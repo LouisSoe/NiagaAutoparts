@@ -11,8 +11,12 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/louissoe/niaga-autoparts/internal/model"
 	"go.uber.org/zap"
 )
+
+// Compile-time check: MessagingService must implement model.MessageSender.
+var _ model.MessageSender = (*MessagingService)(nil)
 
 // FonnteResponse is the raw JSON response from the Fonnte API.
 type FonnteResponse struct {
@@ -44,7 +48,9 @@ func NewMessagingService(token, apiURL string, logger *zap.Logger) *MessagingSer
 }
 
 // SendText sends a plain text message to a WhatsApp number.
-func (s *MessagingService) SendText(ctx context.Context, to, message string) error {
+// The platform argument is accepted to satisfy model.MessageSender but ignored
+// since this service only delivers to Fonnte/WhatsApp.
+func (s *MessagingService) SendText(ctx context.Context, _ model.Platform, to, message string) error {
 	payload := map[string]interface{}{
 		"target":  to,
 		"message": message,
@@ -52,29 +58,24 @@ func (s *MessagingService) SendText(ctx context.Context, to, message string) err
 	return s.send(ctx, payload)
 }
 
-// SendTyping sends a fast "sedang diproses..." acknowledgement before the full reply.
-// This satisfies the <1 second first response requirement.
-func (s *MessagingService) SendTyping(ctx context.Context, to string) error {
-	return s.SendText(ctx, to, "⏳ _Sedang diproses..._")
-}
-
 // SendMedia sends a message that includes a media file (image, audio, video, document).
-// This mirrors the PHP sendFonnte() that passes 'url' and 'filename' alongside 'message'.
+// The platform argument is accepted to satisfy model.MessageSender but ignored
+// since this service only delivers to Fonnte/WhatsApp.
 //
-// Example usage:
+// Example:
 //
-//	svc.SendMedia(ctx, "6281234567890", "Ini foto produk:", "https://example.com/img.jpg", "foto_produk", "")
+//	svc.SendMedia(ctx, model.PlatformFonnte, "6281234567890", "Foto produk:", "https://…/img.jpg", "foto_produk", "")
 //
 // Parameters:
 //   - to       : target WhatsApp number
-//   - message  : caption text (can be empty "")
+//   - caption  : text shown alongside the file (can be "")
 //   - mediaURL : publicly accessible URL of the file
-//   - filename : display name of the file (without extension, Fonnte adds it)
+//   - filename : display name of the file (Fonnte adds extension automatically)
 //   - mimeType : optional hint, e.g. "image/jpeg" (leave "" to let Fonnte auto-detect)
-func (s *MessagingService) SendMedia(ctx context.Context, to, message, mediaURL, filename, mimeType string) error {
+func (s *MessagingService) SendMedia(ctx context.Context, _ model.Platform, to, caption, mediaURL, filename, mimeType string) error {
 	payload := map[string]interface{}{
 		"target":   to,
-		"message":  message,
+		"message":  caption,
 		"url":      mediaURL,
 		"filename": filename,
 	}
@@ -84,7 +85,8 @@ func (s *MessagingService) SendMedia(ctx context.Context, to, message, mediaURL,
 	return s.send(ctx, payload)
 }
 
-// send is the low-level method that posts to the Fonnte API.
+// ─── Internal ─────────────────────────────────────────────────────────────────
+
 func (s *MessagingService) send(ctx context.Context, payload map[string]interface{}) error {
 	body, err := json.Marshal(payload)
 	if err != nil {
@@ -113,32 +115,25 @@ func (s *MessagingService) send(ctx context.Context, payload map[string]interfac
 		return fmt.Errorf("fonnte api error: %d %s", resp.StatusCode, string(respBytes))
 	}
 
-	s.logger.Debug("message sent",
-		zap.String("to", maskPhone(payload["target"].(string))),
+	s.logger.Debug("fonnte message sent",
+		zap.String("to", maskPhoneFonnte(payload["target"].(string))),
 		zap.Int("status", resp.StatusCode),
 	)
 	return nil
 }
 
-// pingClient is a dedicated http.Client for Ping only.
-// It intentionally uses a longer timeout (30s) than the hot-path client (5s)
-// because connectivity checks can be slow on first dial.
+// pingClient is a dedicated http.Client for Ping only — higher timeout (30 s)
+// than the hot-path client (5 s) to allow slow first-dial connectivity checks.
 var pingClient = &http.Client{Timeout: 30 * time.Second}
 
-// Ping sends a test message to the given target number and returns the raw
-// Fonnte API response. It is intended only for connectivity checks (e.g. the
-// GET /fonnte/test endpoint) and should never be called in hot paths.
-//
-// Unlike send(), Ping uses pingClient (30s timeout) so the caller gets a
-// meaningful response even when the first TCP dial to Fonnte is slow.
+// Ping sends a test message and returns the raw Fonnte API response.
+// Intended only for the GET /fonnte/test diagnostic endpoint.
 func (s *MessagingService) Ping(ctx context.Context, target, message string) (*FonnteResponse, error) {
 	payload := map[string]interface{}{
 		"target":  target,
 		"message": message,
 	}
- 	s.logger.Info("token yang dipakai",
-        zap.String("token", s.token), // hapus setelah fix!
-    )
+
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, fmt.Errorf("marshal ping payload: %w", err)
@@ -153,13 +148,12 @@ func (s *MessagingService) Ping(ctx context.Context, target, message string) (*F
 
 	resp, err := pingClient.Do(req)
 	if err != nil {
-		// Classify the error so the handler can give actionable hints.
 		var netErr net.Error
 		if errors.As(err, &netErr) && netErr.Timeout() {
 			return nil, fmt.Errorf(
 				"tidak bisa menjangkau api.fonnte.com (timeout setelah 30 detik). "+
 					"Pastikan: (1) server punya akses internet, "+
-					"(2) firewall/antivirus tidak memblokir port 443, "+
+					"(2) firewall tidak memblokir port 443, "+
 					"(3) FONNTE_API_URL di .env benar: %w", err)
 		}
 		return nil, fmt.Errorf("fonnte ping http post: %w", err)
@@ -174,14 +168,13 @@ func (s *MessagingService) Ping(ctx context.Context, target, message string) (*F
 
 	var fonnteResp FonnteResponse
 	if err := json.Unmarshal(respBytes, &fonnteResp); err != nil {
-		// Return raw body even if unparseable
 		return &FonnteResponse{Detail: string(respBytes)}, nil
 	}
 	return &fonnteResp, nil
 }
 
-// maskPhone returns a privacy-safe phone string for logging (e.g. 6281234****90).
-func maskPhone(phone string) string {
+// maskPhoneFonnte returns a privacy-safe phone string for logging.
+func maskPhoneFonnte(phone string) string {
 	if len(phone) < 6 {
 		return "****"
 	}

@@ -23,8 +23,22 @@ func (p *FonnteWebhookPayload) IsImageMessage() bool {
 	return p.File != "" &&
 		(p.MimeType == "image/jpeg" || p.MimeType == "image/png" || p.MimeType == "image/webp")
 }
- 
+
 // IsGroupMessage returns true when the message comes from a group chat.
 func (p *FonnteWebhookPayload) IsGroupMessage() bool {
 	return p.Member != ""
+}
+
+// ToIncomingMessage converts the Fonnte-specific payload to the generic
+// IncomingMessage used throughout the rest of the system.
+func (p *FonnteWebhookPayload) ToIncomingMessage() IncomingMessage {
+	return IncomingMessage{
+		Platform:      PlatformFonnte,
+		Sender:        p.Sender,
+		SenderName:    p.Name,
+		Message:       p.Message,
+		AttachmentURL: p.File,
+		MimeType:      p.MimeType,
+		IsGroup:       p.IsGroupMessage(),
+	}
 }

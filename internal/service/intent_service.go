@@ -125,15 +125,20 @@ func (s *IntentService) detectByState(normalized string, sess *model.Session) *m
 		if containsAny(normalized, cancelKeywords) {
 			return &model.ParsedMessage{Intent: model.IntentCancelOrder, Confidence: 0.95}
 		}
-		case model.StateAwaitingProductSelection:
-				n := extractNumber(normalized)
-			if n > 0 {
-				return &model.ParsedMessage{
-					Intent:     model.IntentSelectProduct,
-					Quantity:   n, // pakai field ini untuk nomor pilihan
-					Confidence: 0.99,
-				}
+
+	case model.StateAwaitingProductSelection:
+		// Any message that starts with (or contains) an order keyword followed by a
+		// number is treated as "select product #N" — we ignore any trailing number
+		// so that "PESAN 1 3" is read as "select #1" (not "search for '1 3'").
+		// The user can type a quantity AFTER seeing the product detail.
+		n := extractFirstNumber(normalized)
+		if n > 0 {
+			return &model.ParsedMessage{
+				Intent:     model.IntentSelectProduct,
+				Quantity:   n, // used as product selection index
+				Confidence: 0.99,
 			}
+		}
 	}
 	return nil
 }
@@ -178,10 +183,17 @@ func (s *IntentService) detectByKeyword(normalized, original string) *model.Pars
 
 	case containsAny(normalized, orderKeywords):
 		qty := extractNumber(normalized)
+		productQuery := extractProductQuery(normalized, orderKeywords)
+		// If everything left after stripping the order keyword is a bare number,
+		// the user is specifying a quantity for the last-viewed product, not a name.
+		// e.g. "PESAN 2" → qty=2, productQuery="" → handleOrder uses LastProductID.
+		if isNumericOnly(strings.TrimSpace(productQuery)) {
+			productQuery = ""
+		}
 		return &model.ParsedMessage{
 			OriginalText: original,
 			Intent:       model.IntentOrder,
-			ProductQuery: extractProductQuery(normalized, orderKeywords),
+			ProductQuery: productQuery,
 			Quantity:     qty,
 			Confidence:   0.88,
 		}
@@ -240,6 +252,19 @@ func extractNumber(s string) int {
 	return n
 }
 
+// extractFirstNumber returns the value of the first whitespace-delimited numeric
+// token in s (e.g. "pesan 1 3" → 1). Unlike extractNumber it does not merge
+// adjacent digit sequences, so it cannot accidentally combine "1" and "3" into 13.
+func extractFirstNumber(s string) int {
+	for _, field := range strings.Fields(s) {
+		var n int
+		if _, err := fmt.Sscanf(field, "%d", &n); err == nil && n > 0 {
+			return n
+		}
+	}
+	return 0
+}
+
 // extractProductQuery strips trigger keywords and returns the remaining text
 // as the product search query.
 func extractProductQuery(text string, triggers []string) string {
@@ -248,3 +273,17 @@ func extractProductQuery(text string, triggers []string) string {
 	}
 	return strings.TrimSpace(text)
 }
+
+// isNumericOnly returns true if s consists solely of digit characters (no letters).
+// Used to detect when a stripped order query is just a quantity, not a product name.
+func isNumericOnly(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, ch := range s {
+		if !unicode.IsDigit(ch) {
+			return false
+		}
+	}
+	return true
+}

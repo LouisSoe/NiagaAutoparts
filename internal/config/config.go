@@ -14,6 +14,7 @@ type Config struct {
 	App       AppConfig
 	DB        DBConfig
 	Fonnte    FonnteConfig
+	Telegram  TelegramConfig
 	Gemini    GeminiConfig
 	Worker    WorkerConfig
 	Session   SessionConfig
@@ -38,6 +39,10 @@ type DBConfig struct {
 type FonnteConfig struct {
 	Token  string
 	APIURL string
+}
+
+type TelegramConfig struct {
+	Token string // TELE_API — bot token from BotFather
 }
 
 type GeminiConfig struct {
@@ -71,8 +76,8 @@ func Load() (*Config, error) {
 	paths := []string{"../.env", "../../.env", ".env"}
 	for _, path := range paths {
 		if err := godotenv.Load(path); err == nil {
-			fmt.Println("Berhasil load .env dari:", path)
-			fmt.Printf("Berhasil load .env dari: %s", path)
+			fmt.Printf("loaded .env from: %s\n", path)
+			break
 		}
 	}
 
@@ -97,10 +102,13 @@ func Load() (*Config, error) {
 	cfg.Fonnte.Token = getEnv("FONNTE_TOKEN", "")
 	cfg.Fonnte.APIURL = getEnv("FONNTE_API_URL", "https://api.fonnte.com/send")
 
+	// Telegram
+	cfg.Telegram.Token = getEnv("TELE_API", "")
+
 	// Gemini
 	cfg.Gemini.APIKey = getEnv("GEMINI_API_KEY", "")
 	cfg.Gemini.Model = getEnv("GEMINI_MODEL", "gemini-1.5-flash-latest")
-	cfg.Gemini.Timeout = time.Duration(getEnvInt("GEMINI_TIMEOUT_SEC", 3)) * time.Second
+	cfg.Gemini.Timeout = time.Duration(getEnvInt("GEMINI_TIMEOUT_SEC", 15)) * time.Second
 
 	// Worker
 	cfg.Worker.PoolSize = getEnvInt("WORKER_POOL_SIZE", 10)

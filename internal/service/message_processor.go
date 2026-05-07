@@ -14,13 +14,15 @@ import (
 )
 
 // MessageProcessor is the brain of the chatbot.
-// It ties together intent detection, product search, and order management.
+// It is provider-agnostic: the concrete MessageSender (Fonnte or Telegram)
+// is injected via the model.MessageSender interface, so the same logic works
+// for both WhatsApp and Telegram without any modification here.
 type MessageProcessor struct {
 	intentSvc    *IntentService
 	productSvc   *ProductService
 	orderSvc     *OrderService
 	sessionRepo  *repository.SessionRepository
-	messagingSvc *MessagingService
+	messagingSvc model.MessageSender // interface — not tied to any provider
 	aiSvc        *ai.AIService
 	logger       *zap.Logger
 	sessionTTL   time.Duration
@@ -32,7 +34,7 @@ func NewMessageProcessor(
 	productSvc *ProductService,
 	orderSvc *OrderService,
 	sessionRepo *repository.SessionRepository,
-	messagingSvc *MessagingService,
+	messagingSvc model.MessageSender,
 	aiSvc *ai.AIService,
 	sessionTTL time.Duration,
 	logger *zap.Logger,
@@ -50,32 +52,34 @@ func NewMessageProcessor(
 }
 
 // Process is the main entry point for async message handling.
-func (p *MessageProcessor) Process(ctx context.Context, payload model.FonnteWebhookPayload) {
-	phone := payload.Sender
+// It accepts the generic IncomingMessage — platform-agnostic.
+func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessage) {
+	sender := msg.Sender
 
-	sess, err := p.sessionRepo.GetOrCreate(ctx, phone)
+	sess, err := p.sessionRepo.GetOrCreate(ctx, sender)
 	if err != nil {
-		p.logger.Error("session error", zap.String("phone", phone), zap.Error(err))
-		_ = p.messagingSvc.SendText(ctx, phone, FormatError("session_error"))
+		p.logger.Error("session error", zap.String("sender", sender), zap.Error(err))
+		_ = p.messagingSvc.SendText(ctx, msg.Platform, sender, FormatError("session_error"))
 		return
 	}
 
-	if payload.IsImageMessage() {
-		p.handleImage(ctx, payload, sess)
+	if msg.IsImageMessage() {
+		p.handleImage(ctx, msg, sess)
 		return
 	}
 
-	parsed, err := p.intentSvc.Detect(ctx, payload.Message, sess)
+	parsed, err := p.intentSvc.Detect(ctx, msg.Message, sess)
 	if err != nil {
 		p.logger.Error("intent detection failed", zap.Error(err))
 		parsed = &model.ParsedMessage{
-			OriginalText: payload.Message,
+			OriginalText: msg.Message,
 			Intent:       model.IntentUnknown,
 		}
 	}
 
 	p.logger.Info("intent resolved",
-		zap.String("phone", phone),
+		zap.String("sender", sender),
+		zap.String("platform", string(msg.Platform)),
 		zap.String("intent", string(parsed.Intent)),
 		zap.Bool("from_ai", parsed.FromAI),
 	)
@@ -83,7 +87,7 @@ func (p *MessageProcessor) Process(ctx context.Context, payload model.FonnteWebh
 	var reply string
 	switch parsed.Intent {
 	case model.IntentGreeting:
-		reply = FormatWelcome(payload.Name)
+		reply = FormatWelcome(msg.SenderName)
 		sess.State = model.StateIdle
 
 	case model.IntentHelp:
@@ -97,19 +101,19 @@ func (p *MessageProcessor) Process(ctx context.Context, payload model.FonnteWebh
 		reply = p.handleProductSelection(ctx, parsed, sess)
 
 	case model.IntentOrder:
-		reply = p.handleOrder(ctx, parsed, sess, phone)
+		reply = p.handleOrder(ctx, parsed, sess, sender)
 
 	case model.IntentConfirmOrder:
-		reply = p.handleConfirm(ctx, sess, phone)
+		reply = p.handleConfirm(ctx, sess, sender)
 
 	case model.IntentCancelOrder:
-		reply = p.handleCancel(ctx, sess, phone)
+		reply = p.handleCancel(ctx, sess, sender)
 
 	case model.IntentCheckOrder:
-		reply = p.handleCheckOrders(ctx, phone)
+		reply = p.handleCheckOrders(ctx, sender)
 
 	default:
-		parsed.ProductQuery = payload.Message
+		parsed.ProductQuery = msg.Message
 		reply = p.handleSearch(ctx, parsed, sess)
 	}
 
@@ -119,8 +123,8 @@ func (p *MessageProcessor) Process(ctx context.Context, payload model.FonnteWebh
 		p.logger.Warn("failed to save session", zap.Error(err))
 	}
 
-	if err := p.messagingSvc.SendText(ctx, phone, reply); err != nil {
-		p.logger.Error("failed to send reply", zap.String("phone", phone), zap.Error(err))
+	if err := p.messagingSvc.SendText(ctx, msg.Platform, sender, reply); err != nil {
+		p.logger.Error("failed to send reply", zap.String("sender", sender), zap.Error(err))
 	}
 }
 
@@ -161,7 +165,6 @@ func (p *MessageProcessor) handleSearch(ctx context.Context, parsed *model.Parse
 }
 
 func (p *MessageProcessor) handleProductSelection(ctx context.Context, parsed *model.ParsedMessage, sess *model.Session) string {
-	// Jika tidak sedang menunggu pilihan produk
 	if sess.State != model.StateAwaitingProductSelection || len(sess.SearchResults) == 0 {
 		return "Sesi pencarian sudah berakhir. Silakan cari produk lagi."
 	}
@@ -185,7 +188,7 @@ func (p *MessageProcessor) handleProductSelection(ctx context.Context, parsed *m
 	return FormatProductDetail(product, refs)
 }
 
-func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.ParsedMessage, sess *model.Session, phone string) string {
+func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.ParsedMessage, sess *model.Session, sender string) string {
 	var productID int64
 	if parsed.ProductQuery != "" {
 		products, err := p.productSvc.Search(ctx, parsed.ProductQuery)
@@ -221,7 +224,7 @@ func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.Parsed
 		return FormatError("out_of_stock")
 	}
 
-	order, err := p.orderSvc.CreateReservation(ctx, phone, product, parsed.Quantity)
+	order, err := p.orderSvc.CreateReservation(ctx, sender, product, parsed.Quantity)
 	if err != nil {
 		p.logger.Error("create reservation failed", zap.Error(err))
 		return FormatError("order_failed")
@@ -232,7 +235,7 @@ func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.Parsed
 	return FormatOrderConfirmation(order)
 }
 
-func (p *MessageProcessor) handleConfirm(ctx context.Context, sess *model.Session, phone string) string {
+func (p *MessageProcessor) handleConfirm(ctx context.Context, sess *model.Session, sender string) string {
 	if sess.PendingOrderID == nil {
 		return "Tidak ada pesanan yang menunggu konfirmasi."
 	}
@@ -243,11 +246,11 @@ func (p *MessageProcessor) handleConfirm(ctx context.Context, sess *model.Sessio
 		return FormatError("order_failed")
 	}
 
-	_ = p.sessionRepo.Reset(ctx, phone)
+	_ = p.sessionRepo.Reset(ctx, sender)
 	return FormatOrderSuccess(order)
 }
 
-func (p *MessageProcessor) handleCancel(ctx context.Context, sess *model.Session, phone string) string {
+func (p *MessageProcessor) handleCancel(ctx context.Context, sess *model.Session, sender string) string {
 	if sess.PendingOrderID == nil {
 		return "Tidak ada pesanan yang aktif untuk dibatalkan."
 	}
@@ -257,12 +260,12 @@ func (p *MessageProcessor) handleCancel(ctx context.Context, sess *model.Session
 		return FormatError("order_failed")
 	}
 
-	_ = p.sessionRepo.Reset(ctx, phone)
+	_ = p.sessionRepo.Reset(ctx, sender)
 	return "✅ Pesanan berhasil dibatalkan. Stok telah dikembalikan.\n\nAda yang bisa saya bantu?"
 }
 
-func (p *MessageProcessor) handleCheckOrders(ctx context.Context, phone string) string {
-	orders, err := p.orderSvc.GetOrdersByPhone(ctx, phone)
+func (p *MessageProcessor) handleCheckOrders(ctx context.Context, sender string) string {
+	orders, err := p.orderSvc.GetOrdersByPhone(ctx, sender)
 	if err != nil || len(orders) == 0 {
 		return "Anda belum memiliki pesanan."
 	}
@@ -282,24 +285,129 @@ func (p *MessageProcessor) handleCheckOrders(ctx context.Context, phone string) 
 	return reply
 }
 
-func (p *MessageProcessor) handleImage(ctx context.Context, payload model.FonnteWebhookPayload, sess *model.Session) {
-	phone := payload.Sender
+// handleImage uses Gemini AI to identify a product from the attachment URL,
+// then automatically searches the database for matching products using the
+// existing search algorithm (normalization → typo correction → DB trigram search).
+// Works identically for Fonnte and Telegram.
+func (p *MessageProcessor) handleImage(ctx context.Context, msg model.IncomingMessage, sess *model.Session) {
+	sender := msg.Sender
 
-	result, err := p.aiSvc.IdentifyProductFromImageURL(ctx, payload.File)
+	// Step 1: Ask Gemini to identify the spare part in the image (bilingual)
+	aiResult, err := p.aiSvc.IdentifyProductFromImageURL(ctx, msg.AttachmentURL)
 	if err != nil {
 		p.logger.Warn("image identification failed", zap.Error(err))
-		_ = p.messagingSvc.SendText(ctx, phone,
+		_ = p.messagingSvc.SendText(ctx, msg.Platform, sender,
 			"Maaf, tidak dapat memproses gambar. Coba kirim ulang atau ketik nama produknya.")
 		return
 	}
 
-	reply := FormatImageIdentifyResult(result.PossibleProducts)
-	if err := p.messagingSvc.SendText(ctx, phone, reply); err != nil {
-		p.logger.Error("send image reply failed", zap.Error(err))
+	// Combine Indonesian and English candidates into one list for searching
+	allCandidates := append(aiResult.PossibleProductsID, aiResult.PossibleProductsEN...)
+	if len(allCandidates) == 0 {
+		_ = p.messagingSvc.SendText(ctx, msg.Platform, sender,
+			"Maaf, saya tidak dapat mengidentifikasi suku cadang dari foto ini. "+
+				"Coba kirim foto yang lebih jelas, atau ketik nama produknya langsung.")
+		return
 	}
 
-	sess.State = model.StateSearching
+	p.logger.Info("image identified by AI",
+		zap.String("sender", sender),
+		zap.Strings("candidates_id", aiResult.PossibleProductsID),
+		zap.Strings("candidates_en", aiResult.PossibleProductsEN),
+	)
+
+
+	// Step 2: Search the database for every AI candidate, tracking results
+	// separately per language group so we can use intersection for precision.
+	seenByID := make(map[int64]struct{}) // found by Indonesian candidates
+	seenByEN := make(map[int64]struct{}) // found by English candidates
+	productByID := make(map[int64]model.Product)
+
+	searchGroup := func(candidates []string, seen map[int64]struct{}) {
+		for _, candidate := range candidates {
+			results, searchErr := p.productSvc.Search(ctx, candidate)
+			if searchErr != nil {
+				p.logger.Debug("candidate search returned no results",
+					zap.String("candidate", candidate), zap.Error(searchErr))
+				continue
+			}
+			for _, prod := range results {
+				seen[prod.ID] = struct{}{}
+				productByID[prod.ID] = prod
+			}
+		}
+	}
+	searchGroup(aiResult.PossibleProductsID, seenByID)
+	searchGroup(aiResult.PossibleProductsEN, seenByEN)
+
+	// Build union of all found products
+	unionIDs := make(map[int64]struct{})
+	for id := range seenByID {
+		unionIDs[id] = struct{}{}
+	}
+	for id := range seenByEN {
+		unionIDs[id] = struct{}{}
+	}
+
+	// If union is small (≤5), use it directly.
+	// If union is large, fall back to intersection (ID ∩ EN) to remove false positives
+	// caused by generic words like "motor" matching all motorcycle parts.
+	var merged []model.Product
+	const maxUnionResults = 5
+	if len(unionIDs) <= maxUnionResults {
+		for id := range unionIDs {
+			merged = append(merged, productByID[id])
+		}
+	} else {
+		// Intersection: must appear in BOTH language groups
+		for id := range seenByID {
+			if _, inEN := seenByEN[id]; inEN {
+				merged = append(merged, productByID[id])
+			}
+		}
+		// If intersection is also empty (languages returned totally disjoint sets),
+		// fall back to a capped union so the user at least gets something.
+		if len(merged) == 0 {
+			count := 0
+			for id := range unionIDs {
+				if count >= maxUnionResults {
+					break
+				}
+				merged = append(merged, productByID[id])
+				count++
+			}
+		}
+	}
+
+
+	// Step 3: Build reply based on how many DB matches were found
+	var reply string
+	if len(merged) == 0 {
+		// No DB matches — show Gemini's bilingual suggestions for manual follow-up
+		reply = FormatImageNoDBMatch(aiResult.PossibleProductsID, aiResult.PossibleProductsEN)
+	} else if len(merged) == 1 {
+		// Exactly one match → show full product detail immediately
+		product, refs, detailErr := p.productSvc.GetWithPriceRefs(ctx, merged[0].ID)
+		if detailErr != nil {
+			reply = FormatProductList(merged)
+		} else {
+			sess.LastProductID = &product.ID
+			sess.LastProductName = product.Name
+			reply = FormatImageFoundSingle(aiResult.PossibleProductsID, aiResult.PossibleProductsEN, product, refs)
+		}
+		sess.State = model.StateIdle
+	} else {
+		// Multiple matches → numbered list so user can pick by number
+		sess.State = model.StateAwaitingProductSelection
+		sess.SearchResults = merged
+		reply = FormatImageFoundMultiple(aiResult.PossibleProductsID, aiResult.PossibleProductsEN, merged)
+	}
+
 	sess.LastIntent = string(model.IntentIdentifyImage)
 	sess.ExpiresAt = time.Now().Add(p.sessionTTL)
 	_ = p.sessionRepo.Save(ctx, sess)
+
+	if err := p.messagingSvc.SendText(ctx, msg.Platform, sender, reply); err != nil {
+		p.logger.Error("send image reply failed", zap.Error(err))
+	}
 }

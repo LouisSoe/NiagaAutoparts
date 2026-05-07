@@ -10,24 +10,23 @@ import (
 	"go.uber.org/zap"
 )
 
-// Pool manages a fixed set of goroutines that process incoming WhatsApp jobs.
-// This keeps webhook response time under 1 second while the heavy lifting
-// (DB queries, AI calls) happens asynchronously in the background.
+// Pool manages a fixed set of goroutines that process incoming messages from
+// any provider (Fonnte, Telegram, …).
 type Pool struct {
-	jobQueue    chan model.WorkerJob
-	processor   *service.MessageProcessor
-	messagingSvc *service.MessagingService
-	poolSize    int
-	logger      *zap.Logger
-	wg          sync.WaitGroup
-	stopCh      chan struct{}
+	jobQueue     chan model.WorkerJob
+	processor    *service.MessageProcessor
+	messagingSvc model.MessageSender // used only for panic-recovery fallback
+	poolSize     int
+	logger       *zap.Logger
+	wg           sync.WaitGroup
+	stopCh       chan struct{}
 }
 
 // NewPool creates a worker pool with the given concurrency and queue capacity.
 func NewPool(
 	poolSize, queueSize int,
 	processor *service.MessageProcessor,
-	messagingSvc *service.MessagingService,
+	messagingSvc model.MessageSender,
 	logger *zap.Logger,
 ) *Pool {
 	return &Pool{
@@ -40,10 +39,9 @@ func NewPool(
 	}
 }
 
-// Start launches all worker goroutines and a background reservation-expiry ticker.
+// Start launches all worker goroutines.
 func (p *Pool) Start(ctx context.Context) {
 	p.logger.Info("starting worker pool", zap.Int("workers", p.poolSize))
-
 	for i := 0; i < p.poolSize; i++ {
 		p.wg.Add(1)
 		workerID := i
@@ -51,7 +49,7 @@ func (p *Pool) Start(ctx context.Context) {
 	}
 }
 
-// Stop gracefully drains the queue and shuts down all workers.
+// Stop gracefully shuts down all workers.
 func (p *Pool) Stop() {
 	p.logger.Info("stopping worker pool")
 	close(p.stopCh)
@@ -67,7 +65,9 @@ func (p *Pool) Dispatch(job model.WorkerJob) bool {
 		return true
 	default:
 		p.logger.Warn("worker queue full, dropping job",
-			zap.String("phone", job.Payload.Sender))
+			zap.String("sender", job.Payload.Sender),
+			zap.String("platform", string(job.Payload.Platform)),
+		)
 		return false
 	}
 }
@@ -91,7 +91,6 @@ func (p *Pool) runWorker(ctx context.Context, id int) {
 				return
 			}
 			p.processJob(ctx, id, job)
-
 		case <-p.stopCh:
 			return
 		}
@@ -100,27 +99,27 @@ func (p *Pool) runWorker(ctx context.Context, id int) {
 
 func (p *Pool) processJob(ctx context.Context, workerID int, job model.WorkerJob) {
 	start := time.Now()
-	phone := job.Payload.Sender
+	sender := job.Payload.Sender
 
-	// Give each job its own context with a generous timeout
-	jobCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	// Give each job a generous timeout so AI calls don't get cancelled
+	jobCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	p.logger.Info("processing job",
 		zap.Int("worker", workerID),
-		zap.String("phone", phone),
+		zap.String("platform", string(job.Payload.Platform)),
+		zap.String("sender", sender),
 		zap.String("msg_preview", truncate(job.Payload.Message, 40)),
 	)
 
-	// Recover from any panics in the processor to keep the worker alive
+	// Recover from panics to keep the worker alive
 	defer func() {
 		if r := recover(); r != nil {
 			p.logger.Error("worker panic recovered",
 				zap.Int("worker", workerID),
 				zap.Any("panic", r),
 			)
-			// Send a safe fallback message
-			_ = p.messagingSvc.SendText(jobCtx, phone,
+			_ = p.messagingSvc.SendText(jobCtx, job.Payload.Platform, sender,
 				"⚠️ Terjadi kesalahan. Silakan coba lagi atau ketik MENU.")
 		}
 	}()
@@ -133,7 +132,6 @@ func (p *Pool) processJob(ctx context.Context, workerID int, job model.WorkerJob
 	)
 }
 
-// truncate shortens a string to maxLen characters for safe log preview.
 func truncate(s string, maxLen int) string {
 	runes := []rune(s)
 	if len(runes) <= maxLen {

@@ -17,11 +17,15 @@ func FormatProductList(products []model.Product) string {
 	sb.WriteString(fmt.Sprintf("✅ Ditemukan *%d produk*:\n\n", len(products)))
 
 	for i, p := range products {
-		stockLabel := "Ada Stok ✅"
-		if p.AvailableStock() == 0 {
+		avail := p.AvailableStock()
+		var stockLabel string
+		switch {
+		case avail == 0:
 			stockLabel = "Habis ❌"
-		} else if p.AvailableStock() <= 3 {
-			stockLabel = fmt.Sprintf("Sisa %d %s ⚠️", p.AvailableStock(), p.Unit)
+		case avail <= 3:
+			stockLabel = fmt.Sprintf("Sisa %d %s ⚠️", avail, p.Unit)
+		default:
+			stockLabel = fmt.Sprintf("Ada Stok ✅ (%d %s tersedia)", avail, p.Unit)
 		}
 
 		sb.WriteString(fmt.Sprintf(
@@ -40,14 +44,10 @@ func FormatProductList(products []model.Product) string {
 		))
 	}
 
-	if len(products) == 1 {
-		sb.WriteString("Ketik *HARGA* untuk info harga marketplace, atau *PESAN [jumlah]* untuk memesan.")
-	} else {
-		sb.WriteString("Balas dengan *nomor produk* untuk detail, atau *PESAN [no] [jumlah]* untuk memesan.")
-	}
-
+	sb.WriteString("Balas dengan *nomor produk* untuk melihat detail dan memesan.")
 	return sb.String()
 }
+
 
 // FormatProductDetail builds a detailed product card message.
 func FormatProductDetail(p *model.Product, refs []model.PriceReference) string {
@@ -173,22 +173,53 @@ func FormatHelp() string {
 		"Hubungi admin: 08xxx-xxxx-xxxx"
 }
 
-// FormatImageIdentifyResult returns the AI image identification result.
-func FormatImageIdentifyResult(result []string) string {
-	if len(result) == 0 {
-		return "Maaf, saya tidak dapat mengidentifikasi suku cadang dari foto ini. " +
-			"Coba kirim foto yang lebih jelas, atau ketik nama produknya langsung."
+// formatBilingualCandidates writes the bilingual AI identification header.
+func formatBilingualCandidates(sb *strings.Builder, candidatesID, candidatesEN []string) {
+	sb.WriteString("🔍 *Foto diidentifikasi oleh AI:*\n")
+	if len(candidatesID) > 0 {
+		sb.WriteString("🇮🇩 *Bahasa Indonesia:*\n")
+		for _, c := range candidatesID {
+			sb.WriteString(fmt.Sprintf("  • %s\n", c))
+		}
 	}
+	if len(candidatesEN) > 0 {
+		sb.WriteString("🇬🇧 *English:*\n")
+		for _, c := range candidatesEN {
+			sb.WriteString(fmt.Sprintf("  • %s\n", c))
+		}
+	}
+}
 
+// FormatImageNoDBMatch is shown when Gemini recognised a part but the DB
+// returned no matching products. Shows bilingual suggestions for manual follow-up.
+func FormatImageNoDBMatch(candidatesID, candidatesEN []string) string {
 	var sb strings.Builder
-	sb.WriteString("🔍 *Hasil Identifikasi Foto:*\n\n")
-	sb.WriteString("Kemungkinan produk:\n")
-	for i, p := range result {
-		sb.WriteString(fmt.Sprintf("  %d. %s\n", i+1, p))
-	}
-	sb.WriteString("\nKetik *CARI [nama produk]* untuk mencari di database kami.")
+	formatBilingualCandidates(&sb, candidatesID, candidatesEN)
+	sb.WriteString("\n❌ Produk tersebut belum ditemukan di database kami.\n")
+	sb.WriteString("Coba ketik *CARI [nama produk]* untuk mencari dengan kata kunci lain.")
 	return sb.String()
 }
+
+// FormatImageFoundSingle is shown when the DB search returns exactly one product.
+// Displays the full product card directly — the user does not need to pick a number.
+func FormatImageFoundSingle(candidatesID, candidatesEN []string, p *model.Product, refs []model.PriceReference) string {
+	var sb strings.Builder
+	formatBilingualCandidates(&sb, candidatesID, candidatesEN)
+	sb.WriteString("\n✅ *Ditemukan di database:*\n\n")
+	sb.WriteString(FormatProductDetail(p, refs))
+	return sb.String()
+}
+
+// FormatImageFoundMultiple is shown when the DB search returns several matching
+// products. Shows a numbered list so the user can select one by number.
+func FormatImageFoundMultiple(candidatesID, candidatesEN []string, products []model.Product) string {
+	var sb strings.Builder
+	formatBilingualCandidates(&sb, candidatesID, candidatesEN)
+	sb.WriteString("\n")
+	sb.WriteString(FormatProductList(products))
+	return sb.String()
+}
+
 
 // FormatError returns a user-friendly error message.
 func FormatError(code string) string {

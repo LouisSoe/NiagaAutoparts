@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 	"os"
 	"os/signal"
@@ -20,9 +19,8 @@ import (
 	"github.com/louissoe/niaga-autoparts/internal/config"
 	"github.com/louissoe/niaga-autoparts/internal/handler"
 	"github.com/louissoe/niaga-autoparts/internal/middleware"
+	"github.com/louissoe/niaga-autoparts/internal/model"
 	"github.com/louissoe/niaga-autoparts/internal/repository"
-
-	// "github.com/louissoe/niaga-autoparts/internal/scraper"
 	"github.com/louissoe/niaga-autoparts/internal/service"
 	"github.com/louissoe/niaga-autoparts/internal/worker"
 )
@@ -47,8 +45,7 @@ func main() {
 	defer db.Close()
 	logger.Info("database connected")
 
-	// ─── In-Memory Cache (zero external dependencies) ─────────────────────────
-	// Starts a background eviction goroutine; stopped on shutdown via defer.
+	// ─── In-Memory Cache ──────────────────────────────────────────────────────
 	memCache := cache.New(cfg.Cache.CleanupInterval)
 	defer memCache.Stop()
 	logger.Info("in-memory cache started",
@@ -60,7 +57,6 @@ func main() {
 	productRepo := repository.NewProductRepository(db)
 	orderRepo := repository.NewOrderRepository(db)
 	sessionRepo := repository.NewSessionRepository(db, cfg.Session.TTL)
-	// priceRepo  := repository.NewPriceReferenceRepository(db)
 
 	// ─── AI Service ───────────────────────────────────────────────────────────
 	aiSvc := ai.NewAIService(
@@ -70,12 +66,36 @@ func main() {
 		logger,
 	)
 
+	// ─── Fonnte Service ───────────────────────────────────────────────────────
+	fonnteSvc := service.NewMessagingService(cfg.Fonnte.Token, cfg.Fonnte.APIURL, logger)
+
+	// ─── Telegram Service ─────────────────────────────────────────────────────
+	var telegramSvc *service.TelegramService
+	if cfg.Telegram.Token != "" {
+		telegramSvc, err = service.NewTelegramService(cfg.Telegram.Token, logger)
+		if err != nil {
+			logger.Warn("telegram service init failed — telegram will be disabled", zap.Error(err))
+			telegramSvc = nil
+		}
+	} else {
+		logger.Warn("TELE_API not set — telegram bot disabled")
+	}
+
+	// ─── Composite MessageSender ──────────────────────────────────────────────
+	// Routes each outgoing message to the correct provider using the Platform
+	// field that was stamped on the IncomingMessage at ingest time.
+	var compositeSender model.MessageSender
+	if telegramSvc != nil {
+		compositeSender = &compositeMessageSender{fonnte: fonnteSvc, telegram: telegramSvc}
+	} else {
+		compositeSender = fonnteSvc
+	}
+
 	// ─── Business Services ────────────────────────────────────────────────────
 	intentSvc := service.NewIntentService(aiSvc, logger)
 	productSvc := service.NewProductService(productRepo, memCache, cfg.Cache.ProductTTL, logger)
 	orderSvc := service.NewOrderService(orderRepo, productRepo, logger)
-	messagingSvc := service.NewMessagingService(cfg.Fonnte.Token, cfg.Fonnte.APIURL, logger)
-	// priceCron, err  := scraper.NewPriceCronJob(productRepo, priceRepo, logger)
+
 	if err := productSvc.BuildDictionary(context.Background()); err != nil {
 		logger.Fatal("failed to build search dictionary", zap.Error(err))
 	}
@@ -85,34 +105,25 @@ func main() {
 		productSvc,
 		orderSvc,
 		sessionRepo,
-		messagingSvc,
+		compositeSender,
 		aiSvc,
 		cfg.Session.TTL,
 		logger,
 	)
-
 
 	// ─── Worker Pool ──────────────────────────────────────────────────────────
 	pool := worker.NewPool(
 		cfg.Worker.PoolSize,
 		cfg.Worker.QueueSize,
 		processor,
-		messagingSvc,
+		compositeSender,
 		logger,
 	)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// ─── Start background services ────────────────────────────────────────────────
-	// if err != nil {
-	// 	logger.Warn("price scraper unavailable — skipping", zap.Error(err))
-	// } else {
-	// 	priceCron.Start(ctx)
-	// }
-
 	pool.Start(ctx)
-	
 
 	// Background ticker: expire old reservations every minute
 	go func() {
@@ -142,8 +153,15 @@ func main() {
 		middleware.RateLimit(),
 	)
 
-	webhookHandler := handler.NewWebhookHandler(pool, messagingSvc, logger)
-	webhookHandler.RegisterRoutes(router)
+	// Fonnte (WhatsApp) routes
+	fonnteHandler := handler.NewWebhookHandler(pool, fonnteSvc, logger)
+	fonnteHandler.RegisterRoutes(router)
+
+	// Telegram routes (only when token is configured)
+	if telegramSvc != nil {
+		tgHandler := handler.NewTelegramWebhookHandler(pool, telegramSvc, logger)
+		tgHandler.RegisterRoutes(router)
+	}
 
 	srv := &http.Server{
 		Addr:         ":" + cfg.App.Port,
@@ -177,6 +195,30 @@ func main() {
 
 	pool.Stop()
 	logger.Info("server exited cleanly")
+}
+
+// ─── compositeMessageSender ───────────────────────────────────────────────────
+
+// compositeMessageSender routes outgoing messages to the correct provider
+// based on the explicit Platform stamped on the IncomingMessage at ingest time.
+// This completely removes any need for heuristics over the "to" address format.
+type compositeMessageSender struct {
+	fonnte   model.MessageSender
+	telegram model.MessageSender
+}
+
+func (c *compositeMessageSender) SendText(ctx context.Context, platform model.Platform, to, message string) error {
+	if platform == model.PlatformTelegram && c.telegram != nil {
+		return c.telegram.SendText(ctx, platform, to, message)
+	}
+	return c.fonnte.SendText(ctx, platform, to, message)
+}
+
+func (c *compositeMessageSender) SendMedia(ctx context.Context, platform model.Platform, to, caption, mediaURL, filename, mimeType string) error {
+	if platform == model.PlatformTelegram && c.telegram != nil {
+		return c.telegram.SendMedia(ctx, platform, to, caption, mediaURL, filename, mimeType)
+	}
+	return c.fonnte.SendMedia(ctx, platform, to, caption, mediaURL, filename, mimeType)
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -217,5 +259,3 @@ func buildLogger() *zap.Logger {
 	}
 	return logger
 }
-
-var _ = sql.ErrNoRows

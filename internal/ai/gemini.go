@@ -24,10 +24,13 @@ type IntentResult struct {
 }
 
 // ImageMatchResult is Gemini's response when analysing a product image.
+// PossibleProductsID holds Indonesian names and PossibleProductsEN holds
+// English names so both can be used as search queries against the database.
 type ImageMatchResult struct {
-	PossibleProducts []string `json:"possible_products"`
-	Confidence       float64  `json:"confidence"`
-	Description      string   `json:"description"`
+	PossibleProductsID []string `json:"possible_products_id"` // Indonesian names
+	PossibleProductsEN []string `json:"possible_products_en"` // English names
+	Confidence         float64  `json:"confidence"`
+	Description        string   `json:"description"`
 }
 
 // AIService wraps Google AI Studio (Gemini Flash Lite) calls.
@@ -90,20 +93,30 @@ func (s *AIService) IdentifyProductFromImageURL(ctx context.Context, imageURL st
 	ctx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	prompt := fmt.Sprintf(`
-You are an automotive spare parts expert.
+	// 1. Download image and encode to base64
+	b64Data, mimeType, err := downloadImageAsBase64(ctx, imageURL)
+	if err != nil {
+		s.logger.Warn("failed to download image for AI", zap.Error(err), zap.String("url", imageURL))
+		return nil, fmt.Errorf("download image: %w", err)
+	}
+
+	prompt := `You are an automotive spare parts expert.
 Look at this image and identify what spare part(s) it shows.
 Respond ONLY with a valid JSON object (no markdown, no extra text):
 {
-  "possible_products": ["part name 1", "part name 2"],
+  "possible_products_id": ["nama suku cadang dalam bahasa Indonesia 1", "nama 2"],
+  "possible_products_en": ["part name in English 1", "name 2"],
   "confidence": 0.85,
   "description": "Brief description of the part visible in the image"
 }
+Rules:
+- possible_products_id: list the part names in Indonesian (e.g. "kampas rem", "filter oli", "busi")
+- possible_products_en: list the part names in English (e.g. "brake pad", "oil filter", "spark plug")
+- Include brand or vehicle type if clearly visible (e.g. "kampas rem Honda Beat")
+- List 1-4 candidates per language, ordered by likelihood`
 
-Image URL: %s
-`, imageURL)
-
-	rawJSON, err := s.callGemini(ctx, prompt)
+	// 2. Call Gemini with both Text and Image (inlineData)
+	rawJSON, err := s.callGeminiWithImage(ctx, prompt, b64Data, mimeType)
 	if err != nil {
 		return nil, fmt.Errorf("gemini identify image: %w", err)
 	}
@@ -120,7 +133,6 @@ Image URL: %s
 
 // callGemini sends a prompt to the Gemini REST API and returns the raw text response.
 func (s *AIService) callGemini(ctx context.Context, prompt string) (string, error) {
-	// Build the request body
 	reqBody := map[string]interface{}{
 		"contents": []map[string]interface{}{
 			{
@@ -130,11 +142,39 @@ func (s *AIService) callGemini(ctx context.Context, prompt string) (string, erro
 			},
 		},
 		"generationConfig": map[string]interface{}{
-			"temperature":     0.1, // Low temperature = more deterministic JSON
+			"temperature":     0.1,
 			"maxOutputTokens": 256,
 		},
 	}
+	return s.doGeminiRequest(ctx, reqBody)
+}
 
+// callGeminiWithImage sends a prompt + image to Gemini.
+func (s *AIService) callGeminiWithImage(ctx context.Context, prompt, b64Data, mimeType string) (string, error) {
+	reqBody := map[string]interface{}{
+		"contents": []map[string]interface{}{
+			{
+				"parts": []map[string]interface{}{
+					{"text": prompt},
+					{
+						"inlineData": map[string]string{
+							"mimeType": mimeType,
+							"data":     b64Data,
+						},
+					},
+				},
+			},
+		},
+		"generationConfig": map[string]interface{}{
+			"temperature":     0.1,
+			"maxOutputTokens": 256,
+		},
+	}
+	return s.doGeminiRequest(ctx, reqBody)
+}
+
+// doGeminiRequest is the common function to post to Gemini.
+func (s *AIService) doGeminiRequest(ctx context.Context, reqBody map[string]interface{}) (string, error) {
 	bodyBytes, err := json.Marshal(reqBody)
 	if err != nil {
 		return "", fmt.Errorf("marshal gemini request: %w", err)
@@ -145,13 +185,11 @@ func (s *AIService) callGemini(ctx context.Context, prompt string) (string, erro
 		s.model, s.apiKey,
 	)
 
-	// Use net/http directly via a package-level import below
 	respBody, err := doHTTPPost(ctx, url, bodyBytes)
 	if err != nil {
 		return "", err
 	}
 
-	// Parse the Gemini response envelope
 	var envelope struct {
 		Candidates []struct {
 			Content struct {

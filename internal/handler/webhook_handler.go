@@ -32,82 +32,56 @@ func NewWebhookHandler(
 	}
 }
 
-// RegisterRoutes attaches all routes to the given Gin engine.
+// RegisterRoutes attaches all Fonnte-related routes to the Gin engine.
 func (h *WebhookHandler) RegisterRoutes(r *gin.Engine) {
 	r.POST("/webhook", h.HandleIncoming)
-	r.GET("/webhook", h.VerifyWebhook) // Fonnte requires GET to verify the URL
+	r.GET("/webhook", h.VerifyWebhook)
 	r.GET("/health", h.Health)
 	r.GET("/metrics", h.Metrics)
-	r.GET("/fonnte/test", h.TestFonnte) // Connectivity check — send a test WhatsApp message
+	r.GET("/fonnte/test", h.TestFonnte)
 }
 
 // HandleIncoming is the main webhook endpoint called by Fonnte on every message.
-//
-// Two-step response strategy:
-//  1. [DISABLED] Send an instant "processing..." ACK (<1 second) — dinonaktifkan
-//  2. Dispatch the job to the worker pool for async processing
-//  3. Return HTTP 200 immediately so Fonnte doesn't retry
+// It immediately returns HTTP 200 to prevent Fonnte from retrying, then
+// dispatches the job asynchronously to the worker pool.
 func (h *WebhookHandler) HandleIncoming(c *gin.Context) {
 	var payload model.FonnteWebhookPayload
 
-	// Fonnte sends data as form values
 	if err := c.ShouldBind(&payload); err != nil {
 		h.logger.Warn("invalid webhook payload", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
 	}
 
-	// Ignore group messages (handle only personal chat)
-	if payload.IsGroupMessage() {
-		c.JSON(http.StatusOK, gin.H{"status": "ignored", "reason": "group_message"})
+	// Ignore group messages and messages with no sender
+	if payload.IsGroupMessage() || payload.Sender == "" {
+		c.JSON(http.StatusOK, gin.H{"status": "ignored"})
 		return
 	}
 
-	// Ignore empty messages
-	if payload.Sender == "" {
-		c.JSON(http.StatusOK, gin.H{"status": "ignored", "reason": "no_sender"})
-		return
-	}
-
-	h.logger.Info("webhook received",
-		zap.String("sender", maskPhone(payload.Sender)),
+	h.logger.Info("fonnte webhook received",
+		zap.String("sender", maskPhoneHandler(payload.Sender)),
 		zap.Bool("has_image", payload.IsImageMessage()),
 	)
 
-	// Step 1: Send immediate acknowledgement (<1 second)
-	// DISABLED — Balasan "sedang diproses" dinonaktifkan; hapus komentar di bawah untuk mengaktifkan kembali.
-	// go func() {
-	// 	// Use a fresh context for background tasks to avoid "context canceled"
-	// 	bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	// 	defer cancel()
-	//
-	// 	if err := h.messagingSvc.SendTyping(bgCtx, payload.Sender); err != nil {
-	// 		h.logger.Warn("failed to send typing ack", zap.Error(err))
-	// 	}
-	// }()
-
-	// Step 2: Dispatch to async worker pool
+	// Convert to generic IncomingMessage and dispatch
 	job := model.WorkerJob{
-		Payload:  payload,
+		Payload:  payload.ToIncomingMessage(),
 		RecvedAt: time.Now(),
 	}
 	if !h.workerPool.Dispatch(job) {
-		// Queue is full — send a polite overflow message
 		go func() {
 			bgCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
-
-			_ = h.messagingSvc.SendText(bgCtx, payload.Sender,
+			_ = h.messagingSvc.SendText(bgCtx, model.PlatformFonnte, payload.Sender,
 				"⏳ Sistem sedang sibuk. Pesan Anda akan diproses sesaat lagi.")
 		}()
 	}
 
-	// Step 3: Return 200 immediately so Fonnte doesn't retry
 	c.JSON(http.StatusOK, gin.H{"status": "queued"})
 }
 
 // VerifyWebhook handles GET requests from Fonnte to verify the webhook URL.
-// Fonnte sends a GET request before activating the webhook; we must respond 200.
 func (h *WebhookHandler) VerifyWebhook(c *gin.Context) {
 	h.logger.Info("webhook verification request received from Fonnte")
 	c.JSON(http.StatusOK, gin.H{"status": "ok"})
@@ -134,37 +108,25 @@ func (h *WebhookHandler) Metrics(c *gin.Context) {
 // Usage:
 //
 //	GET /fonnte/test?target=6281234567890
-//
-// The response body is the raw JSON from Fonnte, identical to what the PHP
-// example printed via echo $response.
 func (h *WebhookHandler) TestFonnte(c *gin.Context) {
 	target := c.Query("target")
 	if target == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "query param 'target' (nomor WhatsApp tujuan) wajib diisi, contoh: ?target=6281234567890",
+			"error": "query param 'target' wajib diisi, contoh: ?target=6281234567890",
 		})
 		return
 	}
-
 	message := c.DefaultQuery("message", "Halo! Ini adalah pesan uji coba koneksi Fonnte dari NiagaGudang. ✅")
 
-	// Use 35s — slightly longer than pingClient's 30s hard timeout — so the
-	// client timeout fires first and returns the descriptive network error
-	// rather than a generic context cancellation.
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 35*time.Second)
 	defer cancel()
 
-	h.logger.Info("fonnte connectivity test",
-		zap.String("target", maskPhone(target)),
-	)
+	h.logger.Info("fonnte connectivity test", zap.String("target", maskPhoneHandler(target)))
 
 	result, err := h.messagingSvc.Ping(ctx, target, message)
 	if err != nil {
 		h.logger.Error("fonnte ping failed", zap.Error(err))
-		c.JSON(http.StatusBadGateway, gin.H{
-			"ok":    false,
-			"error": err.Error(),
-		})
+		c.JSON(http.StatusBadGateway, gin.H{"ok": false, "error": err.Error()})
 		return
 	}
 
@@ -181,8 +143,8 @@ func (h *WebhookHandler) TestFonnte(c *gin.Context) {
 	})
 }
 
-// maskPhone is duplicated here to avoid cross-package import just for logging.
-func maskPhone(phone string) string {
+// maskPhoneHandler returns a privacy-safe phone string for logging.
+func maskPhoneHandler(phone string) string {
 	if len(phone) < 6 {
 		return "****"
 	}
