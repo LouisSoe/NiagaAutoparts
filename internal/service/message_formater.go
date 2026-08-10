@@ -37,7 +37,7 @@ func FormatProductList(products []model.Product) string {
 			i+1,
 			p.Name,
 			p.SKU,
-			formatIDR(p.Price),
+			formatIDR(p.SellingPrice),
 			p.Unit,
 			p.Location,
 			stockLabel,
@@ -68,8 +68,8 @@ func FormatProductDetail(p *model.Product, refs []model.PriceReference) string {
 			"Lokasi   : %s\n",
 		p.Name,
 		p.SKU,
-		p.Category,
-		formatIDR(p.Price), p.Unit,
+		p.CategoryName,
+		formatIDR(p.SellingPrice), p.Unit,
 		stockStatus, p.AvailableStock(), p.Unit,
 		p.Location,
 	))
@@ -82,7 +82,7 @@ func FormatProductDetail(p *model.Product, refs []model.PriceReference) string {
 	if len(refs) > 0 {
 		sb.WriteString("\n📊 *Perbandingan Harga Marketplace:*\n")
 		for _, ref := range refs {
-			diff := p.Price - ref.Price
+			diff := p.SellingPrice - ref.Price
 			indicator := "💰 Lebih murah di sini"
 			if diff < 0 {
 				indicator = fmt.Sprintf("⬆️ +Rp %s di sini", formatIDR(-diff))
@@ -100,6 +100,14 @@ func FormatProductDetail(p *model.Product, refs []model.PriceReference) string {
 
 // FormatOrderConfirmation sends the reservation summary to the user.
 func FormatOrderConfirmation(order *model.Order) string {
+	prodName := "-"
+	qty := 0
+	unitPrice := 0.0
+	if len(order.Items) > 0 {
+		prodName = order.Items[0].ProductName
+		qty = order.Items[0].Quantity
+		unitPrice = order.Items[0].UnitPrice
+	}
 	return fmt.Sprintf(
 		"🛒 *Konfirmasi Pesanan*\n"+
 			"━━━━━━━━━━━━━━━━\n"+
@@ -109,18 +117,25 @@ func FormatOrderConfirmation(order *model.Order) string {
 			"Harga Satuan: Rp %s\n"+
 			"*Total      : Rp %s*\n"+
 			"━━━━━━━━━━━━━━━━\n"+
-			"⏰ Reservasi berlaku 15 menit.\n\n"+
-			"Balas *YA* untuk konfirmasi atau *BATAL* untuk membatalkan.",
+			"Pilih metode pembayaran:\n"+
+			"1️⃣ Balas *1* atau *MIDTRANS* → Bayar Online (QRIS/Bank/E-Wallet)\n"+
+			"2️⃣ Balas *2* atau *CASH* → Bayar Tunai saat Ambil di Toko\n"+
+			"3️⃣ Balas *BATAL* → Membatalkan pesanan\n\n"+
+			"⏰ Reservasi stok berlaku 15 menit.",
 		order.OrderNumber,
-		order.ProductName,
-		order.Quantity,
-		formatIDR(order.UnitPrice),
+		prodName,
+		qty,
+		formatIDR(unitPrice),
 		formatIDR(order.TotalPrice),
 	)
 }
 
 // FormatOrderSuccess returns the success message after payment confirmation.
 func FormatOrderSuccess(order *model.Order) string {
+	prodName := "-"
+	if len(order.Items) > 0 {
+		prodName = order.Items[0].ProductName
+	}
 	return fmt.Sprintf(
 		"✅ *Pesanan Dikonfirmasi!*\n\n"+
 			"No. Pesanan : *%s*\n"+
@@ -130,7 +145,7 @@ func FormatOrderSuccess(order *model.Order) string {
 			"Lokasi pengambilan akan diinformasikan oleh admin.\n\n"+
 			"Terima kasih! 🙏",
 		order.OrderNumber,
-		order.ProductName,
+		prodName,
 		formatIDR(order.TotalPrice),
 	)
 }
@@ -264,4 +279,65 @@ func capitalise(s string) string {
 		return s
 	}
 	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// FormatOrderHistorySummary formats order list into a readable chat message summary.
+func FormatOrderHistorySummary(orders []model.Order, days int) string {
+	if len(orders) == 0 {
+		return fmt.Sprintf("📜 *Riwayat Pesanan (%d Hari Terakhir)*\n\n"+
+			"Belum ada transaksi pesanan dalam %d hari terakhir.\n\n"+
+			"💡 *Tips Export Excel Lengkap Bulanan:*\n"+
+			"Ketik *HISTORY [BULAN] [TAHUN]* (contoh: *HISTORY 08 2026* atau *HISTORY AGUSTUS 2026*) untuk mengunduh laporan Excel.", days, days)
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("📜 *Riwayat Pesanan (%d Hari Terakhir)*\n", days))
+	sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n")
+
+	for i, o := range orders {
+		prodName := "-"
+		qty := 0
+		if len(o.Items) > 0 {
+			prodName = o.Items[0].ProductName
+			qty = o.Items[0].Quantity
+		}
+
+		statusBadge := "⏳ Pending"
+		switch o.Status {
+		case model.OrderStatusPaid:
+			statusBadge = "✅ Lunas"
+		case model.OrderStatusReserved:
+			statusBadge = "🟡 Terpesan (Hold)"
+		case model.OrderStatusCancelled:
+			statusBadge = "❌ Batal"
+		}
+
+		payMethod := "Cash"
+		if o.PaymentMethod.Valid && (o.PaymentMethod.String == "qris" || o.PaymentMethod.String == "midtrans") {
+			payMethod = "Midtrans Online"
+		}
+
+		sb.WriteString(fmt.Sprintf(
+			"*%d. No. Pesanan : %s*\n"+
+				"   📅 Tanggal : %s\n"+
+				"   📦 Produk  : %s (%d pcs)\n"+
+				"   💰 Total   : Rp %s\n"+
+				"   💳 Metode  : %s\n"+
+				"   📌 Status  : %s\n\n",
+			i+1,
+			o.OrderNumber,
+			o.CreatedAt.Format("02 Jan 2006 15:04"),
+			prodName,
+			qty,
+			formatIDR(o.TotalPrice),
+			payMethod,
+			statusBadge,
+		))
+	}
+
+	sb.WriteString("━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n")
+	sb.WriteString("📥 *Unduh Laporan Excel Per Bulan:*\n")
+	sb.WriteString("Ketik *HISTORY [BULAN] [TAHUN]* (contoh: *HISTORY 08 2026* atau *HISTORY AGUSTUS 2026*) untuk mengunduh berkas laporan format Excel (.xlsx).")
+
+	return sb.String()
 }

@@ -1,10 +1,12 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/louissoe/niaga-autoparts/internal/ai"
@@ -24,6 +26,8 @@ type MessageProcessor struct {
 	sessionRepo  *repository.SessionRepository
 	messagingSvc model.MessageSender // interface — not tied to any provider
 	aiSvc        *ai.AIService
+	midtransSvc  *MidtransService
+	reportSvc    *ReportService
 	logger       *zap.Logger
 	sessionTTL   time.Duration
 }
@@ -51,6 +55,14 @@ func NewMessageProcessor(
 	}
 }
 
+func (p *MessageProcessor) SetMidtransService(midtransSvc *MidtransService) {
+	p.midtransSvc = midtransSvc
+}
+
+func (p *MessageProcessor) SetReportService(reportSvc *ReportService) {
+	p.reportSvc = reportSvc
+}
+
 // Process is the main entry point for async message handling.
 // It accepts the generic IncomingMessage — platform-agnostic.
 func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessage) {
@@ -63,9 +75,22 @@ func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessag
 		return
 	}
 
+	if msg.IsFileMessage() {
+		p.handleFile(ctx, msg, sess)
+		return
+	}
+
 	if msg.IsImageMessage() {
 		p.handleImage(ctx, msg, sess)
 		return
+	}
+
+	if strings.HasPrefix(msg.Message, "/start") {
+		reply := p.handleTelegramStart(ctx, msg, sess)
+		if reply != "" {
+			_ = p.messagingSvc.SendText(ctx, msg.Platform, sender, reply)
+			return
+		}
 	}
 
 	parsed, err := p.intentSvc.Detect(ctx, msg.Message, sess)
@@ -101,16 +126,25 @@ func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessag
 		reply = p.handleProductSelection(ctx, parsed, sess)
 
 	case model.IntentOrder:
-		reply = p.handleOrder(ctx, parsed, sess, sender)
+		reply = p.handleOrder(ctx, parsed, sess, msg)
 
 	case model.IntentConfirmOrder:
-		reply = p.handleConfirm(ctx, sess, sender)
+		reply = p.handleConfirm(ctx, parsed, sess, sender)
 
 	case model.IntentCancelOrder:
 		reply = p.handleCancel(ctx, sess, sender)
 
 	case model.IntentCheckOrder:
 		reply = p.handleCheckOrders(ctx, sender)
+
+	case model.IntentConfirmImport:
+		reply = p.handleImportConfirm(ctx, sess, sender)
+
+	case model.IntentHistory:
+		reply = p.handleHistory(ctx, parsed, msg)
+		if reply == "" {
+			return
+		}
 
 	default:
 		parsed.ProductQuery = msg.Message
@@ -188,7 +222,8 @@ func (p *MessageProcessor) handleProductSelection(ctx context.Context, parsed *m
 	return FormatProductDetail(product, refs)
 }
 
-func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.ParsedMessage, sess *model.Session, sender string) string {
+func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.ParsedMessage, sess *model.Session, msg model.IncomingMessage) string {
+	sender := msg.Sender
 	var productID int64
 	if parsed.ProductQuery != "" {
 		products, err := p.productSvc.Search(ctx, parsed.ProductQuery)
@@ -224,7 +259,7 @@ func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.Parsed
 		return FormatError("out_of_stock")
 	}
 
-	order, err := p.orderSvc.CreateReservation(ctx, sender, product, parsed.Quantity)
+	order, err := p.orderSvc.CreateReservation(ctx, sender, msg.Platform, product, parsed.Quantity)
 	if err != nil {
 		p.logger.Error("create reservation failed", zap.Error(err))
 		return FormatError("order_failed")
@@ -235,19 +270,96 @@ func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.Parsed
 	return FormatOrderConfirmation(order)
 }
 
-func (p *MessageProcessor) handleConfirm(ctx context.Context, sess *model.Session, sender string) string {
+func (p *MessageProcessor) handleConfirm(ctx context.Context, parsed *model.ParsedMessage, sess *model.Session, sender string) string {
 	if sess.PendingOrderID == nil {
 		return "Tidak ada pesanan yang menunggu konfirmasi."
 	}
 
-	order, err := p.orderSvc.ConfirmOrder(ctx, *sess.PendingOrderID)
-	if err != nil {
-		p.logger.Error("confirm order failed", zap.Int64("order_id", *sess.PendingOrderID), zap.Error(err))
+	orderID := *sess.PendingOrderID
+	existingOrder, checkErr := p.orderSvc.GetOrderByID(ctx, orderID)
+	if checkErr != nil || existingOrder == nil {
 		return FormatError("order_failed")
 	}
 
+	if existingOrder.Status == model.OrderStatusPaid {
+		_ = p.sessionRepo.Reset(ctx, sender)
+		return fmt.Sprintf("✅ Pesanan *%s* sudah *LUNAS* dan sedang diproses oleh gudang. Terima kasih!", existingOrder.OrderNumber)
+	}
+
+	if existingOrder.Status == model.OrderStatusCancelled {
+		_ = p.sessionRepo.Reset(ctx, sender)
+		return fmt.Sprintf("❌ Pesanan *%s* telah *DIBATALKAN*.", existingOrder.OrderNumber)
+	}
+
+	text := ""
+	if parsed != nil {
+		text = strings.TrimSpace(strings.ToLower(parsed.OriginalText))
+	}
+
+	isCash := text == "2" || text == "cash" || text == "tunai"
+
+	if isCash {
+		_ = p.orderSvc.orderRepo.UpdatePaymentMethod(ctx, existingOrder.ID, "cash")
+		newExpiry := time.Now().Add(24 * time.Hour)
+		_ = p.orderSvc.orderRepo.UpdateExpiresAt(ctx, existingOrder.ID, newExpiry)
+		_ = p.sessionRepo.Reset(ctx, sender)
+
+		prodName := "-"
+		if len(existingOrder.Items) > 0 {
+			prodName = existingOrder.Items[0].ProductName
+		}
+
+		return fmt.Sprintf("✅ *Pesanan Dikonfirmasi (Bayar Cash di Toko)*\n\n"+
+			"No. Pesanan : *%s*\n"+
+			"Produk      : %s\n"+
+			"Total       : *Rp %s*\n\n"+
+			"🏬 *Instruksi Pembayaran & Pengambilan:*\n"+
+			"1. Datang ke toko Niaga AutoParts.\n"+
+			"2. Tunjukkan No. Pesanan *%s* ke admin kasir.\n"+
+			"3. Bayar tunai (cash) langsung di toko saat mengambil barang.\n\n"+
+			"⏰ Reservasi stok berlaku selama *24 Jam* (sampai %s WIB).\n"+
+			"Terima kasih! 🙏",
+			existingOrder.OrderNumber,
+			prodName,
+			formatIDR(existingOrder.TotalPrice),
+			existingOrder.OrderNumber,
+			newExpiry.Format("15:04, 02 Jan 2006"),
+		)
+	}
+
+	// Midtrans Payment (Online)
+	if p.midtransSvc == nil {
+		return "Fasilitas pembayaran Midtrans saat ini belum aktif. Silakan pilih bayar Cash di Toko."
+	}
+
+	_ = p.orderSvc.orderRepo.UpdatePaymentMethod(ctx, existingOrder.ID, "qris")
+
+	snapResp, err := p.midtransSvc.CreateSnapTransaction(ctx, existingOrder.ID)
+	if err != nil {
+		p.logger.Error("failed to create snap transaction for chatbot order", zap.Error(err))
+		return fmt.Sprintf("⚠️ *Gagal Membuat Link Pembayaran Midtrans:*\n%s", err.Error())
+	}
+
 	_ = p.sessionRepo.Reset(ctx, sender)
-	return FormatOrderSuccess(order)
+
+	prodName := "-"
+	if len(existingOrder.Items) > 0 {
+		prodName = existingOrder.Items[0].ProductName
+	}
+
+	return fmt.Sprintf(
+		"🛒 *Pesanan Dikonfirmasi — Pembayaran Midtrans*\n\n"+
+			"No. Pesanan : *%s*\n"+
+			"Produk      : %s\n"+
+			"Total       : *Rp %s*\n\n"+
+			"💳 *Silakan lakukan pembayaran melalui link Midtrans berikut:*\n%s\n\n"+
+			"⏰ Link pembayaran & reservasi stok berlaku selama 15 menit.\n"+
+			"Setelah pembayaran selesai, Anda akan menerima konfirmasi otomatis di sini.",
+		existingOrder.OrderNumber,
+		prodName,
+		formatIDR(existingOrder.TotalPrice),
+		snapResp.RedirectURL,
+	)
 }
 
 func (p *MessageProcessor) handleCancel(ctx context.Context, sess *model.Session, sender string) string {
@@ -279,8 +391,15 @@ func (p *MessageProcessor) handleCheckOrders(ctx context.Context, sender string)
 			model.OrderStatusCancelled: "❌",
 		}
 		emoji := statusEmoji[o.Status]
-		reply += fmt.Sprintf("%s *%s* — %s (x%d) — Rp %s\n",
-			emoji, o.OrderNumber, o.ProductName, o.Quantity, formatIDR(o.TotalPrice))
+		itemSummary := ""
+		if len(o.Items) > 0 {
+			itemSummary = fmt.Sprintf(" — %s (x%d)", o.Items[0].ProductName, o.Items[0].Quantity)
+			if len(o.Items) > 1 {
+				itemSummary += fmt.Sprintf(" +%d item lainnya", len(o.Items)-1)
+			}
+		}
+		reply += fmt.Sprintf("%s *%s*%s — Rp %s\n",
+			emoji, o.OrderNumber, itemSummary, formatIDR(o.TotalPrice))
 	}
 	return reply
 }
@@ -315,7 +434,6 @@ func (p *MessageProcessor) handleImage(ctx context.Context, msg model.IncomingMe
 		zap.Strings("candidates_id", aiResult.PossibleProductsID),
 		zap.Strings("candidates_en", aiResult.PossibleProductsEN),
 	)
-
 
 	// Step 2: Search the database for every AI candidate, tracking results
 	// separately per language group so we can use intersection for precision.
@@ -379,7 +497,6 @@ func (p *MessageProcessor) handleImage(ctx context.Context, msg model.IncomingMe
 		}
 	}
 
-
 	// Step 3: Build reply based on how many DB matches were found
 	var reply string
 	if len(merged) == 0 {
@@ -410,4 +527,106 @@ func (p *MessageProcessor) handleImage(ctx context.Context, msg model.IncomingMe
 	if err := p.messagingSvc.SendText(ctx, msg.Platform, sender, reply); err != nil {
 		p.logger.Error("send image reply failed", zap.Error(err))
 	}
+}
+
+func (p *MessageProcessor) handleTelegramStart(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
+	parts := strings.Fields(msg.Message)
+	if len(parts) < 2 {
+		return FormatWelcome(msg.SenderName)
+	}
+
+	orderParam := strings.TrimSpace(parts[1])
+	if !strings.HasPrefix(orderParam, "ORD-") && !strings.HasPrefix(orderParam, "ord-") {
+		return FormatWelcome(msg.SenderName)
+	}
+
+	orderNum := strings.ToUpper(orderParam)
+
+	// Link telegram_chat_id to this order
+	if err := p.orderSvc.LinkTelegramChatID(ctx, orderNum, msg.Sender); err != nil {
+		p.logger.Error("failed to link telegram chat_id to order", zap.String("order_number", orderNum), zap.Error(err))
+		return "Gagal menghubungkan pesanan ke Telegram."
+	}
+
+	order, err := p.orderSvc.GetOrderByNumber(ctx, orderNum)
+	if err != nil {
+		p.logger.Warn("order not found for deep link", zap.String("order_number", orderNum), zap.Error(err))
+		return fmt.Sprintf("Pesanan *%s* tidak ditemukan.", orderNum)
+	}
+
+	if order.Status == model.OrderStatusPaid {
+		return fmt.Sprintf("✅ *Pesanan Terhubung*\n\nPesanan *%s* (Total: Rp %s) sudah *LUNAS* dan sedang diproses oleh gudang. Terima kasih!",
+			order.OrderNumber, formatIDR(order.TotalPrice))
+	}
+
+	if order.Status == model.OrderStatusCancelled {
+		return fmt.Sprintf("❌ *Pesanan Terhubung*\n\nPesanan *%s* telah *DIBATALKAN*.", order.OrderNumber)
+	}
+
+	reply := fmt.Sprintf("🔗 *Pesanan %s Berhasil Terhubung ke Telegram!*\n\nStatus: *%s*\nTotal: Rp %s",
+		order.OrderNumber, order.Status, formatIDR(order.TotalPrice))
+
+	if p.midtransSvc != nil {
+		snapResp, err := p.midtransSvc.CreateSnapTransaction(ctx, order.ID)
+		if err == nil && snapResp != nil && snapResp.RedirectURL != "" {
+			reply += fmt.Sprintf("\n\n💳 *Link Pembayaran Midtrans:*\n%s", snapResp.RedirectURL)
+		} else if err != nil {
+			reply += fmt.Sprintf("\n\n⚠️ *Info Pembayaran:* %s", err.Error())
+		}
+	}
+
+	return reply
+}
+
+func (p *MessageProcessor) handleHistory(ctx context.Context, parsed *model.ParsedMessage, msg model.IncomingMessage) string {
+	sender := msg.Sender
+
+	// If no month parameter was specified, return 3 days summary in chat
+	if parsed.Month == 0 {
+		orders, err := p.orderSvc.orderRepo.GetHistoryLastDays(ctx, sender, 3)
+		if err != nil {
+			p.logger.Error("failed to get last 3 days order history", zap.Error(err))
+			return FormatError("db_error")
+		}
+		return FormatOrderHistorySummary(orders, 3)
+	}
+
+	// Month parameter specified -> generate Excel and send document
+	year := parsed.Year
+	if year == 0 {
+		year = time.Now().Year()
+	}
+
+	orders, err := p.orderSvc.orderRepo.GetHistoryMonthly(ctx, sender, year, parsed.Month)
+	if err != nil {
+		p.logger.Error("failed to get monthly order history", zap.Error(err))
+		return FormatError("db_error")
+	}
+
+	if len(orders) == 0 {
+		return fmt.Sprintf("📜 Tidak ditemukan data pesanan untuk bulan %02d/%d.", parsed.Month, year)
+	}
+
+	var buf bytes.Buffer
+	if p.reportSvc != nil {
+		if err := p.reportSvc.GenerateUserOrdersExcel(orders, year, parsed.Month, &buf); err != nil {
+			p.logger.Error("failed to generate monthly excel", zap.Error(err))
+			return FormatError("db_error")
+		}
+	} else {
+		return "Laporan Excel sementara tidak tersedia."
+	}
+
+	filename := fmt.Sprintf("riwayat_pesanan_%d_%02d.xlsx", year, parsed.Month)
+	caption := fmt.Sprintf("📊 *Laporan Riwayat Pesanan Bulan %02d/%d*\nTotal Transaksi: %d pesanan.", parsed.Month, year, len(orders))
+
+	if teleSvc, ok := p.messagingSvc.(*TelegramService); ok {
+		if err := teleSvc.SendDocumentBytes(ctx, msg.Platform, sender, buf.Bytes(), filename, caption); err != nil {
+			p.logger.Error("failed to send document bytes to telegram", zap.Error(err))
+			return "Gagal mengirimkan file Excel ke chat."
+		}
+		return ""
+	}
+
+	return fmt.Sprintf("📊 *Laporan Excel Bulan %02d/%d Berhasil Dibuat!*", parsed.Month, year)
 }

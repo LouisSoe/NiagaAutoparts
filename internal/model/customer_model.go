@@ -1,0 +1,50 @@
+package model
+
+import (
+	"database/sql"
+	"encoding/json"
+	"time"
+)
+
+type CustomerType string
+
+const (
+	CustomerTypeIndividual CustomerType = "INDIVIDUAL"
+	CustomerTypeWorkshop   CustomerType = "WORKSHOP"
+	CustomerTypeCompany    CustomerType = "COMPANY"
+)
+
+type Customer struct {
+	ID           int64          `db:"id" json:"id"`
+	UserID       int64          `db:"user_id" json:"user_id"`
+	TypeCustomer CustomerType   `db:"type_customer" json:"type_customer"`
+	Name         string         `db:"name" json:"name"`
+	Phone        string         `db:"phone" json:"phone"`
+	Email        string         `db:"email" json:"email"`
+	Address      sql.NullString `db:"address" json:"address"`
+	Notes        sql.NullString `db:"notes" json:"notes"`
+	CreatedAt    time.Time      `db:"created_at" json:"created_at"`
+	UpdatedAt    time.Time      `db:"updated_at" json:"updated_at"`
+}
+
+func (c Customer) MarshalJSON() ([]byte, error) {
+	type Alias Customer
+	var address *string
+	if c.Address.Valid {
+		address = &c.Address.String
+	}
+	var notes *string
+	if c.Notes.Valid {
+		notes = &c.Notes.String
+	}
+	return json.Marshal(&struct {
+		Alias
+		Address *string `json:"address"`
+		Notes   *string `json:"notes"`
+	}{
+		Alias:   Alias(c),
+		Address: address,
+		Notes:   notes,
+	})
+}
+

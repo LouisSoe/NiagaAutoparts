@@ -6,33 +6,34 @@
 
 ## 🎯 Ringkasan Project
 
-**Nama project:** `whatsapp-autoparts`  
-**Module Go:** `github.com/yourorg/whatsapp-autoparts`  
-**Bahasa:** Go 1.22  
-**Tujuan:** Chatbot WhatsApp untuk toko suku cadang otomotif — pencarian produk, pemesanan dengan reservasi stok, identifikasi foto via AI  
+**Nama project:** `niaga-autoparts`  
+**Module Go:** `github.com/louissoe/niaga-autoparts`  
+**Bahasa:** Go 1.24.0  
+**Tujuan:** Chatbot WhatsApp & Telegram untuk toko suku cadang otomotif — pencarian produk, pemesanan dengan reservasi stok, identifikasi foto via AI  
 
 **Stack:**
-- WhatsApp Gateway: **Fonnte** (webhook POST, form-encoded)
+- Messaging Gateway: **Fonnte** (WhatsApp Webhook POST) & **Telegram Bot API**
 - AI: **Google Gemini Flash Lite** (intent detection fallback + image identification)
-- Database: **MySQL 8.0** via `sqlx`
+- Database: **PostgreSQL 12+** via `sqlx` (dengan ekstensi `pg_trgm` untuk fuzzy search)
 - HTTP Framework: **Gin**
 - Logger: **Zap**
 - Cache: **In-memory native Go** (`sync.RWMutex` + background eviction goroutine) — **TANPA Redis**
+- Scraper: **Go-Rod** (Headless Browser)
 
 ---
 
-## 📁 Struktur File Lengkap (22 file, ~2752 baris)
+## 📁 Struktur File
 
 ```
-whatsapp-autoparts/
-├── cmd/server/main.go                        # Entry point, wiring semua komponen
+niaga-autoparts/
+├── cmd/main.go                               # Entry point, wiring semua komponen
 ├── go.mod                                    # Dependencies (tanpa redis)
 ├── .env.example                              # Template env vars
 ├── README.md                                 # Dokumentasi lengkap + cara pakai
-├── migrations/001_init.sql                   # Schema MySQL + 10 produk seed
+├── migrations/001_init.sql                   # Schema PostgreSQL + 10 produk seed
 └── internal/
     ├── config/config.go                      # Load env → struct Config
-    ├── model/model.go                        # Semua struct & konstanta
+    ├── model/                              
     ├── cache/memory.go                       # In-memory TTL cache
     ├── ai/
     │   ├── gemini.go                         # Gemini REST API (intent + image)
@@ -45,11 +46,16 @@ whatsapp-autoparts/
     │   ├── intent_service.go                 # Rule-based → AI fallback
     │   ├── product_service.go                # Search + in-memory cache layer
     │   ├── message_processor.go              # Orchestrator utama chatbot
-    │   ├── message_formatter.go              # Template pesan WA (Indonesian)
+    │   ├── message_formater.go               # Template pesan (Indonesian)
     │   ├── order_service.go                  # Reserve → Confirm → Cancel
-    │   └── messaging_service.go              # Kirim pesan via Fonnte API
+    │   ├── messaging_service.go              # Kirim pesan via Fonnte API
+    │   └── telegram_service.go               # Kirim pesan via Telegram API
+    ├── scraper/                              # Marketplace Scraper (Go-Rod)
+    ├── utils/                                # Utils (Spell Check, dll)
     ├── worker/pool.go                        # Goroutine worker pool
-    ├── handler/webhook_handler.go            # Terima webhook Fonnte
+    ├── handler/
+    │   ├── webhook_handler.go                # Terima webhook Fonnte
+    │   └── telegram_webhook_handler.go       # Terima webhook Telegram
     └── middleware/middleware.go              # Logger, recovery, rate limiter
 ```
 
@@ -164,11 +170,11 @@ Webhook return 200 dalam < 1 detik. Semua heavy lifting (DB, AI) jalan di gorout
 
 ```
 github.com/gin-gonic/gin v1.10.0          # HTTP framework
-github.com/go-sql-driver/mysql v1.8.1     # MySQL driver
+github.com/lib/pq v1.12.3                 # PostgreSQL driver
 github.com/jmoiron/sqlx v1.4.0            # SQL helper
 github.com/joho/godotenv v1.5.1           # .env loader
-github.com/google/generative-ai-go v0.14.0 # Gemini SDK (dipakai di ai/http.go via REST)
-google.golang.org/api v0.183.0
+github.com/go-telegram-bot-api/telegram-bot-api/v5 # Telegram API
+github.com/go-rod/rod v0.116.2            # Headless Browser for Scraper
 go.uber.org/zap v1.27.0                   # Logger
 golang.org/x/time v0.5.0                  # Rate limiter
 ```
@@ -182,6 +188,7 @@ golang.org/x/time v0.5.0                  # Rate limiter
 ```env
 # Wajib diisi
 FONNTE_TOKEN=...
+TELE_API=...
 GEMINI_API_KEY=...
 DB_PASS=...
 
@@ -203,7 +210,7 @@ RATE_LIMIT_PER_SECOND=5
 
 | Fitur | Status |
 |-------|--------|
-| Webhook handler (Fonnte) | ✅ Done |
+| Webhook handler (Fonnte & Telegram) | ✅ Done |
 | Worker pool (goroutine) | ✅ Done |
 | Session management (DB) | ✅ Done |
 | Intent detection rule-based | ✅ Done |
@@ -220,10 +227,10 @@ RATE_LIMIT_PER_SECOND=5
 | Middleware (logger, recovery) | ✅ Done |
 | Database schema + seed data | ✅ Done |
 | README + cara pakai | ✅ Done |
+| Marketplace price auto-fetch | ✅ Done (Go-Rod Scraper) |
 | Unit tests | ❌ Belum |
 | Admin dashboard | ❌ Belum |
 | Prometheus metrics | ❌ Belum |
-| Marketplace price auto-fetch | ❌ Belum |
 
 ---
 
@@ -234,10 +241,9 @@ Berikut hal-hal yang belum diimplementasikan dan bisa jadi next step:
 1. **Unit tests** — `service/intent_service_test.go`, `repository/product_repository_test.go`, mock untuk AI
 2. **Admin endpoint** — tambah/edit/hapus produk via REST API (GET/POST/PUT/DELETE `/api/products`)
 3. **Prometheus metrics** — expose `/metrics` dengan gauge worker queue, counter pesan per intent, histogram latency
-4. **Marketplace price scraper** — cronjob Go untuk update tabel `price_references` dari Tokopedia/Shopee API
-5. **Broadcast/blast pesan** — endpoint untuk admin kirim notifikasi ke semua pelanggan via Fonnte
-6. **Docker + docker-compose** — containerize app + MySQL untuk deployment lebih mudah
-7. **Multi-device Fonnte** — support lebih dari 1 nomor WA bot
+4. **Broadcast/blast pesan** — endpoint untuk admin kirim notifikasi ke semua pelanggan via Fonnte / Telegram
+5. **Docker + docker-compose** — containerize app + PostgreSQL untuk deployment lebih mudah
+6. **Multi-device Fonnte** — support lebih dari 1 nomor WA bot
 8. **Payment gateway integration** — Midtrans/Xendit untuk konfirmasi pembayaran otomatis
 
 ---
@@ -249,10 +255,10 @@ Tempel teks ini di awal session baru:
 ```
 Saya melanjutkan pengembangan project WhatsApp AutoParts Chatbot.
 
-Tech stack: Go 1.22, Gin, MySQL (sqlx), Fonnte (WhatsApp gateway), 
-Gemini Flash Lite (AI), in-memory cache native Go (tanpa Redis).
+Tech stack: Go 1.24.0, Gin, PostgreSQL (sqlx + pg_trgm), Fonnte (WhatsApp gateway), Telegram Bot API,
+Gemini Flash Lite (AI), in-memory cache native Go (tanpa Redis), Go-Rod (Scraper).
 
-Module: github.com/yourorg/whatsapp-autoparts
+Module: github.com/louissoe/niaga-autoparts
 Clean architecture: handler → service → repository → model
 Worker pool goroutine untuk async processing.
 In-memory cache di internal/cache/memory.go (sync.RWMutex + TTL).

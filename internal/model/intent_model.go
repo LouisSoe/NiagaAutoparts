@@ -15,6 +15,9 @@ const (
 	IntentHelp          Intent = "help"
 	IntentUnknown       Intent = "unknown"
 	IntentSelectProduct Intent = "select_product"
+	IntentConfirmImport Intent = "confirm_import"
+	IntentViewInvoice   Intent = "view_invoice"
+	IntentHistory       Intent = "history_order"
 )
  
 // ParsedMessage is the result of intent detection.
@@ -23,6 +26,8 @@ type ParsedMessage struct {
 	Intent       Intent
 	ProductQuery string  // Extracted product keyword
 	Quantity     int     // Extracted quantity (for orders)
+	Month        int     // Extracted month (for history export)
+	Year         int     // Extracted year (for history export)
 	Confidence   float64 // 0.0–1.0
 	FromAI       bool    // True if intent was detected by AI (not rule-based)
 }

@@ -1,8 +1,10 @@
 # WhatsApp AutoParts Chatbot 🔧🚗
 
 Chatbot WhatsApp siap produksi untuk toko suku cadang otomotif.  
-Dibangun dengan **Go**, **Fonnte** (WhatsApp Gateway), dan **Google Gemini Flash Lite** (AI).  
+Dibangun dengan **Go**, **Fonnte** (WhatsApp Gateway), **Telegram Bot**, dan **Google Gemini Flash Lite** (AI).  
+Database menggunakan **PostgreSQL** dengan ekstensi `pg_trgm` untuk pencarian pintar.
 Cache menggunakan **in-memory native Go** — tanpa Redis, tanpa dependensi eksternal tambahan.
+Dilengkapi juga dengan **Marketplace Scraper** menggunakan Go-Rod untuk perbandingan harga otomatis.
 
 ---
 
@@ -30,8 +32,8 @@ Pastikan sudah terinstall di komputer/server kamu:
 
 | Tools | Versi Minimum | Cek |
 |-------|---------------|-----|
-| Go | 1.22+ | `go version` |
-| MySQL / MariaDB | 8.0+ / 10.6+ | `mysql --version` |
+| Go | 1.24+ | `go version` |
+| PostgreSQL | 12.0+ | `psql --version` |
 | Git | any | `git --version` |
 | ngrok *(lokal)* | any | `ngrok version` |
 
@@ -60,6 +62,13 @@ Pastikan sudah terinstall di komputer/server kamu:
 
 > Gemini Flash Lite tersedia di free tier — tidak perlu kartu kredit untuk development.
 
+### 3. Telegram Bot
+
+1. Buka Telegram dan cari **@BotFather**
+2. Kirim `/newbot` dan ikuti instruksi
+3. Copy API Token yang diberikan
+4. Masukkan ke `.env` sebagai `TELE_API`
+
 ---
 
 ## Instalasi & Setup
@@ -67,8 +76,8 @@ Pastikan sudah terinstall di komputer/server kamu:
 ### 1. Clone Repository
 
 ```bash
-git clone https://github.com/yourorg/whatsapp-autoparts.git
-cd whatsapp-autoparts
+git clone https://github.com/louissoe/niaga-autoparts.git
+cd niaga-autoparts
 ```
 
 ### 2. Install Dependensi Go
@@ -94,11 +103,11 @@ code .env
 Isi minimal yang wajib diisi:
 
 ```env
-# Database
+# Database (PostgreSQL)
 DB_HOST=localhost
-DB_PORT=3306
-DB_USER=root
-DB_PASS=password_mysql_kamu
+DB_PORT=5432
+DB_USER=postgres
+DB_PASS=password_postgres_kamu
 DB_NAME=autoparts_db
 
 # Fonnte
@@ -106,6 +115,9 @@ FONNTE_TOKEN=token_dari_fonnte_kamu
 
 # Gemini
 GEMINI_API_KEY=key_dari_google_ai_studio_kamu
+
+# Telegram (Opsional)
+TELE_API=token_dari_botfather_kamu
 ```
 
 ### 4. Setup Database
@@ -114,16 +126,16 @@ Buat database dan jalankan migrasi:
 
 ```bash
 # Buat database dulu (kalau belum ada)
-mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS autoparts_db CHARACTER SET utf8mb4;"
+psql -U postgres -c "CREATE DATABASE autoparts_db;"
 
 # Jalankan schema + seed data
-mysql -u root -p autoparts_db < migrations/001_init.sql
+psql -U postgres -d autoparts_db -f migrations/001_init.sql
 ```
 
 Verifikasi data seed masuk:
 
 ```bash
-mysql -u root -p autoparts_db -e "SELECT id, sku, name, price, stock FROM products LIMIT 5;"
+psql -U postgres -d autoparts_db -c "SELECT id, sku, name, price, stock FROM products LIMIT 5;"
 ```
 
 Output yang diharapkan:
@@ -474,7 +486,7 @@ cari kampas rem cakram
 ## Arsitektur Sistem
 
 ```
-Fonnte (WhatsApp)
+Fonnte (WhatsApp) / Telegram Bot
        │  POST /webhook
        ▼
   ┌──────────────┐   goroutine    ┌──────────────────┐
@@ -517,16 +529,15 @@ Fonnte menerima HTTP 200 langsung → tidak ada retry dari gateway.
 ## Struktur Folder
 
 ```
-whatsapp-autoparts/
+niaga-autoparts/
 ├── cmd/
-│   └── server/
-│       └── main.go                   # Entry point, wiring semua komponen
+│   └── main.go                       # Entry point, wiring semua komponen
 ├── internal/
 │   ├── config/
 │   │   └── config.go                 # Load env vars ke struct Config
 │   ├── model/
 │   │   └── model.go                  # Semua struct: Product, Order, Session, dll
-│   ├── repository/                   # Lapisan database (MySQL via sqlx)
+│   ├── repository/                   # Lapisan database (PostgreSQL via sqlx)
 │   │   ├── product_repository.go     # Search, reserve/deduct stock
 │   │   ├── order_repository.go       # CRUD order, expire reservations
 │   │   └── session_repository.go     # Upsert & reset session per user
@@ -534,9 +545,12 @@ whatsapp-autoparts/
 │   │   ├── intent_service.go         # Rule-based → Gemini AI fallback
 │   │   ├── product_service.go        # Search dengan in-memory cache
 │   │   ├── message_processor.go      # Orchestrator utama chatbot
-│   │   ├── message_formatter.go      # Template pesan WhatsApp (Indonesian)
+│   │   ├── message_formater.go       # Template pesan WhatsApp (Indonesian)
 │   │   ├── order_service.go          # Reserve → Confirm → Cancel flow
-│   │   └── messaging_service.go      # Kirim pesan via Fonnte API
+│   │   ├── messaging_service.go      # Kirim pesan via Fonnte API
+│   │   └── telegram_service.go       # Kirim pesan via Telegram API
+│   ├── scraper/
+│   │   └── scraper.go                # Marketplace Scraper (Go-Rod)
 │   ├── ai/
 │   │   ├── gemini.go                 # Intent detection + image identification
 │   │   └── http.go                   # HTTP helper untuk Gemini REST API
@@ -545,11 +559,12 @@ whatsapp-autoparts/
 │   ├── worker/
 │   │   └── pool.go                   # Goroutine worker pool + panic recovery
 │   ├── handler/
-│   │   └── webhook_handler.go        # Terima POST dari Fonnte, dispatch ke worker
+│   │   ├── webhook_handler.go        # Terima POST dari Fonnte, dispatch ke worker
+│   │   └── telegram_webhook_handler.go# Terima POST dari Telegram
 │   └── middleware/
 │       └── middleware.go             # Logger, recovery, rate limiter per user
 ├── migrations/
-│   └── 001_init.sql                  # Schema MySQL + 10 produk seed data
+│   └── 001_init.sql                  # Schema PostgreSQL + 10 produk seed data
 ├── .env.example                      # Template environment variables
 ├── go.mod
 └── README.md
@@ -618,12 +633,13 @@ curl http://localhost:8080/metrics
 |----------|-------|---------|-----------|
 | `APP_PORT` | | `8080` | Port HTTP server |
 | `APP_ENV` | | `development` | Set `production` untuk disable debug log |
-| `DB_HOST` | | `localhost` | MySQL host |
-| `DB_PORT` | | `3306` | MySQL port |
-| `DB_USER` | | `root` | MySQL user |
-| `DB_PASS` | ✅ | — | MySQL password |
+| `DB_HOST` | | `localhost` | PostgreSQL host |
+| `DB_PORT` | | `5432` | PostgreSQL port |
+| `DB_USER` | | `postgres` | PostgreSQL user |
+| `DB_PASS` | ✅ | — | PostgreSQL password |
 | `DB_NAME` | | `autoparts_db` | Nama database |
 | `FONNTE_TOKEN` | ✅ | — | Token dari dashboard Fonnte |
+| `TELE_API` | | — | Token API Telegram |
 | `FONNTE_API_URL` | | `https://api.fonnte.com/send` | Endpoint Fonnte (jangan diubah) |
 | `GEMINI_API_KEY` | ✅ | — | Key dari Google AI Studio |
 | `GEMINI_MODEL` | | `gemini-1.5-flash-latest` | Model Gemini yang dipakai |
@@ -659,13 +675,12 @@ curl http://localhost:8080/metrics
 ## Checklist Produksi
 
 - [ ] Set `APP_ENV=production` di environment
-- [ ] Gunakan user MySQL dengan hak akses terbatas (bukan root)
 - [ ] Setup SSL/TLS — gunakan nginx atau Caddy sebagai reverse proxy
-- [ ] Daftarkan domain + HTTPS agar webhook Fonnte diterima
+- [ ] Daftarkan domain + HTTPS agar webhook Fonnte & Telegram diterima
 - [ ] Jalankan sebagai systemd service atau Docker container
 - [ ] Setup log rotation (zap production mode sudah JSON)
 - [ ] Naikkan `WORKER_POOL_SIZE` jika traffic tinggi (mulai dari 20)
-- [ ] Pertimbangkan MySQL read replica untuk query pencarian
+- [ ] Pertimbangkan PostgreSQL read replica untuk query pencarian
 - [ ] Tambahkan Prometheus exporter untuk monitoring
 - [ ] Backup database secara berkala
 

@@ -20,6 +20,7 @@ type Config struct {
 	Session   SessionConfig
 	Cache     CacheConfig
 	RateLimit RateLimitConfig
+	Midtrans  MidtransConfig
 }
 
 type AppConfig struct {
@@ -69,6 +70,15 @@ type CacheConfig struct {
 type RateLimitConfig struct {
 	PerSecond float64
 	Burst     int
+}
+
+type MidtransConfig struct {
+	MerchantID   string
+	ServerKey    string
+	ClientKey    string
+	IsProduction bool
+	SnapURL      string
+	SnapJSURL    string
 }
 
 // Load reads configuration from the environment (after loading .env if present).
@@ -124,6 +134,22 @@ func Load() (*Config, error) {
 	// Rate Limiting
 	cfg.RateLimit.PerSecond = getEnvFloat("RATE_LIMIT_PER_SECOND", 5.0)
 	cfg.RateLimit.Burst = getEnvInt("RATE_LIMIT_BURST", 10)
+
+	// Midtrans
+	cfg.Midtrans.MerchantID = getEnv("MIDTRANS_MERCHANT_ID", "")
+	cfg.Midtrans.ServerKey = getEnv("MIDTRANS_SERVER_KEY", "")
+	cfg.Midtrans.ClientKey = getEnv("MIDTRANS_CLIENT_KEY", "")
+	cfg.Midtrans.IsProduction = getEnv("MIDTRANS_IS_PRODUCTION", "false") == "true"
+
+	defaultSnapURL := "https://app.sandbox.midtrans.com/snap/v1/transactions"
+	defaultSnapJSURL := "https://app.sandbox.midtrans.com/snap/snap.js"
+	if cfg.Midtrans.IsProduction {
+		defaultSnapURL = "https://app.midtrans.com/snap/v1/transactions"
+		defaultSnapJSURL = "https://app.midtrans.com/snap/snap.js"
+	}
+
+	cfg.Midtrans.SnapURL = defaultSnapURL
+	cfg.Midtrans.SnapJSURL = getEnv("MIDTRANS_SNAP_URL", defaultSnapJSURL)
 
 	return cfg, nil
 }

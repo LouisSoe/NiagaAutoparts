@@ -50,7 +50,7 @@ var orderKeywords = []string{
 // confirmKeywords indicates confirmation of an order.
 var confirmKeywords = []string{
 	"ya", "iya", "yes", "ok", "okay", "oke", "setuju", "jadi",
-	"lanjut", "konfirmasi", "confirm",
+	"lanjut", "konfirmasi", "confirm", "1", "2", "midtrans", "cash", "tunai",
 }
 
 // cancelKeywords indicates order cancellation.
@@ -68,6 +68,16 @@ var checkOrderKeywords = []string{
 // helpKeywords triggers a help menu.
 var helpKeywords = []string{
 	"help", "bantuan", "menu", "info", "cara", "bagaimana",
+}
+
+// importKeywords indicates the user wants to confirm an import.
+var importKeywords = []string{
+	"import konfirmasi", "konfirmasi import", "import", "ya import",
+}
+
+// historyKeywords indicates the user wants to view or export order history.
+var historyKeywords = []string{
+	"history", "riwayat", "laporan saya", "riwayat pesanan", "rekap pesanan",
 }
 
 // ─── Detect ───────────────────────────────────────────────────────────────────
@@ -120,10 +130,18 @@ func (s *IntentService) detectByState(normalized string, sess *model.Session) *m
 
 	case model.StateAwaitingConfirm:
 		if containsAny(normalized, confirmKeywords) {
-			return &model.ParsedMessage{Intent: model.IntentConfirmOrder, Confidence: 0.95}
+			return &model.ParsedMessage{
+				OriginalText: normalized,
+				Intent:       model.IntentConfirmOrder,
+				Confidence:   0.95,
+			}
 		}
 		if containsAny(normalized, cancelKeywords) {
-			return &model.ParsedMessage{Intent: model.IntentCancelOrder, Confidence: 0.95}
+			return &model.ParsedMessage{
+				OriginalText: normalized,
+				Intent:       model.IntentCancelOrder,
+				Confidence:   0.95,
+			}
 		}
 
 	case model.StateAwaitingProductSelection:
@@ -160,6 +178,23 @@ func (s *IntentService) detectByKeyword(normalized, original string) *model.Pars
 			Confidence:   0.99,
 		}
 
+	case containsAny(normalized, importKeywords):
+		return &model.ParsedMessage{
+			OriginalText: original,
+			Intent:       model.IntentConfirmImport,
+			Confidence:   0.95,
+		}
+
+	case containsAny(normalized, historyKeywords):
+		m, y := parseMonthYear(normalized)
+		return &model.ParsedMessage{
+			OriginalText: original,
+			Intent:       model.IntentHistory,
+			Month:        m,
+			Year:         y,
+			Confidence:   0.95,
+		}
+
 	case containsAny(normalized, checkOrderKeywords):
 		return &model.ParsedMessage{
 			OriginalText: original,
@@ -172,13 +207,6 @@ func (s *IntentService) detectByKeyword(normalized, original string) *model.Pars
 			OriginalText: original,
 			Intent:       model.IntentCancelOrder,
 			Confidence:   0.9,
-		}
-
-	case containsAny(normalized, confirmKeywords):
-		return &model.ParsedMessage{
-			OriginalText: original,
-			Intent:       model.IntentConfirmOrder,
-			Confidence:   0.85,
 		}
 
 	case containsAny(normalized, orderKeywords):
@@ -196,6 +224,13 @@ func (s *IntentService) detectByKeyword(normalized, original string) *model.Pars
 			ProductQuery: productQuery,
 			Quantity:     qty,
 			Confidence:   0.88,
+		}
+
+	case containsAny(normalized, confirmKeywords):
+		return &model.ParsedMessage{
+			OriginalText: original,
+			Intent:       model.IntentConfirmOrder,
+			Confidence:   0.85,
 		}
 
 	case containsAny(normalized, priceKeywords):
@@ -286,4 +321,37 @@ func isNumericOnly(s string) bool {
 		}
 	}
 	return true
+}
+
+var monthNamesMap = map[string]int{
+	"januari": 1, "jan": 1, "01": 1, "1": 1,
+	"februari": 2, "feb": 2, "02": 2, "2": 2,
+	"maret": 3, "mar": 3, "03": 3, "3": 3,
+	"april": 4, "apr": 4, "04": 4, "4": 4,
+	"mei": 5, "may": 5, "05": 5, "5": 5,
+	"juni": 6, "jun": 6, "06": 6, "6": 6,
+	"juli": 7, "jul": 7, "07": 7, "7": 7,
+	"agustus": 8, "agu": 8, "aug": 8, "08": 8, "8": 8,
+	"september": 9, "sep": 9, "09": 9, "9": 9,
+	"oktober": 10, "okt": 10, "oct": 10, "10": 10,
+	"november": 11, "nov": 11, "11": 11,
+	"desember": 12, "des": 12, "dec": 12, "12": 12,
+}
+
+func parseMonthYear(s string) (int, int) {
+	fields := strings.Fields(s)
+	month := 0
+	year := 0
+	for _, f := range fields {
+		fClean := strings.Trim(f, ",.-/")
+		if len(fClean) == 4 && (strings.HasPrefix(fClean, "20") || strings.HasPrefix(fClean, "21")) {
+			var y int
+			if _, err := fmt.Sscanf(fClean, "%d", &y); err == nil {
+				year = y
+			}
+		} else if m, ok := monthNamesMap[strings.ToLower(fClean)]; ok {
+			month = m
+		}
+	}
+	return month, year
 }
