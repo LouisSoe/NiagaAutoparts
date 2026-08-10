@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -45,6 +47,11 @@ func main() {
 	defer db.Close()
 	logger.Info("database connected")
 
+	// ─── Auto Migration ───────────────────────────────────────────────────────
+	if err := runMigrations(db.DB, logger); err != nil {
+		logger.Fatal("migration failed", zap.Error(err))
+	}
+
 	// ─── In-Memory Cache ──────────────────────────────────────────────────────
 	memCache := cache.New(cfg.Cache.CleanupInterval)
 	defer memCache.Stop()
@@ -57,6 +64,11 @@ func main() {
 	productRepo := repository.NewProductRepository(db)
 	orderRepo := repository.NewOrderRepository(db)
 	sessionRepo := repository.NewSessionRepository(db, cfg.Session.TTL)
+	categoryRepo := repository.NewCategoryRepository(db)
+	userRepo := repository.NewUserRepository(db)
+	customerRepo := repository.NewCustomerRepository(db)
+	dashboardRepo := repository.NewDashboardRepository(db)
+	reportRepo := repository.NewReportRepository(db)
 
 	// ─── AI Service ───────────────────────────────────────────────────────────
 	aiSvc := ai.NewAIService(
@@ -95,6 +107,12 @@ func main() {
 	intentSvc := service.NewIntentService(aiSvc, logger)
 	productSvc := service.NewProductService(productRepo, memCache, cfg.Cache.ProductTTL, logger)
 	orderSvc := service.NewOrderService(orderRepo, productRepo, logger)
+	categorySvc := service.NewCategoryService(categoryRepo, logger)
+	userSvc := service.NewUserService(userRepo, logger)
+	customerSvc := service.NewCustomerService(customerRepo, logger)
+	midtransSvc := service.NewMidtransService(cfg.Midtrans, orderSvc, customerRepo, logger)
+	dashboardSvc := service.NewDashboardService(dashboardRepo, logger)
+	reportSvc := service.NewReportService(reportRepo, logger)
 
 	if err := productSvc.BuildDictionary(context.Background()); err != nil {
 		logger.Fatal("failed to build search dictionary", zap.Error(err))
@@ -110,6 +128,10 @@ func main() {
 		cfg.Session.TTL,
 		logger,
 	)
+
+	midtransSvc.SetMessageSender(compositeSender)
+	processor.SetMidtransService(midtransSvc)
+	processor.SetReportService(reportSvc)
 
 	// ─── Worker Pool ──────────────────────────────────────────────────────────
 	pool := worker.NewPool(
@@ -148,10 +170,14 @@ func main() {
 
 	router := gin.New()
 	router.Use(
+		middleware.CORS(),
 		middleware.Recovery(logger),
 		middleware.Logger(logger),
 		middleware.RateLimit(),
 	)
+
+	// Static file server untuk foto produk
+	router.Static("/uploads", "./uploads")
 
 	// Fonnte (WhatsApp) routes
 	fonnteHandler := handler.NewWebhookHandler(pool, fonnteSvc, logger)
@@ -161,6 +187,34 @@ func main() {
 	if telegramSvc != nil {
 		tgHandler := handler.NewTelegramWebhookHandler(pool, telegramSvc, logger)
 		tgHandler.RegisterRoutes(router)
+	}
+
+	// ─── REST API v1 Routes (CRUD for Product, Category, User, Customer) ────
+	apiV1 := router.Group("/api/v1")
+	{
+		productHandler := handler.NewProductHandler(productSvc, logger)
+		productHandler.RegisterRoutes(apiV1)
+
+		categoryHandler := handler.NewCategoryHandler(categorySvc, logger)
+		categoryHandler.RegisterRoutes(apiV1)
+
+		userHandler := handler.NewUserHandler(userSvc, logger)
+		userHandler.RegisterRoutes(apiV1)
+
+		customerHandler := handler.NewCustomerHandler(customerSvc, logger)
+		customerHandler.RegisterRoutes(apiV1)
+
+		orderHandler := handler.NewOrderHandler(orderSvc, logger)
+		orderHandler.RegisterRoutes(apiV1)
+
+		paymentHandler := handler.NewPaymentHandler(midtransSvc, logger)
+		paymentHandler.RegisterRoutes(apiV1, router)
+
+		dashboardHandler := handler.NewDashboardHandler(dashboardSvc, logger)
+		dashboardHandler.RegisterRoutes(apiV1)
+
+		reportHandler := handler.NewReportHandler(reportSvc, logger)
+		reportHandler.RegisterRoutes(apiV1)
 	}
 
 	srv := &http.Server{
@@ -258,4 +312,35 @@ func buildLogger() *zap.Logger {
 		panic("failed to build logger: " + err.Error())
 	}
 	return logger
+}
+
+func runMigrations(db *sql.DB, logger *zap.Logger) error {
+	migrationFiles := []string{
+		"migrations/001_init.sql",
+		"migrations/002_add_categories_users_customers.sql",
+		"migrations/003_drop_category_column_from_products.sql",
+		"migrations/004_refactor_order_header_detail.sql",
+		"migrations/005_rename_price_to_purchase_price_and_add_selling_price_minimum_stock.sql",
+		"migrations/006_update_users_role_check_constraint.sql",
+		"migrations/007_refactor_users_and_customers.sql",
+		"migrations/008_add_type_customer_to_customers.sql",
+		"migrations/009_refactor_orders_payment_fields.sql",
+		"migrations/010_remove_product_name_from_order_details.sql",
+		"migrations/011_remove_user_id_from_orders.sql",
+		"migrations/012_use_user_id_drop_customer_id_from_orders.sql",
+	}
+
+	for _, file := range migrationFiles {
+		content, err := os.ReadFile(file)
+		if err != nil {
+			logger.Warn("migration file skip/not found", zap.String("file", file), zap.Error(err))
+			continue
+		}
+		if _, err := db.Exec(string(content)); err != nil {
+			logger.Error("migration failed", zap.String("file", file), zap.Error(err))
+			return fmt.Errorf("migration %s failed: %w", file, err)
+		}
+		logger.Info("migration executed successfully", zap.String("file", file))
+	}
+	return nil
 }

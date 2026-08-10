@@ -1,6 +1,9 @@
 package model
 
-import "context"
+import (
+	"context"
+	"strings"
+)
 
 // Platform identifies which messaging provider delivered the message.
 type Platform string
@@ -48,7 +51,11 @@ func (m *IncomingMessage) IsImageMessage() bool {
 
 // IsFileMessage returns true when there is a non-image file attachment.
 func (m *IncomingMessage) IsFileMessage() bool {
-	return m.AttachmentURL != "" && !m.IsImageMessage()
+	lower := strings.ToLower(m.AttachmentURL)
+	return m.AttachmentURL != "" && (
+		strings.HasSuffix(lower, ".pdf") ||
+		strings.HasSuffix(lower, ".xlsx") ||
+		strings.HasSuffix(lower, ".xls"))
 }
 
 // MessageSender is implemented by any provider that can deliver outgoing

@@ -151,3 +151,72 @@ func (s *ProductService) BuildDictionary(ctx context.Context) error {
     s.logger.Info("dictionary built", zap.Int("words", len(dict)))
     return nil
 }
+
+// GetByID retrieves a single product by ID.
+func (s *ProductService) GetByID(ctx context.Context, id int64) (*model.Product, error) {
+	return s.productRepo.GetByID(ctx, id)
+}
+
+// CreateProduct creates a new product in DB.
+func (s *ProductService) CreateProduct(ctx context.Context, p *model.Product) error {
+	if p.Name == "" {
+		return fmt.Errorf("nama produk wajib diisi")
+	}
+	if p.SKU == "" {
+		p.SKU = repository.GenerateSKU(p.Name, p.CategoryName)
+	}
+
+	// Olah gambar jika dikirim dalam format Base64 dari frontend
+	if p.ImageURL.Valid && p.ImageURL.String != "" {
+		savedPath, err := utils.ProcessAndSaveBase64Image(p.ImageURL.String, "uploads")
+		if err != nil {
+			s.logger.Warn("gagal memproses gambar produk", zap.Error(err))
+			p.ImageURL.String = ""
+			p.ImageURL.Valid = false
+		} else if savedPath != "" {
+			p.ImageURL.String = savedPath
+			p.ImageURL.Valid = true
+		}
+	}
+
+	return s.productRepo.Create(ctx, p)
+}
+
+// UpdateProduct updates an existing product in DB.
+func (s *ProductService) UpdateProduct(ctx context.Context, p *model.Product) error {
+	if p.ID <= 0 {
+		return fmt.Errorf("invalid product ID")
+	}
+
+	// Olah gambar jika dikirim dalam format Base64 dari frontend
+	if p.ImageURL.Valid && p.ImageURL.String != "" {
+		savedPath, err := utils.ProcessAndSaveBase64Image(p.ImageURL.String, "uploads")
+		if err != nil {
+			s.logger.Warn("gagal memproses gambar produk", zap.Error(err))
+			p.ImageURL.String = ""
+			p.ImageURL.Valid = false
+		} else if savedPath != "" {
+			p.ImageURL.String = savedPath
+			p.ImageURL.Valid = true
+		}
+	}
+
+	return s.productRepo.Update(ctx, p)
+}
+
+// DeleteProduct soft deletes a product by ID.
+func (s *ProductService) DeleteProduct(ctx context.Context, id int64) error {
+	if id <= 0 {
+		return fmt.Errorf("invalid product ID")
+	}
+	return s.productRepo.Delete(ctx, id)
+}
+
+// UpsertFromExcel delegasi ke repository untuk import produk
+func (s *ProductService) UpsertFromExcel(ctx context.Context, input repository.ExcelProductInput) error {
+	return s.productRepo.UpsertFromExcel(ctx, input)
+}
+
+func (s *ProductService) GetFilteredProducts(ctx context.Context, filter repository.ProductFilter) ([]model.Product, int64, error) {
+	return s.productRepo.FindFiltered(ctx, filter)
+}

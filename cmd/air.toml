@@ -1,0 +1,12 @@
+root = "."  
+tmp_dir = "tmp"
+
+[log]
+  level = "debug"
+
+[watcher]
+  include_ext = ["go", "tpl", "tmpl", "html"]
+  exclude_dir = ["tmp", "vendor", "node_modules"]
+
+[run]
+cmd = "go run main.go"

@@ -164,3 +164,26 @@ func (t *TelegramService) SendMedia(ctx context.Context, _ model.Platform, to, c
 	}
 	return nil
 }
+
+// SendDocumentBytes sends in-memory document file bytes (e.g. generated Excel files) directly to Telegram.
+func (t *TelegramService) SendDocumentBytes(ctx context.Context, _ model.Platform, to string, fileBytes []byte, filename, caption string) error {
+	chatID, err := strconv.ParseInt(to, 10, 64)
+	if err != nil {
+		return fmt.Errorf("invalid telegram chat id %q: %w", to, err)
+	}
+
+	fileBytesData := tgbotapi.FileBytes{
+		Name:  filename,
+		Bytes: fileBytes,
+	}
+
+	doc := tgbotapi.NewDocument(chatID, fileBytesData)
+	doc.Caption = caption
+	doc.ParseMode = tgbotapi.ModeMarkdown
+	_, err = t.bot.Send(doc)
+	if err != nil {
+		t.logger.Warn("telegram SendDocumentBytes failed", zap.String("to", to), zap.Error(err))
+		return fmt.Errorf("telegram send document bytes: %w", err)
+	}
+	return nil
+}

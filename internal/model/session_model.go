@@ -14,6 +14,7 @@ const (
     StateAwaitingConfirm          SessionState = "awaiting_confirm"
     StateOrdering                 SessionState = "ordering"
     StateAwaitingProductSelection SessionState = "awaiting_product_selection"
+    StateAwaitingImportConfirm    SessionState = "awaiting_import_confirm"
 )
 
 type Session struct {
