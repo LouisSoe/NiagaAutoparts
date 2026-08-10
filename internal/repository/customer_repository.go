@@ -66,6 +66,24 @@ func (r *CustomerRepository) GetByUserID(ctx context.Context, userID int64) (*mo
 	return &c, nil
 }
 
+func (r *CustomerRepository) GetUserBasicInfo(ctx context.Context, userID int64) (*model.Customer, error) {
+	const q = `
+		SELECT 0 AS id, id AS user_id, 'individual' AS type_customer, name, COALESCE(phone, '') AS phone, email, '' AS address, '' AS notes, created_at, updated_at
+		FROM users
+		WHERE id = $1`
+	var c model.Customer
+	if err := r.db.GetContext(ctx, &c, q, userID); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func (r *CustomerRepository) UpdateUserInfo(ctx context.Context, userID int64, name, phone string) error {
+	const q = `UPDATE users SET name = COALESCE(NULLIF($1, ''), name), phone = COALESCE(NULLIF($2, ''), phone), updated_at = NOW() WHERE id = $3`
+	_, err := r.db.ExecContext(ctx, q, name, phone, userID)
+	return err
+}
+
 func (r *CustomerRepository) GetByPhone(ctx context.Context, phone string) (*model.Customer, error) {
 	const q = `
 		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.notes, c.created_at, c.updated_at

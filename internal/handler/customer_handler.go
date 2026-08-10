@@ -28,8 +28,10 @@ func (h *CustomerHandler) RegisterRoutes(rg *gin.RouterGroup) {
 	{
 		customers.GET("", h.List)
 		customers.GET("/:id", h.GetByID)
+		customers.GET("/user/:userId", h.GetByUserID)
 		customers.POST("", h.Create)
 		customers.PUT("/:id", h.Update)
+		customers.PUT("/user/:userId", h.UpsertByUserID)
 		customers.DELETE("/:id", h.Delete)
 	}
 }
@@ -130,4 +132,42 @@ func (h *CustomerHandler) Delete(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "customer deleted successfully"})
+}
+
+func (h *CustomerHandler) GetByUserID(c *gin.Context) {
+	userID, err := strconv.ParseInt(c.Param("userId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
+	}
+
+	cust, err := h.svc.GetCustomerByUserID(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "customer profile not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": cust})
+}
+
+func (h *CustomerHandler) UpsertByUserID(c *gin.Context) {
+	userID, err := strconv.ParseInt(c.Param("userId"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+		return
+	}
+
+	var input service.UpsertProfileInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	cust, err := h.svc.UpsertProfileByUserID(c.Request.Context(), userID, input)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "profile updated successfully", "data": cust})
 }
