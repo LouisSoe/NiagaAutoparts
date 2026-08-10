@@ -329,26 +329,28 @@ func (r *OrderRepository) ResolveCustomerAndUserIDs(ctx context.Context, inputID
 		return nil, nil
 	}
 
-	var cID int64
-	var uID sql.NullInt64
-	err := r.db.QueryRowContext(ctx, `SELECT id, user_id FROM customers WHERE id = $1`, inputID).Scan(&cID, &uID)
-	if err == nil {
-		var uPtr *int64
-		if uID.Valid && uID.Int64 > 0 {
-			uPtr = &uID.Int64
-		}
-		return &cID, uPtr
-	}
-
+	// 1. Cek tabel users terlebih dahulu jika inputID merupakan ID User (seperti Kasir / Admin / Customer Logged In)
 	var userExistID int64
-	err = r.db.QueryRowContext(ctx, `SELECT id FROM users WHERE id = $1`, inputID).Scan(&userExistID)
-	if err == nil {
+	errUser := r.db.QueryRowContext(ctx, `SELECT id FROM users WHERE id = $1`, inputID).Scan(&userExistID)
+	if errUser == nil {
 		var custExistID int64
 		var cPtr *int64
 		if errCust := r.db.QueryRowContext(ctx, `SELECT id FROM customers WHERE user_id = $1`, userExistID).Scan(&custExistID); errCust == nil {
 			cPtr = &custExistID
 		}
 		return cPtr, &userExistID
+	}
+
+	// 2. Jika tidak ditemukan di tabel users, cek apakah inputID merupakan customer_id dari tabel customers
+	var cID int64
+	var uID sql.NullInt64
+	errCust := r.db.QueryRowContext(ctx, `SELECT id, user_id FROM customers WHERE id = $1`, inputID).Scan(&cID, &uID)
+	if errCust == nil {
+		var uPtr *int64
+		if uID.Valid && uID.Int64 > 0 {
+			uPtr = &uID.Int64
+		}
+		return &cID, uPtr
 	}
 
 	return nil, nil
