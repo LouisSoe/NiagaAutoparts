@@ -47,10 +47,10 @@ func main() {
 	defer db.Close()
 	logger.Info("database connected")
 
-	// ─── Auto Migration ───────────────────────────────────────────────────────
-	if err := runMigrations(db.DB, logger); err != nil {
-		logger.Fatal("migration failed", zap.Error(err))
-	}
+	// ─── Auto Migration (Disabled) ────────────────────────────────────────────
+	// if err := runMigrations(db.DB, logger); err != nil {
+	// 	logger.Fatal("migration failed", zap.Error(err))
+	// }
 
 	// ─── In-Memory Cache ──────────────────────────────────────────────────────
 	memCache := cache.New(cfg.Cache.CleanupInterval)
