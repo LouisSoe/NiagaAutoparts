@@ -264,8 +264,8 @@ func (s *OrderService) CreateOrderHeaderWithItems(ctx context.Context, input Cre
 			order.UserID.Int64 = *uID
 			order.UserID.Valid = true
 		} else {
-			order.UserID.Int64 = input.UserID
-			order.UserID.Valid = true
+			s.logger.Warn("user_id not found in database, setting order.user_id to null", zap.Int64("invalid_user_id", input.UserID))
+			order.UserID.Valid = false
 		}
 	}
 	if paymentMethod != "" {
