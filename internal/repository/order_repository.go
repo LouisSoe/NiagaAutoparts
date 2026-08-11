@@ -264,11 +264,14 @@ func (r *OrderRepository) ExpireReservations(ctx context.Context) ([]model.Order
 }
 
 type OrderFilter struct {
-	Q      string
-	Status string
-	UserID int64
-	Page   int
-	Limit  int
+	Q         string
+	Status    string
+	UserID    int64
+	StartDate string
+	EndDate   string
+	Date      string
+	Page      int
+	Limit     int
 }
 
 func (r *OrderRepository) FindFiltered(ctx context.Context, filter OrderFilter) ([]model.Order, int64, error) {
@@ -291,6 +294,32 @@ func (r *OrderRepository) FindFiltered(ctx context.Context, filter OrderFilter) 
 	if filter.UserID > 0 {
 		whereClauses = append(whereClauses, fmt.Sprintf("o.user_id = $%d", argIdx))
 		args = append(args, filter.UserID)
+		argIdx++
+	}
+
+	if filter.StartDate != "" {
+		sd := filter.StartDate
+		if len(sd) == 10 {
+			sd += " 00:00:00"
+		}
+		whereClauses = append(whereClauses, fmt.Sprintf("o.created_at >= $%d", argIdx))
+		args = append(args, sd)
+		argIdx++
+	}
+
+	if filter.EndDate != "" {
+		ed := filter.EndDate
+		if len(ed) == 10 {
+			ed += " 23:59:59"
+		}
+		whereClauses = append(whereClauses, fmt.Sprintf("o.created_at <= $%d", argIdx))
+		args = append(args, ed)
+		argIdx++
+	}
+
+	if filter.Date != "" {
+		whereClauses = append(whereClauses, fmt.Sprintf("DATE(o.created_at) = $%d", argIdx))
+		args = append(args, filter.Date)
 		argIdx++
 	}
 
@@ -383,4 +412,32 @@ func (r *OrderRepository) ResolveCustomerAndUserIDs(ctx context.Context, inputID
 // BeginTx starts a new database transaction.
 func (r *OrderRepository) BeginTx(ctx context.Context) (*sqlx.Tx, error) {
 	return r.db.BeginTxx(ctx, nil)
+}
+
+// Delete permanently removes an order and its detail items within a transaction.
+func (r *OrderRepository) Delete(ctx context.Context, id int64) error {
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx for delete order: %w", err)
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.ExecContext(ctx, `DELETE FROM order_details WHERE order_id = $1`, id); err != nil {
+		return fmt.Errorf("delete order_details: %w", err)
+	}
+
+	res, err := tx.ExecContext(ctx, `DELETE FROM orders WHERE id = $1`, id)
+	if err != nil {
+		return fmt.Errorf("delete orders: %w", err)
+	}
+
+	affected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return fmt.Errorf("order with id %d not found", id)
+	}
+
+	return tx.Commit()
 }

@@ -28,6 +28,9 @@ type SalesReportRow struct {
 type SalesReportSummary struct {
 	TotalOrders  int64   `db:"total_orders" json:"total_orders"`
 	TotalRevenue float64 `db:"total_revenue" json:"total_revenue"`
+	TotalCost    float64 `db:"total_cost" json:"total_cost"`
+	TotalProfit  float64 `db:"total_profit" json:"total_profit"`
+	ProfitMargin float64 `db:"profit_margin" json:"profit_margin"`
 	TotalItems   int64   `db:"total_items" json:"total_items"`
 }
 

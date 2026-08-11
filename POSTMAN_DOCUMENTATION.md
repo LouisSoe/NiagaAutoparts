@@ -121,10 +121,13 @@ File Postman Collection resmi yang dapat di-import langsung ke Postman berada di
 
 | Method | Endpoint | Deskripsi |
 |---|---|---|
-| `GET` | `/api/v1/orders` | Ambil daftar pesanan (Filter: `user_id`, `status`, `q`, `page`, `limit`) |
+| `GET` | `/api/v1/orders` | Ambil daftar pesanan (Filter: `user_id`, `status`, `q`, `start_date`, `end_date`, `date`, `page`, `limit`) |
+| `GET` | `/api/v1/orders?start_date=2026-08-01&end_date=2026-08-11` | Ambil daftar pesanan dalam rentang tanggal tertentu |
+| `GET` | `/api/v1/orders?date=2026-08-11` | Ambil daftar pesanan khusus pada 1 tanggal spesifik |
 | `GET` | `/api/v1/orders?user_id=1` | Ambil daftar pesanan khusus milik User ID / Customer tertentu |
 | `GET` | `/api/v1/orders/:id` | Ambil detail pesanan berdasarkan ID |
 | `POST` | `/api/v1/orders` | Buat pesanan baru (POS / Web Checkout) |
+| `DELETE` | `/api/v1/orders/:id` | Hapus pesanan secara permanen (**Khusus status `cancelled`**) |
 
 #### Contoh Respon `GET /api/v1/orders?user_id=1`:
 ```json

@@ -29,6 +29,7 @@ func (h *OrderHandler) RegisterRoutes(r *gin.RouterGroup) {
 		orders.GET("", h.List)
 		orders.POST("", h.Create)
 		orders.GET("/:id", h.GetByID)
+		orders.DELETE("/:id", h.Delete)
 	}
 }
 
@@ -37,6 +38,9 @@ func (h *OrderHandler) List(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 	q := c.Query("q")
 	status := c.Query("status")
+	startDate := c.Query("start_date")
+	endDate := c.Query("end_date")
+	date := c.Query("date")
 
 	var userID int64
 	if uIDStr := c.Query("user_id"); uIDStr != "" {
@@ -48,11 +52,14 @@ func (h *OrderHandler) List(c *gin.Context) {
 	}
 
 	filter := repository.OrderFilter{
-		Q:      q,
-		Status: status,
-		UserID: userID,
-		Page:   page,
-		Limit:  limit,
+		Q:         q,
+		Status:    status,
+		UserID:    userID,
+		StartDate: startDate,
+		EndDate:   endDate,
+		Date:      date,
+		Page:      page,
+		Limit:     limit,
 	}
 
 	orders, total, err := h.orderSvc.GetFilteredOrders(c.Request.Context(), filter)
@@ -112,5 +119,24 @@ func (h *OrderHandler) GetByID(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": order,
+	})
+}
+
+func (h *OrderHandler) Delete(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid order id"})
+		return
+	}
+
+	if err := h.orderSvc.DeleteOrder(c.Request.Context(), id); err != nil {
+		h.logger.Warn("delete order failed", zap.Int64("order_id", id), zap.Error(err))
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "pesanan berhasil dihapus",
 	})
 }

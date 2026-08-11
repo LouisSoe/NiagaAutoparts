@@ -86,6 +86,9 @@ func (s *ReportService) ExportSalesReportCSV(ctx context.Context, w io.Writer, f
 	writer.Write(summaryHeader)
 	writer.Write([]string{"Total Transaksi", strconv.FormatInt(data.Summary.TotalOrders, 10)})
 	writer.Write([]string{"Total Pendapatan (Lunas)", fmt.Sprintf("%.2f", data.Summary.TotalRevenue)})
+	writer.Write([]string{"Total Modal/HPP", fmt.Sprintf("%.2f", data.Summary.TotalCost)})
+	writer.Write([]string{"Total Keuntungan Bersih", fmt.Sprintf("%.2f", data.Summary.TotalProfit)})
+	writer.Write([]string{"Margin Keuntungan (%)", fmt.Sprintf("%.2f%%", data.Summary.ProfitMargin)})
 	writer.Write([]string{"Total Items Terjual", strconv.FormatInt(data.Summary.TotalItems, 10)})
 
 	return nil
@@ -164,11 +167,14 @@ func (s *ReportService) ExportSalesReportPDF(ctx context.Context, w io.Writer, f
 		periodStr += fmt.Sprintf(" | Status: %s", filter.Status)
 	}
 
-	summaryKeys := []string{"Total Transaksi", "Items Terjual", "Total Omzet (Paid)"}
+	summaryKeys := []string{"Total Transaksi", "Items Terjual", "Total Omzet", "Total Modal (HPP)", "Keuntungan Bersih", "Margin (%)"}
 	summaryVals := []string{
 		strconv.FormatInt(data.Summary.TotalOrders, 10),
 		strconv.FormatInt(data.Summary.TotalItems, 10),
 		fmt.Sprintf("Rp %.0f", data.Summary.TotalRevenue),
+		fmt.Sprintf("Rp %.0f", data.Summary.TotalCost),
+		fmt.Sprintf("Rp %.0f", data.Summary.TotalProfit),
+		fmt.Sprintf("%.1f%%", data.Summary.ProfitMargin),
 	}
 
 	headers := []string{"No. Order", "Tanggal", "Pelanggan", "Metode", "Status", "Total (Rp)"}
@@ -276,6 +282,15 @@ func (s *ReportService) ExportSalesReportExcel(ctx context.Context, w io.Writer,
 	rowIdx++
 	f.SetCellValue(sheetName, fmt.Sprintf("A%d", rowIdx), "Total Pendapatan (Lunas)")
 	f.SetCellValue(sheetName, fmt.Sprintf("B%d", rowIdx), data.Summary.TotalRevenue)
+	rowIdx++
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", rowIdx), "Total Modal (HPP)")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", rowIdx), data.Summary.TotalCost)
+	rowIdx++
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", rowIdx), "Total Keuntungan Bersih")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", rowIdx), data.Summary.TotalProfit)
+	rowIdx++
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", rowIdx), "Margin Keuntungan (%)")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", rowIdx), fmt.Sprintf("%.2f%%", data.Summary.ProfitMargin))
 	rowIdx++
 	f.SetCellValue(sheetName, fmt.Sprintf("A%d", rowIdx), "Total Items Terjual")
 	f.SetCellValue(sheetName, fmt.Sprintf("B%d", rowIdx), data.Summary.TotalItems)

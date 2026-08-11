@@ -42,12 +42,28 @@ func (r *ReportRepository) GetSalesReport(ctx context.Context, filter model.Sale
 
 	summaryQuery := fmt.Sprintf(`
 		SELECT 
-			COUNT(o.id) AS total_orders,
+			COUNT(DISTINCT o.id) AS total_orders,
 			COALESCE(SUM(CASE WHEN o.status = 'paid' THEN o.total_price ELSE 0 END), 0) AS total_revenue,
+			COALESCE(SUM(CASE WHEN o.status = 'paid' THEN od.total_cost ELSE 0 END), 0) AS total_cost,
+			COALESCE(SUM(CASE WHEN o.status = 'paid' THEN (o.total_price - od.total_cost) ELSE 0 END), 0) AS total_profit,
+			CASE 
+				WHEN SUM(CASE WHEN o.status = 'paid' THEN o.total_price ELSE 0 END) > 0 
+				THEN ROUND(
+					((SUM(CASE WHEN o.status = 'paid' THEN o.total_price ELSE 0 END) - SUM(CASE WHEN o.status = 'paid' THEN od.total_cost ELSE 0 END)) 
+					/ SUM(CASE WHEN o.status = 'paid' THEN o.total_price ELSE 0 END) * 100)::numeric, 2
+				)
+				ELSE 0 
+			END AS profit_margin,
 			COALESCE(SUM(od.total_items), 0) AS total_items
 		FROM orders o
 		LEFT JOIN (
-			SELECT order_id, SUM(quantity) AS total_items FROM order_details GROUP BY order_id
+			SELECT 
+				d.order_id, 
+				SUM(d.quantity) AS total_items,
+				SUM(d.quantity * COALESCE(NULLIF(p.purchase_price, 0), d.unit_price * 0.7)) AS total_cost
+			FROM order_details d
+			LEFT JOIN products p ON p.id = d.product_id
+			GROUP BY d.order_id
 		) od ON od.order_id = o.id
 		WHERE %s
 	`, whereClause)

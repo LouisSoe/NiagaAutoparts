@@ -441,6 +441,25 @@ func (s *OrderService) GetOrdersByPhone(ctx context.Context, phone string) ([]mo
 	return s.orderRepo.ListByPhone(ctx, phone)
 }
 
+// DeleteOrder deletes an order permanently ONLY if its status is cancelled.
+func (s *OrderService) DeleteOrder(ctx context.Context, id int64) error {
+	order, err := s.orderRepo.GetByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("order tidak ditemukan: %w", err)
+	}
+
+	if order.Status != model.OrderStatusCancelled {
+		return fmt.Errorf("hanya pesanan berstatus dibatalkan (cancelled) yang dapat dihapus. Status pesanan saat ini: %s", order.Status)
+	}
+
+	if err := s.orderRepo.Delete(ctx, id); err != nil {
+		return fmt.Errorf("gagal menghapus pesanan: %w", err)
+	}
+
+	s.logger.Info("order deleted permanently", zap.String("order_number", order.OrderNumber), zap.Int64("order_id", id))
+	return nil
+}
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 // generateOrderNumber creates a unique order number like "APT-20240115-A3F9".
