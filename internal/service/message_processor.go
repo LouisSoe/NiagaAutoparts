@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -270,24 +271,84 @@ func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.Parsed
 	return FormatOrderConfirmation(order)
 }
 
+var orderNumRegex = regexp.MustCompile(`(?i)APT-\d{8}-[A-Z0-9]{4}`)
+
+func extractOrderNumber(text string) string {
+	match := orderNumRegex.FindString(text)
+	if match != "" {
+		return strings.ToUpper(match)
+	}
+	return ""
+}
+
 func (p *MessageProcessor) handleConfirm(ctx context.Context, parsed *model.ParsedMessage, sess *model.Session, sender string) string {
-	if sess.PendingOrderID == nil {
-		return "Tidak ada pesanan yang menunggu konfirmasi."
+	var existingOrder *model.Order
+	var err error
+
+	text := ""
+	if parsed != nil {
+		text = strings.TrimSpace(parsed.OriginalText)
 	}
 
-	orderID := *sess.PendingOrderID
-	existingOrder, checkErr := p.orderSvc.GetOrderByID(ctx, orderID)
-	if checkErr != nil || existingOrder == nil {
-		return FormatError("order_failed")
+	// 1. Ekstrak nomor order spesifik dari teks (contoh: "Bayar APT-20260811-N2LI")
+	orderNum := extractOrderNumber(text)
+	if orderNum != "" {
+		existingOrder, err = p.orderSvc.GetOrderByNumber(ctx, orderNum)
+		if err != nil || existingOrder == nil {
+			return fmt.Sprintf("Pesanan dengan kode *%s* tidak ditemukan.", orderNum)
+		}
 	}
+
+	// 2. Jika user memilih nomor urut (1-9) dari daftar pesanan
+	if existingOrder == nil {
+		idx := -1
+		if parsed != nil && parsed.Quantity > 0 {
+			idx = parsed.Quantity - 1
+		} else {
+			cleanText := strings.TrimSpace(text)
+			if len(cleanText) <= 2 && cleanText >= "1" && cleanText <= "9" {
+				idx = int(cleanText[0] - '1')
+			}
+		}
+
+		if idx >= 0 {
+			orders, errList := p.orderSvc.GetOrdersByPhone(ctx, sender)
+			if errList == nil && idx < len(orders) {
+				existingOrder = &orders[idx]
+			}
+		}
+	}
+
+	// 3. Jika belum ketemu, ambil dari PendingOrderID di session
+	if existingOrder == nil && sess.PendingOrderID != nil {
+		existingOrder, _ = p.orderSvc.GetOrderByID(ctx, *sess.PendingOrderID)
+	}
+
+	// 4. Jika order dari session NULL atau SUDAH LUNAS / DIBATALKAN, cari order berstatus RESERVED/PENDING milik sender
+	if existingOrder == nil || existingOrder.Status == model.OrderStatusPaid || existingOrder.Status == model.OrderStatusCancelled {
+		orders, errList := p.orderSvc.GetOrdersByPhone(ctx, sender)
+		if errList == nil && len(orders) > 0 {
+			for i := range orders {
+				if orders[i].Status == model.OrderStatusReserved || orders[i].Status == model.OrderStatusPending {
+					existingOrder = &orders[i]
+					break
+				}
+			}
+		}
+	}
+
+	if existingOrder == nil {
+		return "Tidak ada pesanan yang menunggu pembayaran atau konfirmasi."
+	}
+
+	// Simpan ID order aktif yang ditemukan ke session
+	sess.PendingOrderID = &existingOrder.ID
 
 	if existingOrder.Status == model.OrderStatusPaid {
-		_ = p.sessionRepo.Reset(ctx, sender)
 		return fmt.Sprintf("✅ Pesanan *%s* sudah *LUNAS* dan sedang diproses oleh gudang. Terima kasih!", existingOrder.OrderNumber)
 	}
 
 	if existingOrder.Status == model.OrderStatusCancelled {
-		_ = p.sessionRepo.Reset(ctx, sender)
 		return fmt.Sprintf("❌ Pesanan *%s* telah *DIBATALKAN*.", existingOrder.OrderNumber)
 	}
 
