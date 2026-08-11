@@ -186,7 +186,8 @@ func FormatHelp() string {
 		"  STATUS ORDER APT-20240115-A3F9\n\n" +
 		"*Identifikasi Foto:*\n" +
 		"  Kirim foto suku cadang untuk diidentifikasi 📷\n\n" +
-		"Hubungi admin: 08xxx-xxxx-xxxx"
+		"👤 *Hubungi Admin Telegram:* @LouisSoe1\n" +
+		"🔗 https://t.me/LouisSoe1"
 }
 
 // formatBilingualCandidates writes the bilingual AI identification header.
@@ -204,6 +205,7 @@ func formatBilingualCandidates(sb *strings.Builder, candidatesID, candidatesEN [
 			sb.WriteString(fmt.Sprintf("  • %s\n", c))
 		}
 	}
+	sb.WriteString("\n")
 }
 
 // FormatImageNoDBMatch is shown when Gemini recognised a part but the DB
