@@ -211,14 +211,14 @@ func (r *OrderRepository) GetHistoryMonthly(ctx context.Context, sender string, 
 	return orders, nil
 }
 
-// ListByPhone returns all orders for a given customer or user id (legacy phone wrapper), newest first with items.
+// ListByPhone returns all orders for a given customer phone, telegram chat id, or sender notes, newest first with items.
 func (r *OrderRepository) ListByPhone(ctx context.Context, phone string) ([]model.Order, error) {
 	const sql = `
 		SELECT o.id, o.order_number, o.user_id, o.total_price, o.amount_paid, o.change_amount,
 		       o.status, o.source, o.payment_method, o.notes, o.expires_at, o.created_at, o.updated_at
 		FROM orders o
 		LEFT JOIN users u ON u.id = o.user_id
-		WHERE u.phone = $1
+		WHERE u.phone = $1 OR o.telegram_chat_id = $1 OR o.notes = $1
 		ORDER BY o.created_at DESC
 		LIMIT 10
 	`
@@ -266,6 +266,7 @@ func (r *OrderRepository) ExpireReservations(ctx context.Context) ([]model.Order
 type OrderFilter struct {
 	Q      string
 	Status string
+	UserID int64
 	Page   int
 	Limit  int
 }
@@ -284,6 +285,12 @@ func (r *OrderRepository) FindFiltered(ctx context.Context, filter OrderFilter) 
 	if filter.Status != "" {
 		whereClauses = append(whereClauses, fmt.Sprintf("LOWER(o.status) = $%d", argIdx))
 		args = append(args, strings.ToLower(filter.Status))
+		argIdx++
+	}
+
+	if filter.UserID > 0 {
+		whereClauses = append(whereClauses, fmt.Sprintf("o.user_id = $%d", argIdx))
+		args = append(args, filter.UserID)
 		argIdx++
 	}
 
@@ -323,34 +330,51 @@ func (r *OrderRepository) FindFiltered(ctx context.Context, filter OrderFilter) 
 	return orders, total, nil
 }
 
+// ListByUserID returns all orders belonging to a given user ID, newest first.
+func (r *OrderRepository) ListByUserID(ctx context.Context, userID int64) ([]model.Order, error) {
+	filter := OrderFilter{
+		UserID: userID,
+	}
+	orders, _, err := r.FindFiltered(ctx, filter)
+	return orders, err
+}
+
+// UserExists checks if a user ID exists in the users table.
+func (r *OrderRepository) UserExists(ctx context.Context, userID int64) bool {
+	if userID <= 0 {
+		return false
+	}
+	var exists bool
+	_ = r.db.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM users WHERE id = $1)`, userID).Scan(&exists)
+	return exists
+}
+
 // ResolveCustomerAndUserIDs validates input ID against customers and users tables to prevent foreign key errors.
 func (r *OrderRepository) ResolveCustomerAndUserIDs(ctx context.Context, inputID int64) (*int64, *int64) {
 	if inputID <= 0 {
 		return nil, nil
 	}
 
-	// 1. Cek tabel users terlebih dahulu jika inputID merupakan ID User (seperti Kasir / Admin / Customer Logged In)
+	var cID int64
+	var uID sql.NullInt64
+	err := r.db.QueryRowContext(ctx, `SELECT id, user_id FROM customers WHERE id = $1`, inputID).Scan(&cID, &uID)
+	if err == nil {
+		var uPtr *int64
+		if uID.Valid && uID.Int64 > 0 {
+			uPtr = &uID.Int64
+		}
+		return &cID, uPtr
+	}
+
 	var userExistID int64
-	errUser := r.db.QueryRowContext(ctx, `SELECT id FROM users WHERE id = $1`, inputID).Scan(&userExistID)
-	if errUser == nil {
+	err = r.db.QueryRowContext(ctx, `SELECT id FROM users WHERE id = $1`, inputID).Scan(&userExistID)
+	if err == nil {
 		var custExistID int64
 		var cPtr *int64
 		if errCust := r.db.QueryRowContext(ctx, `SELECT id FROM customers WHERE user_id = $1`, userExistID).Scan(&custExistID); errCust == nil {
 			cPtr = &custExistID
 		}
 		return cPtr, &userExistID
-	}
-
-	// 2. Jika tidak ditemukan di tabel users, cek apakah inputID merupakan customer_id dari tabel customers
-	var cID int64
-	var uID sql.NullInt64
-	errCust := r.db.QueryRowContext(ctx, `SELECT id, user_id FROM customers WHERE id = $1`, inputID).Scan(&cID, &uID)
-	if errCust == nil {
-		var uPtr *int64
-		if uID.Valid && uID.Int64 > 0 {
-			uPtr = &uID.Int64
-		}
-		return &cID, uPtr
 	}
 
 	return nil, nil

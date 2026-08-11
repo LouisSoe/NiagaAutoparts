@@ -130,6 +130,10 @@ func main() {
 	)
 
 	midtransSvc.SetMessageSender(compositeSender)
+	orderSvc.SetUserRepository(userRepo)
+	orderSvc.SetCustomerRepository(customerRepo)
+	orderSvc.SetMessageSender(compositeSender)
+	orderSvc.SetMidtransService(midtransSvc)
 	processor.SetMidtransService(midtransSvc)
 	processor.SetReportService(reportSvc)
 

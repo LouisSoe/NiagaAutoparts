@@ -62,7 +62,8 @@ var cancelKeywords = []string{
 // checkOrderKeywords indicates the user wants to check an existing order.
 var checkOrderKeywords = []string{
 	"status order", "cek order", "order saya", "pesanan saya",
-	"check order", "my order",
+	"check order", "my order", "cek pesanan", "pesanan tele",
+	"/cekorder", "/pesanan", "/myorders", "/orders",
 }
 
 // helpKeywords triggers a help menu.

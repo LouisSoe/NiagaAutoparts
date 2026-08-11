@@ -161,8 +161,9 @@ func FormatWelcome(name string) string {
 			"Silakan ketik:\n"+
 			"• *CARI [nama produk]* — Cari produk\n"+
 			"• *HARGA [nama produk]* — Cek harga\n"+
-			"• *ORDER [nama produk] [jumlah]* — Pesan\n"+
-			"• *MENU* — Bantuan\n\n"+
+			"• *ORDER [nama produk] [jumlah]* — Pesan suku cadang\n"+
+			"• *CEK ORDER* atau */pesanan* — Cek daftar pesanan Anda\n"+
+			"• *MENU* — Bantuan lengkap\n\n"+
 			"Atau kirim *foto* suku cadang untuk identifikasi otomatis! 📷",
 		name,
 	)

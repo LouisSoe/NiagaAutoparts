@@ -38,9 +38,19 @@ func (h *OrderHandler) List(c *gin.Context) {
 	q := c.Query("q")
 	status := c.Query("status")
 
+	var userID int64
+	if uIDStr := c.Query("user_id"); uIDStr != "" {
+		userID, _ = strconv.ParseInt(uIDStr, 10, 64)
+	} else if val, exists := c.Get("user_id"); exists {
+		if id, ok := val.(int64); ok {
+			userID = id
+		}
+	}
+
 	filter := repository.OrderFilter{
 		Q:      q,
 		Status: status,
+		UserID: userID,
 		Page:   page,
 		Limit:  limit,
 	}

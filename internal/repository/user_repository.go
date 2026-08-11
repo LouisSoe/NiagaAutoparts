@@ -19,16 +19,16 @@ func NewUserRepository(db *sqlx.DB) *UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, u *model.User) error {
 	const q = `
-		INSERT INTO users (email, password_hash, name, role, phone, is_active, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+		INSERT INTO users (email, password_hash, name, role, phone, telegram_chat_id, is_active, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
 		RETURNING id, created_at, updated_at`
-	return r.db.QueryRowContext(ctx, q, u.Email, u.PasswordHash, u.Name, u.Role, u.Phone, u.IsActive).
+	return r.db.QueryRowContext(ctx, q, u.Email, u.PasswordHash, u.Name, u.Role, u.Phone, u.TelegramChatID, u.IsActive).
 		Scan(&u.ID, &u.CreatedAt, &u.UpdatedAt)
 }
 
 func (r *UserRepository) GetAll(ctx context.Context) ([]model.User, error) {
 	const q = `
-		SELECT id, email, password_hash, name, role, phone, is_active, created_at, updated_at
+		SELECT id, email, password_hash, name, role, phone, telegram_chat_id, is_active, created_at, updated_at
 		FROM users
 		ORDER BY created_at DESC`
 	var users []model.User
@@ -38,7 +38,7 @@ func (r *UserRepository) GetAll(ctx context.Context) ([]model.User, error) {
 
 func (r *UserRepository) GetByID(ctx context.Context, id int64) (*model.User, error) {
 	const q = `
-		SELECT id, email, password_hash, name, role, phone, is_active, created_at, updated_at
+		SELECT id, email, password_hash, name, role, phone, telegram_chat_id, is_active, created_at, updated_at
 		FROM users WHERE id = $1`
 	var u model.User
 	if err := r.db.GetContext(ctx, &u, q, id); err != nil {
@@ -49,10 +49,21 @@ func (r *UserRepository) GetByID(ctx context.Context, id int64) (*model.User, er
 
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
 	const q = `
-		SELECT id, email, password_hash, name, role, phone, is_active, created_at, updated_at
+		SELECT id, email, password_hash, name, role, phone, telegram_chat_id, is_active, created_at, updated_at
 		FROM users WHERE email = $1`
 	var u model.User
 	if err := r.db.GetContext(ctx, &u, q, email); err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *UserRepository) GetByPhone(ctx context.Context, phone string) (*model.User, error) {
+	const q = `
+		SELECT id, email, password_hash, name, role, phone, telegram_chat_id, is_active, created_at, updated_at
+		FROM users WHERE phone = $1`
+	var u model.User
+	if err := r.db.GetContext(ctx, &u, q, phone); err != nil {
 		return nil, err
 	}
 	return &u, nil

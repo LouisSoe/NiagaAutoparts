@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 
 	"github.com/louissoe/niaga-autoparts/internal/model"
@@ -19,9 +20,13 @@ const (
 
 // OrderService handles the order lifecycle: create, reserve, confirm, cancel.
 type OrderService struct {
-	orderRepo   *repository.OrderRepository
-	productRepo *repository.ProductRepository
-	logger      *zap.Logger
+	orderRepo    *repository.OrderRepository
+	productRepo  *repository.ProductRepository
+	userRepo     *repository.UserRepository
+	customerRepo *repository.CustomerRepository
+	msgSender    model.MessageSender
+	midtransSvc  *MidtransService
+	logger       *zap.Logger
 }
 
 func NewOrderService(
@@ -34,6 +39,22 @@ func NewOrderService(
 		productRepo: productRepo,
 		logger:      logger,
 	}
+}
+
+func (s *OrderService) SetUserRepository(repo *repository.UserRepository) {
+	s.userRepo = repo
+}
+
+func (s *OrderService) SetCustomerRepository(repo *repository.CustomerRepository) {
+	s.customerRepo = repo
+}
+
+func (s *OrderService) SetMessageSender(sender model.MessageSender) {
+	s.msgSender = sender
+}
+
+func (s *OrderService) SetMidtransService(midtransSvc *MidtransService) {
+	s.midtransSvc = midtransSvc
 }
 
 func (s *OrderService) GetOrderByNumber(ctx context.Context, orderNum string) (*model.Order, error) {
@@ -190,6 +211,10 @@ type CreateOrderItemInput struct {
 
 type CreateOrderInput struct {
 	UserID        int64                  `json:"user_id"`
+	CustomerName  string                 `json:"customer_name"`
+	CustomerPhone string                 `json:"customer_phone"`
+	CustomerEmail string                 `json:"customer_email"`
+	Address       string                 `json:"address"`
 	AmountPaid    float64                `json:"amount_paid"`
 	ChangeAmount  float64                `json:"change_amount"`
 	Source        string                 `json:"source"`
@@ -258,16 +283,91 @@ func (s *OrderService) CreateOrderHeaderWithItems(ctx context.Context, input Cre
 		order.ExpiresAt = &expiry
 	}
 
+	var userTelegramChatID string
 	if input.UserID > 0 {
-		_, uID := s.orderRepo.ResolveCustomerAndUserIDs(ctx, input.UserID)
-		if uID != nil {
-			order.UserID.Int64 = *uID
+		if s.orderRepo.UserExists(ctx, input.UserID) {
+			order.UserID.Int64 = input.UserID
 			order.UserID.Valid = true
+
+			if s.userRepo != nil {
+				if u, err := s.userRepo.GetByID(ctx, input.UserID); err == nil && u != nil {
+					if u.TelegramChatID.Valid && u.TelegramChatID.String != "" {
+						order.TelegramChatID = u.TelegramChatID
+						userTelegramChatID = u.TelegramChatID.String
+					}
+				}
+			}
 		} else {
-			s.logger.Warn("user_id not found in database, setting order.user_id to null", zap.Int64("invalid_user_id", input.UserID))
+			s.logger.Warn("user_id not found in users table, setting order.user_id to null", zap.Int64("invalid_user_id", input.UserID))
 			order.UserID.Valid = false
 		}
+	} else if (strings.TrimSpace(input.CustomerName) != "" || strings.TrimSpace(input.CustomerPhone) != "" || strings.TrimSpace(input.CustomerEmail) != "") && s.userRepo != nil {
+		// Guest Checkout Flow: Automatically create or link a Guest User (role: guest, is_active: false)
+		var existingUser *model.User
+		var err error
+
+		if strings.TrimSpace(input.CustomerEmail) != "" {
+			existingUser, err = s.userRepo.GetByEmail(ctx, strings.TrimSpace(input.CustomerEmail))
+		}
+		if (existingUser == nil || err != nil) && strings.TrimSpace(input.CustomerPhone) != "" {
+			existingUser, err = s.userRepo.GetByPhone(ctx, strings.TrimSpace(input.CustomerPhone))
+		}
+
+		if existingUser != nil && existingUser.ID > 0 {
+			order.UserID.Int64 = existingUser.ID
+			order.UserID.Valid = true
+			if existingUser.TelegramChatID.Valid && existingUser.TelegramChatID.String != "" {
+				order.TelegramChatID = existingUser.TelegramChatID
+				userTelegramChatID = existingUser.TelegramChatID.String
+			}
+		} else {
+			email := strings.TrimSpace(input.CustomerEmail)
+			if email == "" {
+				phoneClean := strings.ReplaceAll(strings.TrimSpace(input.CustomerPhone), " ", "")
+				if phoneClean != "" {
+					email = fmt.Sprintf("guest_%s@autoparts.local", phoneClean)
+				} else {
+					email = fmt.Sprintf("guest_%d@autoparts.local", time.Now().UnixNano())
+				}
+			}
+			name := strings.TrimSpace(input.CustomerName)
+			if name == "" {
+				name = "Guest Customer"
+			}
+
+			guestUser := &model.User{
+				Email:    email,
+				Name:     name,
+				Role:     model.RoleGuest,
+				IsActive: false,
+			}
+			if strings.TrimSpace(input.CustomerPhone) != "" {
+				guestUser.Phone.String = strings.TrimSpace(input.CustomerPhone)
+				guestUser.Phone.Valid = true
+			}
+
+			if errCreate := s.userRepo.Create(ctx, guestUser); errCreate == nil && guestUser.ID > 0 {
+				order.UserID.Int64 = guestUser.ID
+				order.UserID.Valid = true
+				s.logger.Info("created guest user for checkout", zap.Int64("user_id", guestUser.ID), zap.String("email", email))
+
+				if strings.TrimSpace(input.Address) != "" && s.customerRepo != nil {
+					_ = s.customerRepo.Create(ctx, &model.Customer{
+						UserID:       guestUser.ID,
+						TypeCustomer: model.CustomerTypeIndividual,
+						Address:      sql.NullString{String: strings.TrimSpace(input.Address), Valid: true},
+					})
+				}
+			} else if errCreate != nil {
+				s.logger.Error("failed to create guest user", zap.Error(errCreate))
+			}
+		}
 	}
+
+	if order.TelegramChatID.Valid && order.TelegramChatID.String != "" {
+		userTelegramChatID = order.TelegramChatID.String
+	}
+
 	if paymentMethod != "" {
 		order.PaymentMethod.String = paymentMethod
 		order.PaymentMethod.Valid = true
@@ -305,11 +405,35 @@ func (s *OrderService) CreateOrderHeaderWithItems(ctx context.Context, input Cre
 		zap.Float64("total", order.TotalPrice),
 	)
 
+	// Send notification via Telegram if messageSender is configured and target chat ID exists
+	if s.msgSender != nil && userTelegramChatID != "" {
+		msg := fmt.Sprintf("🛒 *Pesanan Baru Dibuat!*\n\nNomor Pesanan: *%s*\nTotal: *Rp %.0f*\nMetode Pembayaran: *%s*",
+			order.OrderNumber, order.TotalPrice, paymentMethod)
+
+		if paymentMethod == "midtrans" && s.midtransSvc != nil {
+			snapResp, err := s.midtransSvc.CreateSnapTransaction(ctx, order.ID)
+			if err == nil && snapResp != nil && snapResp.RedirectURL != "" {
+				msg += fmt.Sprintf("\n\n💳 *Link Pembayaran Online Midtrans:*\n%s", snapResp.RedirectURL)
+			}
+		} else {
+			msg += "\n\n📌 *Instruksi:* Silakan tunjukkan Nomor Pesanan ini kepada kasir kami untuk melakukan pembayaran."
+		}
+
+		if err := s.msgSender.SendText(ctx, model.PlatformTelegram, userTelegramChatID, msg); err != nil {
+			s.logger.Error("gagal mengirim notifikasi pesanan ke Telegram", zap.String("chat_id", userTelegramChatID), zap.Error(err))
+		}
+	}
+
 	return order, nil
 }
 
 func (s *OrderService) GetFilteredOrders(ctx context.Context, filter repository.OrderFilter) ([]model.Order, int64, error) {
 	return s.orderRepo.FindFiltered(ctx, filter)
+}
+
+// GetOrdersByUserID lists all orders for a specific user ID.
+func (s *OrderService) GetOrdersByUserID(ctx context.Context, userID int64) ([]model.Order, error) {
+	return s.orderRepo.ListByUserID(ctx, userID)
 }
 
 // GetOrdersByPhone lists recent orders for a user.

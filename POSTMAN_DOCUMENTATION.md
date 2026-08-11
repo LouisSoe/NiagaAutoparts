@@ -117,7 +117,58 @@ File Postman Collection resmi yang dapat di-import langsung ke Postman berada di
 
 ---
 
-### 5. Payments & Midtrans Integration (`/api/v1/payments`)
+### 5. Orders (`/api/v1/orders`)
+
+| Method | Endpoint | Deskripsi |
+|---|---|---|
+| `GET` | `/api/v1/orders` | Ambil daftar pesanan (Filter: `user_id`, `status`, `q`, `page`, `limit`) |
+| `GET` | `/api/v1/orders?user_id=1` | Ambil daftar pesanan khusus milik User ID / Customer tertentu |
+| `GET` | `/api/v1/orders/:id` | Ambil detail pesanan berdasarkan ID |
+| `POST` | `/api/v1/orders` | Buat pesanan baru (POS / Web Checkout) |
+
+#### Contoh Respon `GET /api/v1/orders?user_id=1`:
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "order_number": "APT-20260805-A3F9",
+      "user_id": 1,
+      "total_price": 75000,
+      "amount_paid": 100000,
+      "change_amount": 25000,
+      "status": "paid",
+      "source": "pos",
+      "payment_method": "cash",
+      "notes": "Pembelian via Kasir POS",
+      "expires_at": null,
+      "created_at": "2026-08-05T10:30:00+07:00",
+      "updated_at": "2026-08-05T10:30:00+07:00",
+      "items": [
+        {
+          "id": 1,
+          "order_id": 1,
+          "product_id": 1,
+          "product_name": "Kampas Rem Honda Vario Depan",
+          "quantity": 1,
+          "unit_price": 40000,
+          "subtotal": 40000,
+          "created_at": "2026-08-05T10:30:00+07:00"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "limit": 10,
+    "total": 1
+  }
+}
+```
+
+---
+
+### 6. Payments & Midtrans Integration (`/api/v1/payments`)
 
 | Method | Endpoint | Deskripsi |
 |---|---|---|
