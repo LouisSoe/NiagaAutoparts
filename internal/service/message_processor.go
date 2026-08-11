@@ -352,12 +352,8 @@ func (p *MessageProcessor) handleConfirm(ctx context.Context, parsed *model.Pars
 		return fmt.Sprintf("❌ Pesanan *%s* telah *DIBATALKAN*.", existingOrder.OrderNumber)
 	}
 
-	text := ""
-	if parsed != nil {
-		text = strings.TrimSpace(strings.ToLower(parsed.OriginalText))
-	}
-
-	isCash := text == "2" || text == "cash" || text == "tunai"
+	textLower := strings.ToLower(text)
+	isCash := textLower == "2" || textLower == "cash" || textLower == "tunai"
 
 	if isCash {
 		_ = p.orderSvc.orderRepo.UpdatePaymentMethod(ctx, existingOrder.ID, "cash")
