@@ -1,10 +1,12 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/louissoe/niaga-autoparts/internal/service"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
@@ -44,12 +46,17 @@ func CORS() gin.HandlerFunc {
 	}
 }
 
-// Recovery returns a Gin middleware that catches panics and returns HTTP 500.
-func Recovery(logger *zap.Logger) gin.HandlerFunc {
+// Recovery returns a Gin middleware that catches panics and returns HTTP 500, sending alert to Telegram Error Channel.
+func Recovery(logger *zap.Logger, notifierSvc *service.TelegramNotifierService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if r := recover(); r != nil {
+				errMsg := fmt.Sprintf("%v", r)
 				logger.Error("panic recovered in http handler", zap.Any("panic", r))
+				if notifierSvc != nil {
+					ctxInfo := fmt.Sprintf("HTTP %s %s (IP: %s)", c.Request.Method, c.Request.URL.Path, c.ClientIP())
+					notifierSvc.SendErrorAlert(c.Request.Context(), errMsg, ctxInfo)
+				}
 				c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 					"error": "internal server error",
 				})

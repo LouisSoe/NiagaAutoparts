@@ -26,6 +26,7 @@ type OrderService struct {
 	customerRepo *repository.CustomerRepository
 	msgSender    model.MessageSender
 	midtransSvc  *MidtransService
+	notifierSvc  *TelegramNotifierService
 	logger       *zap.Logger
 }
 
@@ -55,6 +56,10 @@ func (s *OrderService) SetMessageSender(sender model.MessageSender) {
 
 func (s *OrderService) SetMidtransService(midtransSvc *MidtransService) {
 	s.midtransSvc = midtransSvc
+}
+
+func (s *OrderService) SetNotifierService(notifierSvc *TelegramNotifierService) {
+	s.notifierSvc = notifierSvc
 }
 
 func (s *OrderService) GetOrderByNumber(ctx context.Context, orderNum string) (*model.Order, error) {
@@ -422,6 +427,11 @@ func (s *OrderService) CreateOrderHeaderWithItems(ctx context.Context, input Cre
 		if err := s.msgSender.SendText(ctx, model.PlatformTelegram, userTelegramChatID, msg); err != nil {
 			s.logger.Error("gagal mengirim notifikasi pesanan ke Telegram", zap.String("chat_id", userTelegramChatID), zap.Error(err))
 		}
+	}
+
+	// Send broadcast notification to Telegram Order Channel (Bot 2)
+	if s.notifierSvc != nil {
+		s.notifierSvc.SendOrderNotification(ctx, order)
 	}
 
 	return order, nil

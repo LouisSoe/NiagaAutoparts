@@ -114,6 +114,18 @@ func main() {
 	dashboardSvc := service.NewDashboardService(dashboardRepo, logger)
 	reportSvc := service.NewReportService(reportRepo, logger)
 
+	notifierSvc, err := service.NewTelegramNotifierService(
+		cfg.Telegram.NotifierToken,
+		cfg.Telegram.OrderChannelID,
+		cfg.Telegram.ErrorChannelID,
+		logger,
+	)
+	if err != nil {
+		logger.Error("failed to initialize telegram notifier service", zap.Error(err))
+	} else if notifierSvc != nil {
+		orderSvc.SetNotifierService(notifierSvc)
+	}
+
 	if err := productSvc.BuildDictionary(context.Background()); err != nil {
 		logger.Fatal("failed to build search dictionary", zap.Error(err))
 	}
@@ -175,7 +187,7 @@ func main() {
 	router := gin.New()
 	router.Use(
 		middleware.CORS(),
-		middleware.Recovery(logger),
+		middleware.Recovery(logger, notifierSvc),
 		middleware.Logger(logger),
 		middleware.RateLimit(),
 	)

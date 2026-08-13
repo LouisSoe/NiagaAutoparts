@@ -43,7 +43,10 @@ type FonnteConfig struct {
 }
 
 type TelegramConfig struct {
-	Token string // TELE_API — bot token from BotFather
+	Token          string // TELE_API — Bot 1 CS Token
+	NotifierToken  string // TELEGRAM_NOTIFIER_BOT_TOKEN — Bot 2 Notifier Token
+	OrderChannelID string // TELEGRAM_ORDER_CHANNEL_ID
+	ErrorChannelID string // TELEGRAM_ERROR_CHANNEL_ID
 }
 
 type GeminiConfig struct {
@@ -114,6 +117,9 @@ func Load() (*Config, error) {
 
 	// Telegram
 	cfg.Telegram.Token = getEnv("TELE_API", "")
+	cfg.Telegram.NotifierToken = getEnv("TELEGRAM_NOTIFIER_BOT_TOKEN", "")
+	cfg.Telegram.OrderChannelID = getEnv("TELEGRAM_ORDER_CHANNEL_ID", "")
+	cfg.Telegram.ErrorChannelID = getEnv("TELEGRAM_ERROR_CHANNEL_ID", "")
 
 	// Gemini
 	cfg.Gemini.APIKey = getEnv("GEMINI_API_KEY", "")
