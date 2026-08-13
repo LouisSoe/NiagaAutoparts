@@ -7,25 +7,25 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/louissoe/niaga-autoparts/internal/service"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
 
-// Logger returns a Gin middleware that logs each request using logrus.
-func Logger(logger *logrus.Logger) gin.HandlerFunc {
+// Logger returns a Gin middleware that logs each request using zap.
+func Logger(logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		path := c.Request.URL.Path
 
 		c.Next()
 
-		logger.WithFields(logrus.Fields{
-			"method":    c.Request.Method,
-			"path":      path,
-			"status":    c.Writer.Status(),
-			"latency":   time.Since(start),
-			"client_ip": c.ClientIP(),
-		}).Info("http request")
+		logger.Info("http request",
+			zap.String("method", c.Request.Method),
+			zap.String("path", path),
+			zap.Int("status", c.Writer.Status()),
+			zap.Duration("latency", time.Since(start)),
+			zap.String("client_ip", c.ClientIP()),
+		)
 	}
 }
 
@@ -47,12 +47,12 @@ func CORS() gin.HandlerFunc {
 }
 
 // Recovery returns a Gin middleware that catches panics and returns HTTP 500, sending alert to Telegram Error Channel.
-func Recovery(logger *logrus.Logger, notifierSvc *service.TelegramNotifierService) gin.HandlerFunc {
+func Recovery(logger *zap.Logger, notifierSvc *service.TelegramNotifierService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if r := recover(); r != nil {
 				errMsg := fmt.Sprintf("%v", r)
-				logger.WithField("panic", r).Error("panic recovered in http handler")
+				logger.Error("panic recovered in http handler", zap.Any("panic", r))
 				if notifierSvc != nil {
 					ctxInfo := fmt.Sprintf("HTTP %s %s (IP: %s)", c.Request.Method, c.Request.URL.Path, c.ClientIP())
 					notifierSvc.SendErrorAlert(c.Request.Context(), errMsg, ctxInfo)

@@ -15,6 +15,7 @@ import (
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 
 	"github.com/louissoe/niaga-autoparts/internal/ai"
 	"github.com/louissoe/niaga-autoparts/internal/cache"
@@ -29,14 +30,15 @@ import (
 
 func main() {
 	// ─── Logger ───────────────────────────────────────────────────────────────
-	log := customLogger.NewLogger()
+	logger := buildLogger()
+	defer logger.Sync() //nolint:errcheck
 
 	// ─── Config ───────────────────────────────────────────────────────────────
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		logger.Fatal("failed to load config", zap.Error(err))
 	}
-	log.Infof("configuration loaded (env: %s)", cfg.App.Env)
+	logger.Info("configuration loaded", zap.String("env", cfg.App.Env))
 
 	// ─── Database ─────────────────────────────────────────────────────────────
 	db, err := connectDB(cfg.DB.DSN)
@@ -312,21 +314,33 @@ func connectDB(dsn string) (*sqlx.DB, error) {
 func buildLogger() *zap.Logger {
 	env := os.Getenv("APP_ENV")
 
-	var cfg zap.Config
-	if env == "production" {
-		cfg = zap.NewProductionConfig()
-		cfg.EncoderConfig.TimeKey = "ts"
-		cfg.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
-	} else {
-		cfg = zap.NewDevelopmentConfig()
-		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	// Lumberjack log rotation (7 days retention)
+	lumberjackLogger := &lumberjack.Logger{
+		Filename:   "logs/app.log",
+		MaxSize:    10,   // megabytes
+		MaxBackups: 14,   // max files
+		MaxAge:     7,    // 7 days retention
+		Compress:   true, // compress with gzip
 	}
 
-	logger, err := cfg.Build()
-	if err != nil {
-		panic("failed to build logger: " + err.Error())
+	var encoder zapcore.Encoder
+	if env == "production" {
+		encCfg := zap.NewProductionEncoderConfig()
+		encCfg.TimeKey = "ts"
+		encCfg.EncodeTime = zapcore.ISO8601TimeEncoder
+		encoder = zapcore.NewJSONEncoder(encCfg)
+	} else {
+		encCfg := zap.NewDevelopmentEncoderConfig()
+		encCfg.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		encoder = zapcore.NewConsoleEncoder(encCfg)
 	}
-	return logger
+
+	core := zapcore.NewTee(
+		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zap.DebugLevel),
+		zapcore.NewCore(encoder, zapcore.AddSync(lumberjackLogger), zap.DebugLevel),
+	)
+
+	return zap.New(core)
 }
 
 func runMigrations(db *sql.DB, logger *zap.Logger) error {
