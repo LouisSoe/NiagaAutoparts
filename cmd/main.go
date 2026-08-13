@@ -29,15 +29,14 @@ import (
 
 func main() {
 	// ─── Logger ───────────────────────────────────────────────────────────────
-	logger := buildLogger()
-	defer logger.Sync() //nolint:errcheck
+	log := customLogger.NewLogger()
 
 	// ─── Config ───────────────────────────────────────────────────────────────
 	cfg, err := config.Load()
 	if err != nil {
-		logger.Fatal("failed to load config", zap.Error(err))
+		log.Fatalf("failed to load config: %v", err)
 	}
-	logger.Info("configuration loaded", zap.String("env", cfg.App.Env))
+	log.Infof("configuration loaded (env: %s)", cfg.App.Env)
 
 	// ─── Database ─────────────────────────────────────────────────────────────
 	db, err := connectDB(cfg.DB.DSN)

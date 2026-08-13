@@ -14,8 +14,11 @@ import (
 )
 
 const (
-	// ReservationWindow is how long stock is held before auto-cancellation.
+	// ReservationWindow is how long stock is held before auto-cancellation (for online payment/bot).
 	ReservationWindow = 15 * time.Minute
+
+	// CashReservationWindow is the payment expiry window for cash payment method (24 hours).
+	CashReservationWindow = 24 * time.Hour
 )
 
 // OrderService handles the order lifecycle: create, reserve, confirm, cancel.
@@ -284,7 +287,11 @@ func (s *OrderService) CreateOrderHeaderWithItems(ctx context.Context, input Cre
 	}
 
 	if orderStatus == model.OrderStatusReserved || orderStatus == model.OrderStatusPending {
-		expiry := time.Now().Add(ReservationWindow)
+		window := ReservationWindow
+		if strings.EqualFold(paymentMethod, "cash") {
+			window = CashReservationWindow
+		}
+		expiry := time.Now().Add(window)
 		order.ExpiresAt = &expiry
 	}
 
