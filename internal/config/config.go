@@ -24,8 +24,9 @@ type Config struct {
 }
 
 type AppConfig struct {
-	Port string
-	Env  string
+	Port      string
+	Env       string
+	JWTSecret string
 }
 
 type DBConfig struct {
@@ -99,6 +100,7 @@ func Load() (*Config, error) {
 	// App
 	cfg.App.Port = getEnv("APP_PORT", "8080")
 	cfg.App.Env = getEnv("APP_ENV", "development")
+	cfg.App.JWTSecret = getEnv("JWT_SECRET", "autoparts_super_secret_jwt_key_2026")
 
 	// Database (PostgreSQL)
 	cfg.DB.Host = getEnv("DB_HOST", "localhost")

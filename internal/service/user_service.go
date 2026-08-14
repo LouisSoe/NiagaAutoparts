@@ -4,23 +4,25 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/louissoe/niaga-autoparts/internal/model"
 	"github.com/louissoe/niaga-autoparts/internal/repository"
+	"github.com/louissoe/niaga-autoparts/internal/utils"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type UserService struct {
-	repo   *repository.UserRepository
-	logger *zap.Logger
+	repo      *repository.UserRepository
+	logger    *zap.Logger
+	jwtSecret string
 }
 
-func NewUserService(repo *repository.UserRepository, logger *zap.Logger) *UserService {
+func NewUserService(repo *repository.UserRepository, logger *zap.Logger, jwtSecret string) *UserService {
 	return &UserService{
-		repo:   repo,
-		logger: logger,
+		repo:      repo,
+		logger:    logger,
+		jwtSecret: jwtSecret,
 	}
 }
 
@@ -163,7 +165,10 @@ func (s *UserService) Login(ctx context.Context, input LoginInput) (*LoginResult
 		return nil, fmt.Errorf("kredensial tidak valid")
 	}
 
-	token := fmt.Sprintf("session_token_%d_%d", user.ID, time.Now().Unix())
+	token, err := utils.GenerateJWT(user.ID, user.Email, user.Name, string(user.Role), s.jwtSecret)
+	if err != nil {
+		return nil, fmt.Errorf("gagal membuat token autentikasi: %w", err)
+	}
 
 	return &LoginResult{
 		User:  user,

@@ -27,17 +27,19 @@ RETURNS TRIGGER AS $$
 DECLARE
     rec_id BIGINT;
     actor_username VARCHAR(100) := 'system';
+    uid_val BIGINT := NULL;
     old_json JSONB := NULL;
     new_json JSONB := NULL;
 BEGIN
     IF (TG_OP = 'DELETE') THEN
         rec_id := OLD.id;
         old_json := to_jsonb(OLD);
-        -- Coba ekstrak username dari field username/user_name/created_by jika ada
         IF old_json ? 'username' AND old_json->>'username' IS NOT NULL AND old_json->>'username' != '' THEN
             actor_username := old_json->>'username';
         ELSIF old_json ? 'user_name' AND old_json->>'user_name' IS NOT NULL AND old_json->>'user_name' != '' THEN
             actor_username := old_json->>'user_name';
+        ELSIF old_json ? 'user_id' AND old_json->>'user_id' IS NOT NULL AND old_json->>'user_id' != '' THEN
+            uid_val := (old_json->>'user_id')::BIGINT;
         END IF;
     ELSIF (TG_OP = 'UPDATE') THEN
         rec_id := NEW.id;
@@ -47,8 +49,12 @@ BEGIN
             actor_username := new_json->>'username';
         ELSIF new_json ? 'user_name' AND new_json->>'user_name' IS NOT NULL AND new_json->>'user_name' != '' THEN
             actor_username := new_json->>'user_name';
+        ELSIF new_json ? 'user_id' AND new_json->>'user_id' IS NOT NULL AND new_json->>'user_id' != '' THEN
+            uid_val := (new_json->>'user_id')::BIGINT;
         ELSIF old_json ? 'username' AND old_json->>'username' IS NOT NULL AND old_json->>'username' != '' THEN
             actor_username := old_json->>'username';
+        ELSIF old_json ? 'user_id' AND old_json->>'user_id' IS NOT NULL AND old_json->>'user_id' != '' THEN
+            uid_val := (old_json->>'user_id')::BIGINT;
         END IF;
     ELSIF (TG_OP = 'INSERT') THEN
         rec_id := NEW.id;
@@ -57,7 +63,15 @@ BEGIN
             actor_username := new_json->>'username';
         ELSIF new_json ? 'user_name' AND new_json->>'user_name' IS NOT NULL AND new_json->>'user_name' != '' THEN
             actor_username := new_json->>'user_name';
+        ELSIF new_json ? 'user_id' AND new_json->>'user_id' IS NOT NULL AND new_json->>'user_id' != '' THEN
+            uid_val := (new_json->>'user_id')::BIGINT;
         END IF;
+    END IF;
+
+    -- Jika actor_username masih default 'system' namun ada user_id, cari Nama / Email dari tabel users
+    IF actor_username = 'system' AND uid_val IS NOT NULL THEN
+        SELECT COALESCE(NULLIF(name, ''), email, 'system') INTO actor_username
+        FROM users WHERE id = uid_val;
     END IF;
 
     -- Jika actor_username null atau kosong, fallback ke 'system'

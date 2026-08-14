@@ -3,10 +3,12 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/louissoe/niaga-autoparts/internal/service"
+	"github.com/louissoe/niaga-autoparts/internal/utils"
 	"go.uber.org/zap"
 	"golang.org/x/time/rate"
 )
@@ -40,6 +42,61 @@ func CORS() gin.HandlerFunc {
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
+		}
+
+		c.Next()
+	}
+}
+
+// AuthMiddleware validates JWT Bearer tokens and extracts user information.
+//
+// When a valid token is found it:
+//  1. Stores user claims (user_id, user_email, user_name, user_role) in the Gin context.
+//  2. Stores the actor's display name (Name or Email from JWT) in the request context
+//     via utils.WithActor, so that service/repository layers can propagate it into
+//     PostgreSQL audit triggers using SET LOCAL app.current_user inside transactions.
+//
+// Requests without a token (unauthenticated / background workers) will not have an
+// actor in context; audit logs will record 'system' for those operations.
+func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.Next()
+			return
+		}
+
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		tokenStr = strings.TrimSpace(tokenStr)
+		if tokenStr == "" {
+			c.Next()
+			return
+		}
+
+		claims, err := utils.ValidateJWT(tokenStr, jwtSecret)
+		if err != nil || claims == nil {
+			c.Next()
+			return
+		}
+
+		// Store JWT claims in Gin context for handlers.
+		c.Set("user_id", claims.UserID)
+		c.Set("user_email", claims.Email)
+		c.Set("user_name", claims.Name)
+		c.Set("user_role", claims.Role)
+
+		// Determine the display name to record in audit logs.
+		// Prefer Name; fall back to Email if Name is empty.
+		actorName := strings.TrimSpace(claims.Name)
+		if actorName == "" {
+			actorName = strings.TrimSpace(claims.Email)
+		}
+
+		// Store the actor name in the request context so it can be picked up
+		// by service/repository layers to set app.current_user inside transactions.
+		if actorName != "" {
+			ctx := utils.WithActor(c.Request.Context(), actorName)
+			c.Request = c.Request.WithContext(ctx)
 		}
 
 		c.Next()

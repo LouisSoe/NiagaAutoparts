@@ -109,7 +109,7 @@ func main() {
 	productSvc := service.NewProductService(productRepo, memCache, cfg.Cache.ProductTTL, logger)
 	orderSvc := service.NewOrderService(orderRepo, productRepo, logger)
 	categorySvc := service.NewCategoryService(categoryRepo, logger)
-	userSvc := service.NewUserService(userRepo, logger)
+	userSvc := service.NewUserService(userRepo, logger, cfg.App.JWTSecret)
 	customerSvc := service.NewCustomerService(customerRepo, logger)
 	midtransSvc := service.NewMidtransService(cfg.Midtrans, orderSvc, customerRepo, logger)
 	dashboardSvc := service.NewDashboardService(dashboardRepo, logger)
@@ -208,6 +208,7 @@ func main() {
 
 	// ─── REST API v1 Routes (CRUD for Product, Category, User, Customer) ────
 	apiV1 := router.Group("/api/v1")
+	apiV1.Use(middleware.AuthMiddleware(cfg.App.JWTSecret))
 	{
 		productHandler := handler.NewProductHandler(productSvc, logger)
 		productHandler.RegisterRoutes(apiV1)

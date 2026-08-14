@@ -422,6 +422,8 @@ func (r *OrderRepository) Delete(ctx context.Context, id int64) error {
 	}
 	defer tx.Rollback()
 
+	setAuditActor(ctx, tx)
+
 	if _, err := tx.ExecContext(ctx, `DELETE FROM order_details WHERE order_id = $1`, id); err != nil {
 		return fmt.Errorf("delete order_details: %w", err)
 	}
@@ -440,4 +442,4 @@ func (r *OrderRepository) Delete(ctx context.Context, id int64) error {
 	}
 
 	return tx.Commit()
-}
+}

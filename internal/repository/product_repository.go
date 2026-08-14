@@ -505,11 +505,24 @@ func (r *ProductRepository) Create(ctx context.Context, p *model.Product) error 
 		) VALUES (
 			$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW()
 		) RETURNING id, created_at, updated_at`
-	return r.db.QueryRowContext(
+
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	setAuditActor(ctx, tx)
+
+	err = tx.QueryRowContext(
 		ctx, q,
 		p.SKU, p.Name, p.CategoryID, p.Description, p.Stock, p.MinimumStock, p.Reserved,
 		p.Location, p.PurchasePrice, p.SellingPrice, p.Unit, p.ImageURL, p.IsActive,
 	).Scan(&p.ID, &p.CreatedAt, &p.UpdatedAt)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 // Update modifies an existing product in the database.
@@ -531,7 +544,16 @@ func (r *ProductRepository) Update(ctx context.Context, p *model.Product) error 
 			is_active      = $13,
 			updated_at     = NOW()
 		WHERE id = $14`
-	res, err := r.db.ExecContext(
+
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	setAuditActor(ctx, tx)
+
+	res, err := tx.ExecContext(
 		ctx, q,
 		p.SKU, p.Name, p.CategoryID, p.Description, p.Stock, p.MinimumStock, p.Reserved,
 		p.Location, p.PurchasePrice, p.SellingPrice, p.Unit, p.ImageURL, p.IsActive, p.ID,
@@ -546,13 +568,22 @@ func (r *ProductRepository) Update(ctx context.Context, p *model.Product) error 
 	if affected == 0 {
 		return fmt.Errorf("product not found or no change")
 	}
-	return nil
+	return tx.Commit()
 }
 
 // Delete performs soft-delete on product setting is_active = false.
 func (r *ProductRepository) Delete(ctx context.Context, id int64) error {
 	const q = `UPDATE products SET is_active = false, updated_at = NOW() WHERE id = $1`
-	res, err := r.db.ExecContext(ctx, q, id)
+
+	tx, err := r.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback() //nolint:errcheck
+
+	setAuditActor(ctx, tx)
+
+	res, err := tx.ExecContext(ctx, q, id)
 	if err != nil {
 		return err
 	}
@@ -563,7 +594,7 @@ func (r *ProductRepository) Delete(ctx context.Context, id int64) error {
 	if affected == 0 {
 		return fmt.Errorf("product not found")
 	}
-	return nil
+	return tx.Commit()
 }
 
 // GenerateSKU buat SKU sederhana dari nama dan kategori jika tidak ada

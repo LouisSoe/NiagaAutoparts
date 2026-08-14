@@ -10,6 +10,7 @@ import (
 
 	"github.com/louissoe/niaga-autoparts/internal/model"
 	"github.com/louissoe/niaga-autoparts/internal/repository"
+	"github.com/louissoe/niaga-autoparts/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -151,6 +152,14 @@ func (s *OrderService) ConfirmOrder(ctx context.Context, orderID int64) (*model.
 			_ = tx.Rollback()
 		}
 	}()
+
+	// Propagate the authenticated actor into the PostgreSQL audit trigger
+	// via SET LOCAL — scoped to this transaction, no pool-leak risk.
+	// NOTE: "app.current_user" must be quoted — current_user is a reserved keyword.
+	if actor := utils.ActorFromContext(ctx); actor != "" {
+		safeActor := strings.ReplaceAll(actor, "'", "''")
+		_, _ = tx.ExecContext(ctx, fmt.Sprintf(`SET LOCAL "app.current_user" = '%s'`, safeActor))
+	}
 
 	for _, item := range order.Items {
 		if err = s.productRepo.DeductStock(ctx, tx, item.ProductID, item.Quantity); err != nil {
@@ -390,6 +399,14 @@ func (s *OrderService) CreateOrderHeaderWithItems(ctx context.Context, input Cre
 		return nil, fmt.Errorf("gagal membuka transaksi: %w", err)
 	}
 	defer tx.Rollback()
+
+	// Propagate the authenticated actor into the PostgreSQL audit trigger
+	// via SET LOCAL — scoped to this transaction, no pool-leak risk.
+	// NOTE: "app.current_user" must be quoted — current_user is a reserved keyword.
+	if actor := utils.ActorFromContext(ctx); actor != "" {
+		safeActor := strings.ReplaceAll(actor, "'", "''")
+		_, _ = tx.ExecContext(ctx, fmt.Sprintf(`SET LOCAL "app.current_user" = '%s'`, safeActor))
+	}
 
 	if err := s.orderRepo.CreateTx(ctx, tx, order); err != nil {
 		return nil, fmt.Errorf("gagal membuat order: %w", err)
