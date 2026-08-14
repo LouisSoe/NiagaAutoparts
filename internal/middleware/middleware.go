@@ -103,11 +103,27 @@ func AuthMiddleware(jwtSecret string) gin.HandlerFunc {
 	}
 }
 
-// Recovery returns a Gin middleware that catches panics and returns HTTP 500, sending alert to Telegram Error Channel.
+type responseBodyWriter struct {
+	gin.ResponseWriter
+	body *strings.Builder
+}
+
+func (w responseBodyWriter) Write(b []byte) (int, error) {
+	w.body.Write(b)
+	return w.ResponseWriter.Write(b)
+}
+
+// Recovery returns a Gin middleware that catches panics and HTTP 500+ responses, sending alerts to Telegram Error Channel.
 func Recovery(logger *zap.Logger, notifierSvc *service.TelegramNotifierService) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		panicked := false
+		bodyBuffer := &strings.Builder{}
+		w := &responseBodyWriter{body: bodyBuffer, ResponseWriter: c.Writer}
+		c.Writer = w
+
 		defer func() {
 			if r := recover(); r != nil {
+				panicked = true
 				errMsg := fmt.Sprintf("%v", r)
 				logger.Error("panic recovered in http handler", zap.Any("panic", r))
 				if notifierSvc != nil {
@@ -119,7 +135,22 @@ func Recovery(logger *zap.Logger, notifierSvc *service.TelegramNotifierService) 
 				})
 			}
 		}()
+
 		c.Next()
+
+		// If status >= 500 and wasn't already handled by panic recover
+		if !panicked && c.Writer.Status() >= 500 && notifierSvc != nil {
+			var errMsg string
+			if len(c.Errors) > 0 {
+				errMsg = c.Errors.String()
+			} else if body := strings.TrimSpace(bodyBuffer.String()); body != "" {
+				errMsg = body
+			} else {
+				errMsg = fmt.Sprintf("Server returned status %d", c.Writer.Status())
+			}
+			ctxInfo := fmt.Sprintf("HTTP %s %s (IP: %s) [Status: %d]", c.Request.Method, c.Request.URL.Path, c.ClientIP(), c.Writer.Status())
+			notifierSvc.SendErrorAlert(c.Request.Context(), errMsg, ctxInfo)
+		}
 	}
 }
 

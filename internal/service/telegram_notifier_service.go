@@ -83,13 +83,16 @@ func (s *TelegramNotifierService) SendErrorAlert(ctx context.Context, errMessage
 		return
 	}
 
+	// Clean/sanitize code fence backticks to prevent breaking markdown
+	safeErr := strings.ReplaceAll(errMessage, "```", "'''")
+
 	var sb strings.Builder
 	sb.WriteString("🚨 *SYSTEM ERROR ALERT!*\n\n")
 	sb.WriteString(fmt.Sprintf("⏰ *Waktu:* %s WIB\n", time.Now().Format("02 Jan 2006 15:04:05")))
 	if contextInfo != "" {
 		sb.WriteString(fmt.Sprintf("📍 *Konteks/Modul:* `%s`\n", contextInfo))
 	}
-	sb.WriteString(fmt.Sprintf("⚠️ *Error Details:*\n```\n%s\n```", errMessage))
+	sb.WriteString(fmt.Sprintf("⚠️ *Error Details:*\n```\n%s\n```", safeErr))
 
 	s.sendToChannel(s.errorChannelID, sb.String())
 }
