@@ -112,6 +112,17 @@ func (t *TelegramService) ProcessUpdate(update tgbotapi.Update) (model.IncomingM
 		}
 	}
 
+	// Location: Telegram sends GPS location coordinates
+	if msg.Location != nil {
+		lat := msg.Location.Latitude
+		lng := msg.Location.Longitude
+		incoming.Latitude = &lat
+		incoming.Longitude = &lng
+		if incoming.Message == "" {
+			incoming.Message = fmt.Sprintf("LOC:%f,%f", lat, lng)
+		}
+	}
+
 	return incoming, false
 }
 

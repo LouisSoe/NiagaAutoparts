@@ -58,6 +58,17 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.U
 	return &u, nil
 }
 
+func (r *UserRepository) GetByTelegramChatID(ctx context.Context, chatID string) (*model.User, error) {
+	const q = `
+		SELECT id, email, password_hash, name, role, phone, telegram_chat_id, is_active, created_at, updated_at
+		FROM users WHERE telegram_chat_id = $1`
+	var u model.User
+	if err := r.db.GetContext(ctx, &u, q, chatID); err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
 func (r *UserRepository) GetByPhone(ctx context.Context, phone string) (*model.User, error) {
 	const q = `
 		SELECT id, email, password_hash, name, role, phone, telegram_chat_id, is_active, created_at, updated_at

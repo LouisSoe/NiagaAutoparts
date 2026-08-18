@@ -21,6 +21,7 @@ type Config struct {
 	Cache     CacheConfig
 	RateLimit RateLimitConfig
 	Midtrans  MidtransConfig
+	GoogleMaps GoogleMapsConfig
 }
 
 type AppConfig struct {
@@ -46,6 +47,7 @@ type FonnteConfig struct {
 type TelegramConfig struct {
 	Token          string // TELE_API — Bot 1 CS Token
 	NotifierToken  string // TELEGRAM_NOTIFIER_BOT_TOKEN — Bot 2 Notifier Token
+	CourierToken   string // TELEGRAM_COURIER_BOT_TOKEN — Bot 3 Courier Assistant Bot
 	OrderChannelID string // TELEGRAM_ORDER_CHANNEL_ID
 	ErrorChannelID string // TELEGRAM_ERROR_CHANNEL_ID
 }
@@ -74,6 +76,11 @@ type CacheConfig struct {
 type RateLimitConfig struct {
 	PerSecond float64
 	Burst     int
+}
+
+type GoogleMapsConfig struct {
+	Enabled bool   // true if Google Maps integration is enabled
+	ApiKey  string // Google Maps Distance Matrix API key
 }
 
 type MidtransConfig struct {
@@ -120,6 +127,7 @@ func Load() (*Config, error) {
 	// Telegram
 	cfg.Telegram.Token = getEnv("TELE_API", "")
 	cfg.Telegram.NotifierToken = getEnv("TELEGRAM_NOTIFIER_BOT_TOKEN", "")
+	cfg.Telegram.CourierToken = getEnv("TELEGRAM_COURIER_BOT_TOKEN", "")
 	cfg.Telegram.OrderChannelID = getEnv("TELEGRAM_ORDER_CHANNEL_ID", "")
 	cfg.Telegram.ErrorChannelID = getEnv("TELEGRAM_ERROR_CHANNEL_ID", "")
 
@@ -145,9 +153,12 @@ func Load() (*Config, error) {
 
 	// Midtrans
 	cfg.Midtrans.MerchantID = getEnv("MIDTRANS_MERCHANT_ID", "")
+	cfg.Midtrans.IsProduction = getEnv("MIDTRANS_IS_PRODUCTION", "false") == "true"
+	// Google Maps Distance Matrix configuration
+	cfg.GoogleMaps.Enabled = getEnv("GOOGLE_MAPS_ENABLED", "false") == "true"
+	cfg.GoogleMaps.ApiKey = getEnv("GOOGLE_MAPS_API_KEY", "")
 	cfg.Midtrans.ServerKey = getEnv("MIDTRANS_SERVER_KEY", "")
 	cfg.Midtrans.ClientKey = getEnv("MIDTRANS_CLIENT_KEY", "")
-	cfg.Midtrans.IsProduction = getEnv("MIDTRANS_IS_PRODUCTION", "false") == "true"
 
 	defaultSnapURL := "https://app.sandbox.midtrans.com/snap/v1/transactions"
 	defaultSnapJSURL := "https://app.sandbox.midtrans.com/snap/snap.js"

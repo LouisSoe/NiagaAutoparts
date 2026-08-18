@@ -146,6 +146,13 @@ func (r *OrderRepository) UpdatePaymentMethod(ctx context.Context, orderID int64
 	return err
 }
 
+// UpdateTotalPrice updates the total_price for an order (e.g. after adding shipping cost).
+func (r *OrderRepository) UpdateTotalPrice(ctx context.Context, orderID int64, totalPrice float64) error {
+	const sql = `UPDATE orders SET total_price = $1, updated_at = NOW() WHERE id = $2`
+	_, err := r.db.ExecContext(ctx, sql, totalPrice, orderID)
+	return err
+}
+
 // UpdateExpiresAt updates the expiration timestamp for an order.
 func (r *OrderRepository) UpdateExpiresAt(ctx context.Context, orderID int64, expiresAt time.Time) error {
 	const sql = `UPDATE orders SET expires_at = $1, updated_at = NOW() WHERE id = $2`

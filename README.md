@@ -574,12 +574,30 @@ niaga-autoparts/
 
 ## API Endpoints
 
+### 1. Webhook & Monitoring
 | Method | Path | Deskripsi |
 |--------|------|-----------|
 | `POST` | `/webhook` | Endpoint utama — dipanggil Fonnte setiap ada pesan masuk |
+| `POST` | `/webhook/telegram` | Webhook Telegram bot CS |
+| `POST` | `/webhook/midtrans` | Webhook notifikasi pembayaran Midtrans |
 | `GET` | `/health` | Health check / liveness probe |
 | `GET` | `/metrics` | Stats worker queue (jumlah job pending) |
 | `GET` | `/fonnte/test` | Cek koneksi & kirim pesan WhatsApp test |
+
+### 2. Courier Map & Web App
+| Method | Path | Deskripsi |
+|--------|------|-----------|
+| `GET` | `/api/v1/courier/map-view` | Peta interaktif Leaflet OSM multi-pin point rute kurir |
+| `GET` | `/api/v1/courier/manifest-data` | Data JSON manifest & stop points pengantaran |
+
+### 3. Deliveries & Scheduling (`/api/v1/deliveries`)
+| Method | Path | Deskripsi |
+|--------|------|-----------|
+| `GET` | `/api/v1/deliveries/available-schedules?date=YYYY-MM-DD` | List slot pengantaran & kuota sisa untuk tanggal tertentu |
+| `POST` | `/api/v1/deliveries/request` | Buat permintaan pengantaran pesanan + hitung ongkir GPS |
+| `POST` | `/api/v1/deliveries/:id/approve` | Kurir mengonfirmasi jadwal pengantaran |
+| `POST` | `/api/v1/deliveries/:id/reschedule-suggest` | Kurir mengajukan saran tanggal/slot baru ke customer |
+| `POST` | `/api/v1/deliveries/:id/reschedule-accept` | Customer menyetujui saran perubahan jadwal dari kurir |
 
 ### Contoh Request Webhook (dari Fonnte)
 
@@ -633,13 +651,18 @@ curl http://localhost:8080/metrics
 |----------|-------|---------|-----------|
 | `APP_PORT` | | `8080` | Port HTTP server |
 | `APP_ENV` | | `development` | Set `production` untuk disable debug log |
+| `APP_BASE_URL` | | `http://localhost:8080` | Domain publik (HTTPS) untuk tombol link WebApp Telegram |
 | `DB_HOST` | | `localhost` | PostgreSQL host |
 | `DB_PORT` | | `5432` | PostgreSQL port |
 | `DB_USER` | | `postgres` | PostgreSQL user |
 | `DB_PASS` | ✅ | — | PostgreSQL password |
 | `DB_NAME` | | `autoparts_db` | Nama database |
 | `FONNTE_TOKEN` | ✅ | — | Token dari dashboard Fonnte |
-| `TELE_API` | | — | Token API Telegram |
+| `TELE_API` | | — | Token Bot 1: CS Chatbot Telegram |
+| `TELEGRAM_NOTIFIER_BOT_TOKEN` | | — | Token Bot 2: Notifier & Channel Broadcaster |
+| `TELEGRAM_COURIER_BOT_TOKEN` | | — | Token Bot 3: Courier Delivery Assistant |
+| `TELEGRAM_ORDER_CHANNEL_ID` | | — | Channel Telegram untuk broadcast order baru |
+| `TELEGRAM_ERROR_CHANNEL_ID` | | — | Channel Telegram untuk error alerting |
 | `FONNTE_API_URL` | | `https://api.fonnte.com/send` | Endpoint Fonnte (jangan diubah) |
 | `GEMINI_API_KEY` | ✅ | — | Key dari Google AI Studio |
 | `GEMINI_MODEL` | | `gemini-1.5-flash-latest` | Model Gemini yang dipakai |

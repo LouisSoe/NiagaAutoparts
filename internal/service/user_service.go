@@ -13,9 +13,10 @@ import (
 )
 
 type UserService struct {
-	repo      *repository.UserRepository
-	logger    *zap.Logger
-	jwtSecret string
+	repo         *repository.UserRepository
+	customerRepo *repository.CustomerRepository
+	logger       *zap.Logger
+	jwtSecret    string
 }
 
 func NewUserService(repo *repository.UserRepository, logger *zap.Logger, jwtSecret string) *UserService {
@@ -24,6 +25,10 @@ func NewUserService(repo *repository.UserRepository, logger *zap.Logger, jwtSecr
 		logger:    logger,
 		jwtSecret: jwtSecret,
 	}
+}
+
+func (s *UserService) SetCustomerRepository(customerRepo *repository.CustomerRepository) {
+	s.customerRepo = customerRepo
 }
 
 type CreateUserInput struct {
@@ -237,6 +242,16 @@ func (s *UserService) Register(ctx context.Context, input RegisterInput) (*model
 
 	if err := s.repo.Create(ctx, newUser); err != nil {
 		return nil, fmt.Errorf("gagal mendaftarkan user baru: %w", err)
+	}
+
+	// Otomatis buat data profil customer terkait
+	if s.customerRepo != nil {
+		if _, errCust := s.customerRepo.GetByUserID(ctx, newUser.ID); errCust != nil {
+			_ = s.customerRepo.Create(ctx, &model.Customer{
+				UserID:       newUser.ID,
+				TypeCustomer: model.CustomerTypeIndividual,
+			})
+		}
 	}
 
 	return newUser, nil

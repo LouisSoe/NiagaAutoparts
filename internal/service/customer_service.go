@@ -24,6 +24,8 @@ type CreateCustomerInput struct {
 	UserID       int64              `json:"user_id"`
 	TypeCustomer model.CustomerType `json:"type_customer"`
 	Address      string             `json:"address"`
+	Latitude     *float64           `json:"latitude"`
+	Longitude    *float64           `json:"longitude"`
 	Notes        string             `json:"notes"`
 }
 
@@ -31,6 +33,8 @@ type UpdateCustomerInput struct {
 	UserID       int64              `json:"user_id"`
 	TypeCustomer model.CustomerType `json:"type_customer"`
 	Address      string             `json:"address"`
+	Latitude     *float64           `json:"latitude"`
+	Longitude    *float64           `json:"longitude"`
 	Notes        string             `json:"notes"`
 }
 
@@ -45,6 +49,14 @@ func (s *CustomerService) CreateCustomer(ctx context.Context, input CreateCustom
 	if input.Address != "" {
 		c.Address.String = input.Address
 		c.Address.Valid = true
+	}
+	if input.Latitude != nil {
+		c.Latitude.Float64 = *input.Latitude
+		c.Latitude.Valid = true
+	}
+	if input.Longitude != nil {
+		c.Longitude.Float64 = *input.Longitude
+		c.Longitude.Valid = true
 	}
 	if input.Notes != "" {
 		c.Notes.String = input.Notes
@@ -77,6 +89,8 @@ type UpsertProfileInput struct {
 	Name         string             `json:"name"`
 	Phone        string             `json:"phone"`
 	Address      string             `json:"address"`
+	Latitude     *float64           `json:"latitude"`
+	Longitude    *float64           `json:"longitude"`
 	TypeCustomer model.CustomerType `json:"type_customer"`
 	Notes        string             `json:"notes"`
 }
@@ -101,6 +115,14 @@ func (s *CustomerService) UpsertProfileByUserID(ctx context.Context, userID int6
 			c.Address.String = input.Address
 			c.Address.Valid = true
 		}
+		if input.Latitude != nil {
+			c.Latitude.Float64 = *input.Latitude
+			c.Latitude.Valid = true
+		}
+		if input.Longitude != nil {
+			c.Longitude.Float64 = *input.Longitude
+			c.Longitude.Valid = true
+		}
 		if input.Notes != "" {
 			c.Notes.String = input.Notes
 			c.Notes.Valid = true
@@ -117,6 +139,14 @@ func (s *CustomerService) UpsertProfileByUserID(ctx context.Context, userID int6
 	if input.Address != "" {
 		existing.Address.String = input.Address
 		existing.Address.Valid = true
+	}
+	if input.Latitude != nil {
+		existing.Latitude.Float64 = *input.Latitude
+		existing.Latitude.Valid = true
+	}
+	if input.Longitude != nil {
+		existing.Longitude.Float64 = *input.Longitude
+		existing.Longitude.Valid = true
 	}
 	if input.Notes != "" {
 		existing.Notes.String = input.Notes
@@ -145,6 +175,14 @@ func (s *CustomerService) UpdateCustomer(ctx context.Context, id int64, input Up
 	if input.Address != "" {
 		existing.Address.String = input.Address
 		existing.Address.Valid = true
+	}
+	if input.Latitude != nil {
+		existing.Latitude.Float64 = *input.Latitude
+		existing.Latitude.Valid = true
+	}
+	if input.Longitude != nil {
+		existing.Longitude.Float64 = *input.Longitude
+		existing.Longitude.Valid = true
 	}
 	if input.Notes != "" {
 		existing.Notes.String = input.Notes

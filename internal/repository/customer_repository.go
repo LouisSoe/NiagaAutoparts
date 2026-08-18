@@ -22,16 +22,16 @@ func (r *CustomerRepository) Create(ctx context.Context, c *model.Customer) erro
 		c.TypeCustomer = model.CustomerTypeIndividual
 	}
 	const q = `
-		INSERT INTO customers (user_id, type_customer, address, notes, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, NOW(), NOW())
+		INSERT INTO customers (user_id, type_customer, address, latitude, longitude, notes, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
 		RETURNING id, created_at, updated_at`
-	return r.db.QueryRowContext(ctx, q, c.UserID, c.TypeCustomer, c.Address, c.Notes).
+	return r.db.QueryRowContext(ctx, q, c.UserID, c.TypeCustomer, c.Address, c.Latitude, c.Longitude, c.Notes).
 		Scan(&c.ID, &c.CreatedAt, &c.UpdatedAt)
 }
 
 func (r *CustomerRepository) GetAll(ctx context.Context) ([]model.Customer, error) {
 	const q = `
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.notes, c.created_at, c.updated_at
+		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
 		ORDER BY c.id DESC`
@@ -42,7 +42,7 @@ func (r *CustomerRepository) GetAll(ctx context.Context) ([]model.Customer, erro
 
 func (r *CustomerRepository) GetByID(ctx context.Context, id int64) (*model.Customer, error) {
 	const q = `
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.notes, c.created_at, c.updated_at
+		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
 		WHERE c.id = $1`
@@ -55,7 +55,7 @@ func (r *CustomerRepository) GetByID(ctx context.Context, id int64) (*model.Cust
 
 func (r *CustomerRepository) GetByUserID(ctx context.Context, userID int64) (*model.Customer, error) {
 	const q = `
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.notes, c.created_at, c.updated_at
+		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
 		WHERE c.user_id = $1`
@@ -68,7 +68,7 @@ func (r *CustomerRepository) GetByUserID(ctx context.Context, userID int64) (*mo
 
 func (r *CustomerRepository) GetUserBasicInfo(ctx context.Context, userID int64) (*model.Customer, error) {
 	const q = `
-		SELECT 0 AS id, id AS user_id, 'individual' AS type_customer, name, COALESCE(phone, '') AS phone, email, '' AS address, '' AS notes, created_at, updated_at
+		SELECT 0 AS id, id AS user_id, 'individual' AS type_customer, name, COALESCE(phone, '') AS phone, email, '' AS address, NULL AS latitude, NULL AS longitude, '' AS notes, created_at, updated_at
 		FROM users
 		WHERE id = $1`
 	var c model.Customer
@@ -86,7 +86,7 @@ func (r *CustomerRepository) UpdateUserInfo(ctx context.Context, userID int64, n
 
 func (r *CustomerRepository) GetByPhone(ctx context.Context, phone string) (*model.Customer, error) {
 	const q = `
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.notes, c.created_at, c.updated_at
+		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
 		WHERE u.phone = $1`
@@ -100,9 +100,9 @@ func (r *CustomerRepository) GetByPhone(ctx context.Context, phone string) (*mod
 func (r *CustomerRepository) Update(ctx context.Context, c *model.Customer) error {
 	const q = `
 		UPDATE customers
-		SET user_id = $1, type_customer = $2, address = $3, notes = $4, updated_at = NOW()
-		WHERE id = $5`
-	res, err := r.db.ExecContext(ctx, q, c.UserID, c.TypeCustomer, c.Address, c.Notes, c.ID)
+		SET user_id = $1, type_customer = $2, address = $3, latitude = $4, longitude = $5, notes = $6, updated_at = NOW()
+		WHERE id = $7`
+	res, err := r.db.ExecContext(ctx, q, c.UserID, c.TypeCustomer, c.Address, c.Latitude, c.Longitude, c.Notes, c.ID)
 	if err != nil {
 		return err
 	}
@@ -170,7 +170,7 @@ func (r *CustomerRepository) FindFiltered(ctx context.Context, filter CustomerFi
 	}
 
 	selectQuery := fmt.Sprintf(`
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.notes, c.created_at, c.updated_at
+		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
 		WHERE %s

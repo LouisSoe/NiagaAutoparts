@@ -91,15 +91,22 @@ func (s *OrderService) CreateReservation(ctx context.Context, sender string, pla
 
 	sourceStr := "wa"
 	var teleChatID sql.NullString
+	var userID sql.NullInt64
 	if platform == model.PlatformTelegram {
 		sourceStr = "telegram"
 		teleChatID = sql.NullString{String: sender, Valid: true}
+		if s.userRepo != nil {
+			if u, err := s.userRepo.GetByTelegramChatID(ctx, sender); err == nil && u != nil {
+				userID = sql.NullInt64{Int64: u.ID, Valid: true}
+			}
+		}
 	}
 
 	expiry := time.Now().Add(ReservationWindow)
 	subtotal := product.SellingPrice * float64(qty)
 	order := &model.Order{
 		OrderNumber:    generateOrderNumber(),
+		UserID:         userID,
 		TotalPrice:     subtotal,
 		Status:         model.OrderStatusReserved,
 		Source:         sourceStr,
@@ -237,7 +244,10 @@ type CreateOrderInput struct {
 	Source        string                 `json:"source"`
 	PaymentMethod string                 `json:"payment_method"`
 	Status        string                 `json:"status"`
+	OrderType     string                 `json:"order_type"` // delivery or pickup
 	Notes         string                 `json:"notes"`
+	ShippingCost  *float64               `json:"shipping_cost"`
+	TaxAmount     float64                `json:"tax_amount"`
 	Items         []CreateOrderItemInput `json:"items"`
 }
 
@@ -266,6 +276,16 @@ func (s *OrderService) CreateOrderHeaderWithItems(ctx context.Context, input Cre
 			UnitPrice: item.UnitPrice,
 			Subtotal:  subtotal,
 		})
+	}
+
+	// Tambahkan Tax (PPN) jika ada
+	if input.TaxAmount > 0 {
+		totalPrice += input.TaxAmount
+	}
+
+	// Tambahkan Ongkir jika ada (opsional / bisa null)
+	if input.ShippingCost != nil && *input.ShippingCost > 0 {
+		totalPrice += *input.ShippingCost
 	}
 
 	source := input.Source

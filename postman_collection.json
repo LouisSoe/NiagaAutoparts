@@ -1496,6 +1496,159 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Deliveries",
+			"item": [
+				{
+					"name": "Get Available Delivery Schedules",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/deliveries/available-schedules?date=2026-08-17",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "deliveries", "available-schedules"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-08-17"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Request Delivery (Customer Checkout)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"order_id\": 1,\n  \"customer_id\": 1,\n  \"schedule_id\": 1,\n  \"delivery_date\": \"2026-08-17\",\n  \"address\": \"Jl. Danau Sunter Utara No. 12, Jakarta Utara\",\n  \"latitude\": -6.1352,\n  \"longitude\": 106.8589,\n  \"notes\": \"Titip di pos satpam depan\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/deliveries/request",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "deliveries", "request"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Courier Approve Delivery",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/deliveries/1/approve",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "deliveries", "1", "approve"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Courier Suggest Reschedule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"suggested_date\": \"2026-08-18\",\n  \"suggested_schedule_id\": 2,\n  \"reason\": \"Kurir berhalangan karena rute pengiriman penuh\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/deliveries/1/reschedule-suggest",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "deliveries", "1", "reschedule-suggest"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Customer Accept Reschedule",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/deliveries/1/reschedule-accept",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "deliveries", "1", "reschedule-accept"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Courier Map & Web View",
+			"item": [
+				{
+					"name": "View Interactive Leaflet Map",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/courier/map-view",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "courier", "map-view"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Courier Manifest & Stop Points JSON",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/courier/manifest-data",
+							"host": ["{{base_url}}"],
+							"path": ["api", "v1", "courier", "manifest-data"]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	]
 }

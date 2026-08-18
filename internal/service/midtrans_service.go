@@ -118,20 +118,36 @@ func (s *MidtransService) CreateSnapTransaction(ctx context.Context, orderID int
 		}
 	}
 
-	items := make([]SnapItemDetails, 0, len(order.Items))
+	var itemsSubtotal int64
+	items := make([]SnapItemDetails, 0, len(order.Items)+2)
 	for _, item := range order.Items {
+		itemPrice := int64(item.UnitPrice)
+		itemsSubtotal += itemPrice * int64(item.Quantity)
 		items = append(items, SnapItemDetails{
 			ID:       fmt.Sprintf("%d", item.ProductID),
-			Price:    int64(item.UnitPrice),
+			Price:    itemPrice,
 			Quantity: item.Quantity,
 			Name:     item.ProductName,
+		})
+	}
+
+	grossAmount := int64(order.TotalPrice)
+	diff := grossAmount - itemsSubtotal
+
+	// Jika ada selisih biaya tambahan (PPN / Ongkir)
+	if diff > 0 {
+		items = append(items, SnapItemDetails{
+			ID:       "ADDITIONAL_FEE",
+			Price:    diff,
+			Quantity: 1,
+			Name:     "Biaya Tambahan (PPN / Ongkir)",
 		})
 	}
 
 	payload := SnapRequestPayload{
 		TransactionDetails: SnapTransactionDetails{
 			OrderID:     order.OrderNumber,
-			GrossAmount: int64(order.TotalPrice),
+			GrossAmount: grossAmount,
 		},
 		ItemDetails: items,
 	}

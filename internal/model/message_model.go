@@ -38,6 +38,10 @@ type IncomingMessage struct {
 	// MimeType hints the content type of AttachmentURL, e.g. "image/jpeg".
 	MimeType string
 
+	// Location coordinates if user shared location
+	Latitude  *float64
+	Longitude *float64
+
 	// IsGroup is true when the message was sent inside a group chat.
 	IsGroup bool
 }

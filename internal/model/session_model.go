@@ -11,6 +11,9 @@ const (
     StateIdle                     SessionState = "idle"
     StateSearching                SessionState = "searching"
     StateAwaitingQty              SessionState = "awaiting_qty"
+    StateAwaitingOrderType        SessionState = "awaiting_order_type"
+    StateAwaitingDeliveryAddress  SessionState = "awaiting_delivery_address"
+    StateAwaitingDeliverySchedule SessionState = "awaiting_delivery_schedule"
     StateAwaitingConfirm          SessionState = "awaiting_confirm"
     StateOrdering                 SessionState = "ordering"
     StateAwaitingProductSelection SessionState = "awaiting_product_selection"
@@ -29,16 +32,32 @@ type Session struct {
     UpdatedAt       time.Time    `db:"updated_at"       json:"updated_at"`
     ExpiresAt       time.Time    `db:"expires_at"       json:"expires_at"`
 
-    // SearchResults tidak disimpan langsung ke DB — dimuat dari Context
-    SearchResults []Product `db:"-" json:"-"`
+    // Fields tidak disimpan langsung ke DB — dimuat dari Context
+    SearchResults     []Product          `db:"-" json:"-"`
+    PendingOrderType  string             `db:"-" json:"-"`
+    PendingAddress    string             `db:"-" json:"-"`
+    PendingLat        *float64           `db:"-" json:"-"`
+    PendingLng        *float64           `db:"-" json:"-"`
+    PendingShipping   float64            `db:"-" json:"-"`
+    PendingDistanceKm float64            `db:"-" json:"-"`
+    PendingDate       string             `db:"-" json:"-"`
+    AvailSchedules    []DeliverySchedule `db:"-" json:"-"`
 }
 
 // sessionContext adalah struktur yang di-encode ke kolom context
 type sessionContext struct {
-    SearchResults []Product `json:"search_results,omitempty"`
+    SearchResults     []Product          `json:"search_results,omitempty"`
+    PendingOrderType  string             `json:"pending_order_type,omitempty"`
+    PendingAddress    string             `json:"pending_address,omitempty"`
+    PendingLat        *float64           `json:"pending_lat,omitempty"`
+    PendingLng        *float64           `json:"pending_lng,omitempty"`
+    PendingShipping   float64            `json:"pending_shipping,omitempty"`
+    PendingDistanceKm float64            `json:"pending_distance_km,omitempty"`
+    PendingDate       string             `json:"pending_date,omitempty"`
+    AvailSchedules    []DeliverySchedule `json:"avail_schedules,omitempty"`
 }
 
-// LoadContext mengisi field SearchResults dari kolom Context (JSON)
+// LoadContext mengisi field dari kolom Context (JSON)
 func (s *Session) LoadContext() {
     if s.Context == "" {
         return
@@ -46,12 +65,30 @@ func (s *Session) LoadContext() {
     var sc sessionContext
     if err := json.Unmarshal([]byte(s.Context), &sc); err == nil {
         s.SearchResults = sc.SearchResults
+        s.PendingOrderType = sc.PendingOrderType
+        s.PendingAddress = sc.PendingAddress
+        s.PendingLat = sc.PendingLat
+        s.PendingLng = sc.PendingLng
+        s.PendingShipping = sc.PendingShipping
+        s.PendingDistanceKm = sc.PendingDistanceKm
+        s.PendingDate = sc.PendingDate
+        s.AvailSchedules = sc.AvailSchedules
     }
 }
 
-// SaveContext menyimpan SearchResults ke kolom Context sebagai JSON
+// SaveContext menyimpan data ke kolom Context sebagai JSON
 func (s *Session) SaveContext() {
-    sc := sessionContext{SearchResults: s.SearchResults}
+    sc := sessionContext{
+        SearchResults:     s.SearchResults,
+        PendingOrderType:  s.PendingOrderType,
+        PendingAddress:    s.PendingAddress,
+        PendingLat:        s.PendingLat,
+        PendingLng:        s.PendingLng,
+        PendingShipping:   s.PendingShipping,
+        PendingDistanceKm: s.PendingDistanceKm,
+        PendingDate:       s.PendingDate,
+        AvailSchedules:    s.AvailSchedules,
+    }
     if b, err := json.Marshal(sc); err == nil {
         s.Context = string(b)
     }

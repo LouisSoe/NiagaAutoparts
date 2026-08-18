@@ -70,6 +70,8 @@ func main() {
 	customerRepo := repository.NewCustomerRepository(db)
 	dashboardRepo := repository.NewDashboardRepository(db)
 	reportRepo := repository.NewReportRepository(db)
+	deliveryRepo := repository.NewDeliveryRepository(db)
+	deliveryScheduleRepo := repository.NewDeliveryScheduleRepository(db)
 
 	// ─── AI Service ───────────────────────────────────────────────────────────
 	aiSvc := ai.NewAIService(
@@ -110,10 +112,19 @@ func main() {
 	orderSvc := service.NewOrderService(orderRepo, productRepo, logger)
 	categorySvc := service.NewCategoryService(categoryRepo, logger)
 	userSvc := service.NewUserService(userRepo, logger, cfg.App.JWTSecret)
+	userSvc.SetCustomerRepository(customerRepo)
 	customerSvc := service.NewCustomerService(customerRepo, logger)
 	midtransSvc := service.NewMidtransService(cfg.Midtrans, orderSvc, customerRepo, logger)
 	dashboardSvc := service.NewDashboardService(dashboardRepo, logger)
 	reportSvc := service.NewReportService(reportRepo, logger)
+	deliverySvc := service.NewDeliveryService(deliveryRepo, deliveryScheduleRepo, customerRepo, orderRepo, logger)
+	deliverySvc.SetMessageSender(compositeSender)
+
+	// Initialize Google Maps Service if enabled
+	if cfg.GoogleMaps.Enabled {
+		mapsSvc := service.NewGoogleMapsService(cfg.GoogleMaps.ApiKey)
+		deliverySvc.SetGoogleMapsService(mapsSvc)
+	}
 
 	notifierSvc, err := service.NewTelegramNotifierService(
 		cfg.Telegram.NotifierToken,
@@ -149,6 +160,9 @@ func main() {
 	orderSvc.SetMidtransService(midtransSvc)
 	processor.SetMidtransService(midtransSvc)
 	processor.SetReportService(reportSvc)
+	processor.SetDeliveryService(deliverySvc)
+	processor.SetCustomerRepository(customerRepo)
+	processor.SetUserRepository(userRepo)
 
 	// ─── Worker Pool ──────────────────────────────────────────────────────────
 	pool := worker.NewPool(
@@ -196,6 +210,51 @@ func main() {
 	// Static file server untuk foto produk
 	router.Static("/uploads", "./uploads")
 
+	// Courier Map Web View routes
+	courierMapHandler := handler.NewCourierMapHandler(logger)
+	courierMapHandler.RegisterPublicRoutes(router)
+
+	// Courier Bot 3 (Telegram Delivery Assistant)
+	if cfg.Telegram.CourierToken != "" {
+		webAppBase := os.Getenv("APP_BASE_URL") // jika menggunakan ngrok atau domain publik (misal https://xyz.ngrok-free.app)
+		courierBotSvc, err := service.NewCourierBotService(cfg.Telegram.CourierToken, webAppBase, logger)
+		if err != nil {
+			logger.Error("failed to initialize courier bot service", zap.Error(err))
+		} else {
+			courierBotSvc.SetDeliveryService(deliverySvc)
+			deliverySvc.SetCourierBot(courierBotSvc)
+			courierBotSvc.StartPolling(ctx)
+
+			// Background scheduler: Kirim Daily Reminder Pengantaran setiap hari pk 05:00 WIB
+			go func() {
+				loc, errLoc := time.LoadLocation("Asia/Jakarta")
+				if errLoc != nil {
+					loc = time.Local
+				}
+
+				for {
+					now := time.Now().In(loc)
+					nextRun := time.Date(now.Year(), now.Month(), now.Day(), 5, 0, 0, 0, loc)
+					if now.After(nextRun) {
+						nextRun = nextRun.Add(24 * time.Hour)
+					}
+
+					durationUntilNextRun := time.Until(nextRun)
+					logger.Info("courier morning digest scheduled", zap.Time("next_run", nextRun), zap.Duration("wait", durationUntilNextRun))
+
+					select {
+					case <-time.After(durationUntilNextRun):
+						courierBotSvc.SendDailyMorningDigest(ctx)
+					case <-ctx.Done():
+						return
+					}
+				}
+			}()
+		}
+	} else {
+		logger.Warn("TELEGRAM_COURIER_BOT_TOKEN not set — courier bot disabled")
+	}
+
 	// Fonnte (WhatsApp) routes
 	fonnteHandler := handler.NewWebhookHandler(pool, fonnteSvc, logger)
 	fonnteHandler.RegisterRoutes(router)
@@ -233,6 +292,9 @@ func main() {
 
 		reportHandler := handler.NewReportHandler(reportSvc, logger)
 		reportHandler.RegisterRoutes(apiV1)
+
+		deliveryHandler := handler.NewDeliveryHandler(deliverySvc, logger)
+		deliveryHandler.RegisterRoutes(apiV1)
 	}
 
 	srv := &http.Server{
@@ -358,6 +420,7 @@ func runMigrations(db *sql.DB, logger *zap.Logger) error {
 		"migrations/010_remove_product_name_from_order_details.sql",
 		"migrations/011_remove_user_id_from_orders.sql",
 		"migrations/012_use_user_id_drop_customer_id_from_orders.sql",
+		"migrations/018_create_delivery_schedules_and_deliveries.sql",
 	}
 
 	for _, file := range migrationFiles {

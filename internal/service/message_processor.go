@@ -24,6 +24,9 @@ type MessageProcessor struct {
 	intentSvc    *IntentService
 	productSvc   *ProductService
 	orderSvc     *OrderService
+	deliverySvc  *DeliveryService
+	customerRepo *repository.CustomerRepository
+	userRepo     *repository.UserRepository
 	sessionRepo  *repository.SessionRepository
 	messagingSvc model.MessageSender // interface — not tied to any provider
 	aiSvc        *ai.AIService
@@ -54,6 +57,18 @@ func NewMessageProcessor(
 		logger:       logger,
 		sessionTTL:   sessionTTL,
 	}
+}
+
+func (p *MessageProcessor) SetDeliveryService(deliverySvc *DeliveryService) {
+	p.deliverySvc = deliverySvc
+}
+
+func (p *MessageProcessor) SetCustomerRepository(customerRepo *repository.CustomerRepository) {
+	p.customerRepo = customerRepo
+}
+
+func (p *MessageProcessor) SetUserRepository(userRepo *repository.UserRepository) {
+	p.userRepo = userRepo
 }
 
 func (p *MessageProcessor) SetMidtransService(midtransSvc *MidtransService) {
@@ -92,6 +107,22 @@ func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessag
 			_ = p.messagingSvc.SendText(ctx, msg.Platform, sender, reply)
 			return
 		}
+	}
+
+	// Tangani alur state percakapan bertahap (Order Type & Delivery Flow)
+	sess.LoadContext()
+	if sess.State == model.StateAwaitingOrderType {
+		reply := p.handleOrderTypeSelection(ctx, msg, sess)
+		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
+		return
+	} else if sess.State == model.StateAwaitingDeliveryAddress {
+		reply := p.handleDeliveryAddress(ctx, msg, sess)
+		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
+		return
+	} else if sess.State == model.StateAwaitingDeliverySchedule {
+		reply := p.handleDeliveryScheduleSelection(ctx, msg, sess)
+		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
+		return
 	}
 
 	parsed, err := p.intentSvc.Detect(ctx, msg.Message, sess)
@@ -152,14 +183,21 @@ func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessag
 		reply = p.handleSearch(ctx, parsed, sess)
 	}
 
-	sess.LastIntent = string(parsed.Intent)
+	p.finalizeAndSend(ctx, msg, sess, string(parsed.Intent), reply)
+}
+
+func (p *MessageProcessor) finalizeAndSend(ctx context.Context, msg model.IncomingMessage, sess *model.Session, lastIntent, reply string) {
+	sess.SaveContext()
+	sess.LastIntent = lastIntent
 	sess.ExpiresAt = time.Now().Add(p.sessionTTL)
 	if err := p.sessionRepo.Save(ctx, sess); err != nil {
 		p.logger.Warn("failed to save session", zap.Error(err))
 	}
 
-	if err := p.messagingSvc.SendText(ctx, msg.Platform, sender, reply); err != nil {
-		p.logger.Error("failed to send reply", zap.String("sender", sender), zap.Error(err))
+	if reply != "" {
+		if err := p.messagingSvc.SendText(ctx, msg.Platform, msg.Sender, reply); err != nil {
+			p.logger.Error("failed to send reply", zap.String("sender", msg.Sender), zap.Error(err))
+		}
 	}
 }
 
@@ -267,8 +305,290 @@ func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.Parsed
 	}
 
 	sess.PendingOrderID = &order.ID
+	sess.State = model.StateAwaitingOrderType
+
+	return fmt.Sprintf(
+		"🛒 *Pesanan Dibuat: %s*\n"+
+			"Produk: %s (%d pcs)\n"+
+			"Subtotal: *Rp %s*\n\n"+
+			"Silakan pilih metode penerimaan pesanan:\n"+
+			"1️⃣ Balas *1* atau *AMBIL* → Ambil di Toko (Pickup)\n"+
+			"2️⃣ Balas *2* atau *KIRIM* → Diantar Kurir (Delivery)\n"+
+			"3️⃣ Balas *BATAL* → Batalkan pesanan",
+		order.OrderNumber,
+		product.Name,
+		parsed.Quantity,
+		formatIDR(order.TotalPrice),
+	)
+}
+
+func (p *MessageProcessor) handleOrderTypeSelection(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
+	text := strings.ToLower(strings.TrimSpace(msg.Message))
+	if text == "batal" || text == "3" {
+		return p.handleCancel(ctx, sess, msg.Sender)
+	}
+
+	if text == "1" || text == "ambil" || text == "pickup" {
+		sess.PendingOrderType = "pickup"
+		sess.State = model.StateAwaitingConfirm
+
+		if sess.PendingOrderID != nil {
+			order, _ := p.orderSvc.GetOrderByID(ctx, *sess.PendingOrderID)
+			if order != nil {
+				return FormatOrderConfirmation(order)
+			}
+		}
+		return "Pilihan Anda: *Ambil di Toko*.\nKetik *1* untuk Bayar Online (Midtrans) atau *2* untuk Bayar Cash di Kasir."
+	}
+
+	if text == "2" || text == "kirim" || text == "delivery" {
+		sess.PendingOrderType = "delivery"
+
+		// Cek apakah user sudah terhubung ke data customer (autofill)
+		var existingCustomer *model.Customer
+		if p.userRepo != nil && p.customerRepo != nil {
+			u, err := p.userRepo.GetByTelegramChatID(ctx, msg.Sender)
+			if err == nil && u != nil {
+				c, errC := p.customerRepo.GetByUserID(ctx, u.ID)
+				if errC == nil && c != nil {
+					existingCustomer = c
+				}
+			}
+		}
+
+		if existingCustomer != nil && existingCustomer.Address.Valid && existingCustomer.Address.String != "" &&
+			existingCustomer.Latitude.Valid && existingCustomer.Longitude.Valid {
+			lat := existingCustomer.Latitude.Float64
+			lng := existingCustomer.Longitude.Float64
+			sess.PendingLat = &lat
+			sess.PendingLng = &lng
+			sess.PendingAddress = existingCustomer.Address.String
+
+			// Hitung ongkir
+			if p.deliverySvc != nil {
+				est := p.deliverySvc.CalculateShippingCost(lat, lng)
+				sess.PendingShipping = est.ShippingCost
+				sess.PendingDistanceKm = est.DistanceKm
+			}
+
+			// Lanjut ke jadwal
+			return p.askDeliverySchedule(ctx, sess, existingCustomer.Address.String, sess.PendingShipping)
+		}
+
+		sess.State = model.StateAwaitingDeliveryAddress
+		return "📍 *Pengantaran Kurir (Delivery)*\n\n" +
+			"Silakan kirimkan alamat pengantaran Anda:\n" +
+			"👉 Gunakan fitur *Kirim Lokasi (Share Location / GPS)* pada Telegram 📎, ATAU\n" +
+			"👉 Ketik alamat lengkap Anda di sini."
+	}
+
+	return "Pilihan tidak valid. Silakan balas:\n1️⃣ *1* (Ambil di Toko)\n2️⃣ *2* (Diantar Kurir)"
+}
+
+func (p *MessageProcessor) handleDeliveryAddress(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
+	text := strings.TrimSpace(msg.Message)
+	if strings.ToLower(text) == "batal" {
+		return p.handleCancel(ctx, sess, msg.Sender)
+	}
+
+	var lat, lng float64
+	var address string
+
+	if msg.Latitude != nil && msg.Longitude != nil {
+		lat = *msg.Latitude
+		lng = *msg.Longitude
+		address = fmt.Sprintf("Koordinat GPS: %.6f, %.6f", lat, lng)
+	} else if strings.HasPrefix(text, "LOC:") {
+		parts := strings.Split(strings.TrimPrefix(text, "LOC:"), ",")
+		if len(parts) == 2 {
+			_, _ = fmt.Sscanf(parts[0], "%f", &lat)
+			_, _ = fmt.Sscanf(parts[1], "%f", &lng)
+			address = text
+		}
+	} else {
+		address = text
+		// Jika hanya alamat teks tanpa koordinat, gunakan koordinat toko/default atau estimasi
+		lat = WarehouseLat
+		lng = WarehouseLng
+	}
+
+	sess.PendingAddress = address
+	sess.PendingLat = &lat
+	sess.PendingLng = &lng
+
+	// Hitung Ongkir
+	if p.deliverySvc != nil && lat != 0 && lng != 0 {
+		est := p.deliverySvc.CalculateShippingCost(lat, lng)
+		sess.PendingShipping = est.ShippingCost
+		sess.PendingDistanceKm = est.DistanceKm
+	}
+
+	// Update / Create Customer Profile otomatis jika belum ada
+	if p.userRepo != nil && p.customerRepo != nil {
+		u, _ := p.userRepo.GetByTelegramChatID(ctx, msg.Sender)
+		if u == nil {
+			// Buat guest user & link telegram
+			guestUser := &model.User{
+				Email:          fmt.Sprintf("tele_%s@autoparts.local", msg.Sender),
+				Name:           msg.SenderName,
+				Role:           model.RoleCustomer,
+				TelegramChatID: sql.NullString{String: msg.Sender, Valid: true},
+				IsActive:       true,
+			}
+			if msg.SenderName == "" {
+				guestUser.Name = "Customer Telegram"
+			}
+			if errU := p.userRepo.Create(ctx, guestUser); errU == nil && guestUser.ID > 0 {
+				u = guestUser
+			}
+		}
+
+		if u != nil {
+			cust, _ := p.customerRepo.GetByUserID(ctx, u.ID)
+			if cust == nil {
+				_ = p.customerRepo.Create(ctx, &model.Customer{
+					UserID:       u.ID,
+					TypeCustomer: model.CustomerTypeIndividual,
+					Address:      sql.NullString{String: address, Valid: address != ""},
+					Latitude:     sql.NullFloat64{Float64: lat, Valid: lat != 0},
+					Longitude:    sql.NullFloat64{Float64: lng, Valid: lng != 0},
+				})
+			} else {
+				cust.Address = sql.NullString{String: address, Valid: address != ""}
+				cust.Latitude = sql.NullFloat64{Float64: lat, Valid: lat != 0}
+				cust.Longitude = sql.NullFloat64{Float64: lng, Valid: lng != 0}
+				_ = p.customerRepo.Update(ctx, cust)
+			}
+		}
+	}
+
+	return p.askDeliverySchedule(ctx, sess, address, sess.PendingShipping)
+}
+
+func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.Session, address string, shippingCost float64) string {
+	sess.State = model.StateAwaitingDeliverySchedule
+
+	targetDate := time.Now()
+	dateStr := targetDate.Format("2006-01-02")
+	sess.PendingDate = dateStr
+
+	var schedules []model.DeliverySchedule
+	if p.deliverySvc != nil {
+		schedules, _ = p.deliverySvc.GetAvailableSchedules(ctx, targetDate)
+	}
+
+	sess.AvailSchedules = schedules
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("📍 *Alamat:* %s\n", address))
+	if sess.PendingDistanceKm > 0 {
+		sb.WriteString(fmt.Sprintf("📏 *Estimasi Jarak:* %.2f km\n", sess.PendingDistanceKm))
+	}
+	sb.WriteString(fmt.Sprintf("🚚 *Ongkir:* Rp %s\n\n", formatIDR(shippingCost)))
+	sb.WriteString(fmt.Sprintf("📅 *Jadwal Pengantaran Tersedia (%s):*\n", targetDate.Format("02 Jan 2006")))
+
+	if len(schedules) == 0 {
+		sb.WriteString("_Belum ada slot jadwal tersedia untuk hari ini._\nKetik *BATAL* untuk membatalkan.")
+		return sb.String()
+	}
+
+	hasSlot := false
+	for i, s := range schedules {
+		status := fmt.Sprintf("Tersedia (%d slot)", s.AvailableSlots)
+		if s.IsFull {
+			status = "❌ Penuh"
+		} else {
+			hasSlot = true
+		}
+		sb.WriteString(fmt.Sprintf("%d️⃣ *%s* (%s - %s) [%s]\n", i+1, s.SlotName, s.StartTime, s.EndTime, status))
+	}
+
+	if !hasSlot {
+		sb.WriteString("\n⚠️ Semua jadwal pengantaran hari ini sudah penuh. Silakan ketik *BATAL*.")
+	} else {
+		sb.WriteString("\nBalas dengan *nomor slot jadwal* yang Anda inginkan (misal: *1*).")
+	}
+
+	return sb.String()
+}
+
+func (p *MessageProcessor) handleDeliveryScheduleSelection(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
+	text := strings.TrimSpace(msg.Message)
+	if strings.ToLower(text) == "batal" {
+		return p.handleCancel(ctx, sess, msg.Sender)
+	}
+
+	if len(sess.AvailSchedules) == 0 {
+		return "Tidak ada slot jadwal yang dipilih. Ketik *BATAL*."
+	}
+
+	var choice int
+	if _, err := fmt.Sscanf(text, "%d", &choice); err != nil || choice < 1 || choice > len(sess.AvailSchedules) {
+		return fmt.Sprintf("Nomor tidak valid. Balas dengan angka antara 1 dan %d.", len(sess.AvailSchedules))
+	}
+
+	selected := sess.AvailSchedules[choice-1]
+	if selected.IsFull {
+		return "Slot jadwal tersebut sudah penuh, silakan pilih nomor slot yang lain."
+	}
+
+	// Update order total price dengan menambahkan ongkir
+	if sess.PendingOrderID != nil {
+		order, _ := p.orderSvc.GetOrderByID(ctx, *sess.PendingOrderID)
+		if order != nil {
+			newTotal := order.TotalPrice + sess.PendingShipping
+			_ = p.orderSvc.orderRepo.UpdateTotalPrice(ctx, order.ID, newTotal)
+
+			// Buat delivery request di table deliveries
+			var custID int64
+			if p.userRepo != nil && p.customerRepo != nil {
+				u, _ := p.userRepo.GetByTelegramChatID(ctx, msg.Sender)
+				if u != nil {
+					c, _ := p.customerRepo.GetByUserID(ctx, u.ID)
+					if c != nil {
+						custID = c.ID
+					}
+				}
+			}
+
+			if p.deliverySvc != nil {
+				_, _ = p.deliverySvc.RequestDelivery(ctx, RequestDeliveryInput{
+					OrderID:      order.ID,
+					CustomerID:   custID,
+					ScheduleID:   selected.ID,
+					DeliveryDate: sess.PendingDate,
+					Address:      sess.PendingAddress,
+					Latitude:     sess.PendingLat,
+					Longitude:    sess.PendingLng,
+					Notes:        "Order via Telegram Chatbot",
+				})
+			}
+
+			sess.State = model.StateAwaitingConfirm
+			order.TotalPrice = newTotal
+
+			return fmt.Sprintf(
+				"🚚 *Jadwal Pengantaran Dipilih:*\n"+
+					"⏰ Slot: *%s* (%s - %s)\n"+
+					"📍 Alamat: %s\n"+
+					"Ongkos Kirim: Rp %s\n\n"+
+					"━━━━━━━━━━━━━━━━\n"+
+					"🛒 *Total Akhir Pesanan: Rp %s*\n"+
+					"━━━━━━━━━━━━━━━━\n"+
+					"Pilih metode pembayaran:\n"+
+					"1️⃣ Balas *1* atau *MIDTRANS* → Bayar Online (QRIS/Bank/E-Wallet)\n"+
+					"2️⃣ Balas *BATAL* → Membatalkan pesanan\n\n"+
+					"⏰ Reservasi berlaku selama 15 menit.",
+				selected.SlotName, selected.StartTime, selected.EndTime,
+				sess.PendingAddress,
+				formatIDR(sess.PendingShipping),
+				formatIDR(newTotal),
+			)
+		}
+	}
+
 	sess.State = model.StateAwaitingConfirm
-	return FormatOrderConfirmation(order)
+	return "Jadwal pengantaran dikonfirmasi. Ketik *1* untuk bayar online via Midtrans."
 }
 
 var orderNumRegex = regexp.MustCompile(`(?i)APT-\d{8}-[A-Z0-9]{4}`)

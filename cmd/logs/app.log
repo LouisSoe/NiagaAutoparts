@@ -1,0 +1,1268 @@
+2026-08-15T21:48:59.934+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T21:48:59.950+0700	[31mFATAL[0m	failed to connect to database	{"error": "dial tcp 127.0.0.1:5432: connectex: No connection could be made because the target machine actively refused it."}
+2026-08-15T21:50:01.432+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T21:50:01.440+0700	[31mFATAL[0m	failed to connect to database	{"error": "dial tcp 127.0.0.1:5432: connectex: No connection could be made because the target machine actively refused it."}
+2026-08-15T21:50:33.910+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T21:50:34.108+0700	[34mINFO[0m	database connected
+2026-08-15T21:50:34.108+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T21:50:36.765+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T21:50:37.420+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T21:50:37.604+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T21:50:37.613+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T21:50:37.614+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T21:50:41.425+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-15T21:50:41.513+0700	[34mINFO[0m	courier bot polling started
+2026-08-15T21:50:41.596+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-15T21:51:21.869+0700	[31mERROR[0m	failed to send manifest summary	{"error": "Bad Request: inline keyboard button URL 'http://localhost:8080/api/v1/courier/map-view' is invalid: Wrong HTTP URL", "chat_id": 8788392199}
+2026-08-15T21:51:38.041+0700	[34mINFO[0m	reservation expired	{"order_id": 53, "product_id": 7}
+2026-08-15T21:51:38.051+0700	[34mINFO[0m	reservation expired	{"order_id": 54, "product_id": 11}
+2026-08-15T21:52:23.320+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T21:52:23.393+0700	[34mINFO[0m	database connected
+2026-08-15T21:52:23.394+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T21:52:24.177+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T21:52:24.380+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T21:52:24.494+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T21:52:24.494+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T21:52:24.494+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T21:52:24.495+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T21:52:24.842+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-15T21:52:24.843+0700	[34mINFO[0m	courier bot polling started
+2026-08-15T21:52:24.857+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-15T21:52:47.674+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T21:52:47.726+0700	[34mINFO[0m	database connected
+2026-08-15T21:52:47.727+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T21:52:51.077+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T21:52:52.190+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T21:52:52.200+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T21:52:52.201+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T21:52:52.201+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T21:52:52.596+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-15T21:52:52.597+0700	[34mINFO[0m	courier bot polling started
+2026-08-15T21:52:52.619+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-15T22:19:31.129+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T22:19:31.206+0700	[34mINFO[0m	database connected
+2026-08-15T22:19:31.206+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T22:19:32.038+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T22:19:32.359+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T22:19:32.531+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T22:19:32.533+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T22:19:32.540+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T22:19:32.537+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T22:19:32.754+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-15T22:19:32.755+0700	[34mINFO[0m	courier bot polling started
+2026-08-15T22:19:32.769+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-15T22:37:25.127+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T22:37:25.161+0700	[34mINFO[0m	database connected
+2026-08-15T22:37:25.162+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T22:37:41.801+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T22:37:41.856+0700	[34mINFO[0m	database connected
+2026-08-15T22:37:41.858+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T22:37:42.566+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T22:37:42.768+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T22:37:42.849+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T22:37:42.850+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T22:37:42.851+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T22:37:43.069+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-15T22:37:43.080+0700	[34mINFO[0m	courier bot polling started
+2026-08-15T22:37:43.091+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-15T23:11:26.542+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "215.0481ms", "client_ip": "::1"}
+2026-08-15T23:11:26.732+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "80.3433ms", "client_ip": "::1"}
+2026-08-15T23:11:26.880+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/uploads/prod_1785982145137823900.webp", "status": 304, "latency": "8.1681ms", "client_ip": "::1"}
+2026-08-15T23:11:52.965+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 404, "latency": "0s", "client_ip": "::1"}
+2026-08-15T23:11:52.971+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 404, "latency": "0s", "client_ip": "::1"}
+2026-08-15T23:12:02.813+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 404, "latency": "0s", "client_ip": "::1"}
+2026-08-15T23:12:02.819+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 404, "latency": "0s", "client_ip": "::1"}
+2026-08-15T23:13:07.791+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T23:13:07.830+0700	[34mINFO[0m	database connected
+2026-08-15T23:13:07.831+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T23:13:08.624+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T23:13:08.843+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T23:13:08.873+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T23:13:08.873+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T23:13:08.874+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T23:13:09.085+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-15T23:13:09.087+0700	[34mINFO[0m	courier bot polling started
+2026-08-15T23:13:09.107+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-15T23:13:39.081+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T23:13:39.142+0700	[34mINFO[0m	database connected
+2026-08-15T23:13:39.142+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T23:13:39.901+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T23:13:40.104+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T23:13:40.126+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T23:13:40.127+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T23:13:40.129+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T23:13:42.180+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T23:13:42.214+0700	[34mINFO[0m	database connected
+2026-08-15T23:13:42.214+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T23:13:42.901+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T23:13:43.093+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T23:13:43.097+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T23:13:43.100+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T23:13:43.101+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T23:13:43.302+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-15T23:13:43.304+0700	[34mINFO[0m	courier bot polling started
+2026-08-15T23:13:43.326+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-15T23:14:04.610+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-15T23:14:04.783+0700	[34mINFO[0m	database connected
+2026-08-15T23:14:04.783+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-15T23:14:05.456+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-15T23:14:05.642+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-15T23:14:05.655+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-15T23:14:05.655+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-15T23:14:05.656+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-15T23:14:05.847+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-15T23:14:05.849+0700	[34mINFO[0m	courier bot polling started
+2026-08-15T23:14:05.864+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-15T23:14:21.315+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "89.989ms", "client_ip": "::1"}
+2026-08-15T23:14:21.326+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.9694ms", "client_ip": "::1"}
+2026-08-15T23:15:00.059+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "5.8541ms", "client_ip": "::1"}
+2026-08-15T23:15:00.068+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "5.5625ms", "client_ip": "::1"}
+2026-08-15T23:15:04.099+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.076ms", "client_ip": "::1"}
+2026-08-15T23:15:08.466+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "5.7567ms", "client_ip": "::1"}
+2026-08-15T23:18:04.952+0700	[34mINFO[0m	order created via POS/REST	{"order_number": "APT-20260815-OWQ6", "status": "reserved", "total": 230000}
+2026-08-15T23:18:04.963+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/orders", "status": 201, "latency": "497.9822ms", "client_ip": "::1"}
+2026-08-15T23:18:05.192+0700	[34mINFO[0m	delivery notification prepared for couriers	{"delivery_id": 1}
+2026-08-15T23:18:05.195+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/deliveries/request", "status": 201, "latency": "147.1461ms", "client_ip": "::1"}
+2026-08-15T23:18:05.404+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004337357166"}
+2026-08-15T23:24:01.608+0700	[34mINFO[0m	shutdown signal received
+2026-08-15T23:24:01.625+0700	[34mINFO[0m	stopping courier bot polling
+2026-08-15T23:24:01.635+0700	[34mINFO[0m	stopping worker pool
+2026-08-15T23:24:01.635+0700	[34mINFO[0m	worker pool stopped
+2026-08-15T23:24:01.636+0700	[34mINFO[0m	server exited cleanly
+2026-08-18T08:42:30.691+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T08:42:30.722+0700	[31mFATAL[0m	failed to connect to database	{"error": "dial tcp 127.0.0.1:5432: connectex: No connection could be made because the target machine actively refused it."}
+2026-08-18T08:47:51.796+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T08:47:52.125+0700	[34mINFO[0m	database connected
+2026-08-18T08:47:52.128+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T08:47:53.081+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T08:47:53.287+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T08:47:53.519+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T08:47:53.520+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T08:47:53.524+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T08:47:53.727+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T08:47:53.728+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T08:47:53.745+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T08:47:58.421+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "51.2429ms", "client_ip": "::1"}
+2026-08-18T08:47:58.635+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "24.3204ms", "client_ip": "::1"}
+2026-08-18T08:47:58.777+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/uploads/prod_1785982145137823900.webp", "status": 304, "latency": "2.7362ms", "client_ip": "::1"}
+2026-08-18T08:48:21.389+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "13.1841ms", "client_ip": "::1"}
+2026-08-18T08:48:21.536+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers", "status": 200, "latency": "156.2759ms", "client_ip": "::1"}
+2026-08-18T08:48:21.585+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "204.7446ms", "client_ip": "::1"}
+2026-08-18T08:48:27.216+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "6.2041ms", "client_ip": "::1"}
+2026-08-18T08:48:27.229+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "22.341ms", "client_ip": "::1"}
+2026-08-18T08:48:27.416+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "9.0297ms", "client_ip": "::1"}
+2026-08-18T08:48:53.743+0700	[34mINFO[0m	reservation expired	{"order_id": 57, "product_id": 5}
+2026-08-18T08:53:54.365+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T08:53:55.399+0700	[34mINFO[0m	database connected
+2026-08-18T08:53:55.399+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T08:53:56.159+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T08:53:56.356+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T08:53:56.463+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T08:53:56.464+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T08:53:56.464+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T08:53:56.667+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T08:53:56.668+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T08:53:56.693+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T08:54:44.882+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T08:54:44.980+0700	[34mINFO[0m	database connected
+2026-08-18T08:54:44.981+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T08:54:45.657+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T08:54:45.850+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T08:54:46.486+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T08:54:46.486+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T08:54:46.486+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T08:54:46.804+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T08:54:46.805+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T08:54:46.905+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T08:54:56.196+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "136.819ms", "client_ip": "::1"}
+2026-08-18T08:56:11.630+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "745.842ms", "client_ip": "::1"}
+2026-08-18T08:56:12.191+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "21.0693ms", "client_ip": "::1"}
+2026-08-18T08:56:33.301+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "62.8559ms", "client_ip": "::1"}
+2026-08-18T08:56:33.316+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "10.1876ms", "client_ip": "::1"}
+2026-08-18T08:57:26.959+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/5", "status": 200, "latency": "45.5062ms", "client_ip": "::1"}
+2026-08-18T08:57:27.038+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "2.7027ms", "client_ip": "::1"}
+2026-08-18T08:57:52.338+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/5", "status": 200, "latency": "7.5305ms", "client_ip": "::1"}
+2026-08-18T08:57:52.420+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "2.9948ms", "client_ip": "::1"}
+2026-08-18T08:58:28.894+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/6", "status": 200, "latency": "7.0515ms", "client_ip": "::1"}
+2026-08-18T08:58:28.966+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "2.3669ms", "client_ip": "::1"}
+2026-08-18T08:58:38.243+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/1", "status": 200, "latency": "7.3128ms", "client_ip": "::1"}
+2026-08-18T08:58:38.317+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "4.6642ms", "client_ip": "::1"}
+2026-08-18T08:58:43.714+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/2", "status": 200, "latency": "5.3085ms", "client_ip": "::1"}
+2026-08-18T08:58:43.797+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "3.0871ms", "client_ip": "::1"}
+2026-08-18T08:59:29.657+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/3", "status": 200, "latency": "7.0434ms", "client_ip": "::1"}
+2026-08-18T08:59:29.723+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "2.6947ms", "client_ip": "::1"}
+2026-08-18T08:59:38.920+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/4", "status": 200, "latency": "7.2827ms", "client_ip": "::1"}
+2026-08-18T08:59:38.985+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "2.633ms", "client_ip": "::1"}
+2026-08-18T08:59:46.058+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/7", "status": 200, "latency": "72.4801ms", "client_ip": "::1"}
+2026-08-18T08:59:46.164+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "8.0646ms", "client_ip": "::1"}
+2026-08-18T08:59:52.142+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/8", "status": 200, "latency": "3.159ms", "client_ip": "::1"}
+2026-08-18T08:59:52.237+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "4.584ms", "client_ip": "::1"}
+2026-08-18T08:59:59.792+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/9", "status": 200, "latency": "6.4533ms", "client_ip": "::1"}
+2026-08-18T08:59:59.861+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "2.5951ms", "client_ip": "::1"}
+2026-08-18T09:00:07.153+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/10", "status": 200, "latency": "6.4956ms", "client_ip": "::1"}
+2026-08-18T09:00:07.310+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "30.2778ms", "client_ip": "::1"}
+2026-08-18T09:00:14.417+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/11", "status": 200, "latency": "6.5792ms", "client_ip": "::1"}
+2026-08-18T09:00:14.494+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "2.9902ms", "client_ip": "::1"}
+2026-08-18T09:00:21.800+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/12", "status": 200, "latency": "6.1727ms", "client_ip": "::1"}
+2026-08-18T09:00:21.880+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "3.0114ms", "client_ip": "::1"}
+2026-08-18T09:00:36.727+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "54.4802ms", "client_ip": "::1"}
+2026-08-18T09:01:16.316+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/delivery-schedules", "status": 201, "latency": "41.3803ms", "client_ip": "::1"}
+2026-08-18T09:01:16.387+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "5.3108ms", "client_ip": "::1"}
+2026-08-18T09:01:53.420+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/delivery-schedules", "status": 201, "latency": "6.1716ms", "client_ip": "::1"}
+2026-08-18T09:01:53.502+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "6.5391ms", "client_ip": "::1"}
+2026-08-18T09:01:56.875+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "2.5804ms", "client_ip": "::1"}
+2026-08-18T09:02:08.080+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/13", "status": 200, "latency": "16.7369ms", "client_ip": "::1"}
+2026-08-18T09:02:08.154+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "3.6691ms", "client_ip": "::1"}
+2026-08-18T09:02:13.233+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "3.7627ms", "client_ip": "::1"}
+2026-08-18T09:02:14.943+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "4.163ms", "client_ip": "::1"}
+2026-08-18T09:02:25.018+0700	[34mINFO[0m	http request	{"method": "PUT", "path": "/api/v1/delivery-schedules/6", "status": 200, "latency": "19.5865ms", "client_ip": "::1"}
+2026-08-18T09:02:25.108+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "8.8828ms", "client_ip": "::1"}
+2026-08-18T09:02:32.824+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "50.31ms", "client_ip": "::1"}
+2026-08-18T09:02:40.375+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "10.8762ms", "client_ip": "::1"}
+2026-08-18T09:02:40.406+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "9.5468ms", "client_ip": "::1"}
+2026-08-18T09:02:44.040+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "5.8537ms", "client_ip": "::1"}
+2026-08-18T09:02:44.050+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.9888ms", "client_ip": "::1"}
+2026-08-18T09:04:08.630+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "7.3586ms", "client_ip": "::1"}
+2026-08-18T09:04:08.639+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.3501ms", "client_ip": "::1"}
+2026-08-18T09:05:02.961+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:05:03.060+0700	[34mINFO[0m	database connected
+2026-08-18T09:05:03.062+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:05:05.544+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:05:05.783+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:05:05.861+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:05:05.861+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:05:05.864+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:05:05.864+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:05:05.865+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:05:05.865+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:05:05.865+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:05:05.865+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:05:05.865+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:05:05.865+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:05:05.865+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:05:05.865+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:05:06.124+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:05:06.125+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:05:06.141+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:05:34.862+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "89.945ms", "client_ip": "::1"}
+2026-08-18T09:05:52.825+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:05:52.933+0700	[34mINFO[0m	database connected
+2026-08-18T09:05:52.933+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:05:53.656+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:05:53.868+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:05:54.026+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:05:54.028+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:05:54.029+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:05:54.242+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:05:54.242+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:05:54.262+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:06:06.351+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "288.175ms", "client_ip": "::1"}
+2026-08-18T09:06:16.635+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "6.3827ms", "client_ip": "::1"}
+2026-08-18T09:06:16.646+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.6622ms", "client_ip": "::1"}
+2026-08-18T09:15:39.054+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:15:39.237+0700	[34mINFO[0m	database connected
+2026-08-18T09:15:39.237+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:15:40.123+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:15:40.319+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:15:40.448+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:15:40.448+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:15:40.449+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:15:40.658+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:15:40.659+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:15:40.675+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:16:59.241+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:16:59.333+0700	[34mINFO[0m	database connected
+2026-08-18T09:16:59.333+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:17:00.160+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:17:00.354+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:17:00.389+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:17:00.389+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:17:00.389+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:17:00.389+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:17:00.390+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:17:00.390+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:17:00.390+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:17:00.390+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:17:00.389+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:17:00.389+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:17:00.389+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:17:00.389+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:17:00.590+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:17:00.591+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:17:00.607+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:19:42.965+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "92.1331ms", "client_ip": "::1"}
+2026-08-18T09:19:43.076+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "23.6176ms", "client_ip": "::1"}
+2026-08-18T09:19:58.587+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "117.2795ms", "client_ip": "::1"}
+2026-08-18T09:20:02.389+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "5.6399ms", "client_ip": "::1"}
+2026-08-18T09:20:02.396+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.0772ms", "client_ip": "::1"}
+2026-08-18T09:26:36.436+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "74.5598ms", "client_ip": "::1"}
+2026-08-18T09:26:36.551+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "33.5621ms", "client_ip": "::1"}
+2026-08-18T09:26:36.665+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "87.4925ms", "client_ip": "::1"}
+2026-08-18T09:29:24.474+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:29:24.532+0700	[34mINFO[0m	database connected
+2026-08-18T09:29:24.533+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:29:25.277+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:29:25.477+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:29:25.549+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:29:25.549+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:29:25.550+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:29:25.754+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:29:25.756+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:29:25.778+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:29:49.279+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "176.8586ms", "client_ip": "::1"}
+2026-08-18T09:29:53.706+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "12.0694ms", "client_ip": "::1"}
+2026-08-18T09:29:53.718+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "5.0412ms", "client_ip": "::1"}
+2026-08-18T09:29:58.817+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 404, "latency": "0s", "client_ip": "::1"}
+2026-08-18T09:31:49.188+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:31:49.256+0700	[34mINFO[0m	database connected
+2026-08-18T09:31:49.256+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:31:50.019+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:31:50.207+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:31:50.246+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:31:50.246+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:31:50.246+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:31:50.438+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:31:50.439+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:31:50.484+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:32:15.392+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "54.6581ms", "client_ip": "::1"}
+2026-08-18T09:32:15.640+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "1.1599ms", "client_ip": "::1"}
+2026-08-18T09:33:40.276+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:33:40.358+0700	[34mINFO[0m	database connected
+2026-08-18T09:33:40.358+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:33:41.087+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:33:41.292+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:33:41.364+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:33:41.364+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:33:41.365+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:33:41.571+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:33:41.572+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:33:41.627+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:33:56.349+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "55.6316ms", "client_ip": "::1"}
+2026-08-18T09:33:56.584+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "0s", "client_ip": "::1"}
+2026-08-18T09:37:02.233+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "207.3781ms", "client_ip": "::1"}
+2026-08-18T09:37:02.277+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "20.2918ms", "client_ip": "::1"}
+2026-08-18T09:38:10.800+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "109.2227ms", "client_ip": "::1"}
+2026-08-18T09:38:10.972+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "4.0421ms", "client_ip": "::1"}
+2026-08-18T09:40:34.637+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "256.8108ms", "client_ip": "::1"}
+2026-08-18T09:40:34.699+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "1.005ms", "client_ip": "::1"}
+2026-08-18T09:41:24.172+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "111.2183ms", "client_ip": "::1"}
+2026-08-18T09:41:24.518+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "188.6658ms", "client_ip": "::1"}
+2026-08-18T09:41:27.735+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "6.4297ms", "client_ip": "::1"}
+2026-08-18T09:41:27.813+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "9.8009ms", "client_ip": "::1"}
+2026-08-18T09:43:01.191+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:43:01.304+0700	[34mINFO[0m	database connected
+2026-08-18T09:43:01.307+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:43:02.052+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:43:02.250+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:43:02.294+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:43:02.294+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:43:02.295+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:43:02.498+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:43:02.499+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:43:02.514+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:45:38.998+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:45:39.149+0700	[34mINFO[0m	database connected
+2026-08-18T09:45:39.150+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:45:40.741+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:45:40.931+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:45:40.994+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:45:40.994+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:45:40.996+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:45:41.198+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:45:41.200+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:45:41.219+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:48:30.523+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "133.2887ms", "client_ip": "::1"}
+2026-08-18T09:48:30.750+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "38.1808ms", "client_ip": "::1"}
+2026-08-18T09:48:34.156+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "7.3412ms", "client_ip": "::1"}
+2026-08-18T09:48:34.305+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "8.0004ms", "client_ip": "::1"}
+2026-08-18T09:48:47.261+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "5.9063ms", "client_ip": "::1"}
+2026-08-18T09:48:47.346+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "6.8618ms", "client_ip": "::1"}
+2026-08-18T09:48:48.324+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "69.3128ms", "client_ip": "::1"}
+2026-08-18T09:48:52.862+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "5.9492ms", "client_ip": "::1"}
+2026-08-18T09:48:52.963+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "7.855ms", "client_ip": "::1"}
+2026-08-18T09:49:03.043+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "8.0451ms", "client_ip": "::1"}
+2026-08-18T09:49:03.229+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "14.7876ms", "client_ip": "::1"}
+2026-08-18T09:49:23.634+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:49:23.823+0700	[34mINFO[0m	database connected
+2026-08-18T09:49:23.825+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:49:24.647+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:49:24.842+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:49:24.984+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:49:24.986+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:49:24.987+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:49:33.175+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:49:33.274+0700	[34mINFO[0m	database connected
+2026-08-18T09:49:33.274+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:49:34.301+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:49:34.601+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:49:34.620+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:49:34.621+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:49:34.622+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:49:34.622+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:49:34.623+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:49:34.623+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:49:34.623+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:49:34.623+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:49:34.622+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:49:34.622+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:49:34.622+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:49:34.622+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:49:34.905+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:49:34.907+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:49:34.926+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:50:11.083+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T09:50:11.309+0700	[34mINFO[0m	database connected
+2026-08-18T09:50:11.309+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T09:50:12.385+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T09:50:12.692+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T09:50:12.841+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T09:50:12.842+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T09:50:12.843+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T09:50:13.170+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T09:50:13.172+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T09:50:13.209+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T09:50:29.873+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "137.8455ms", "client_ip": "::1"}
+2026-08-18T09:50:30.060+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "49.9905ms", "client_ip": "::1"}
+2026-08-18T09:50:33.055+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "58.0872ms", "client_ip": "::1"}
+2026-08-18T10:02:15.015+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "158.3187ms", "client_ip": "::1"}
+2026-08-18T10:02:15.302+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "120.2004ms", "client_ip": "::1"}
+2026-08-18T10:02:25.415+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/2", "status": 200, "latency": "114.5399ms", "client_ip": "::1"}
+2026-08-18T10:13:32.788+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "373.6385ms", "client_ip": "::1"}
+2026-08-18T10:13:33.891+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "196.3112ms", "client_ip": "::1"}
+2026-08-18T10:13:39.474+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "231.2299ms", "client_ip": "::1"}
+2026-08-18T10:13:42.135+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "11.6405ms", "client_ip": "::1"}
+2026-08-18T10:13:42.270+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "13.6851ms", "client_ip": "::1"}
+2026-08-18T10:15:20.911+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "169.1591ms", "client_ip": "::1"}
+2026-08-18T10:15:25.372+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/2", "status": 200, "latency": "32.4627ms", "client_ip": "::1"}
+2026-08-18T10:15:58.179+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/2", "status": 200, "latency": "6.9005ms", "client_ip": "::1"}
+2026-08-18T10:16:00.264+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "64.1659ms", "client_ip": "::1"}
+2026-08-18T10:18:58.920+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "275.3109ms", "client_ip": "::1"}
+2026-08-18T10:19:45.920+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/2", "status": 200, "latency": "25.6351ms", "client_ip": "::1"}
+2026-08-18T10:19:46.040+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.7188ms", "client_ip": "::1"}
+2026-08-18T10:21:46.855+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "140.0823ms", "client_ip": "::1"}
+2026-08-18T10:21:47.056+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "61.7555ms", "client_ip": "::1"}
+2026-08-18T10:21:47.197+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "167.9771ms", "client_ip": "::1"}
+2026-08-18T10:21:47.506+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "24.0538ms", "client_ip": "::1"}
+2026-08-18T10:22:31.644+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "18.347ms", "client_ip": "::1"}
+2026-08-18T10:22:31.899+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "23.1339ms", "client_ip": "::1"}
+2026-08-18T10:22:38.511+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/2", "status": 200, "latency": "36.3317ms", "client_ip": "::1"}
+2026-08-18T10:22:42.147+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "88.4069ms", "client_ip": "::1"}
+2026-08-18T10:22:46.478+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "7.1365ms", "client_ip": "::1"}
+2026-08-18T10:41:54.268+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T10:41:54.400+0700	[34mINFO[0m	database connected
+2026-08-18T10:41:54.402+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T10:41:55.437+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T10:41:55.718+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T10:41:55.819+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T10:41:55.819+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T10:41:55.821+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T10:41:56.164+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T10:41:56.228+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T10:41:56.338+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T10:45:13.273+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T10:45:13.385+0700	[34mINFO[0m	database connected
+2026-08-18T10:45:13.385+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T10:45:14.452+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T10:45:14.792+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T10:45:14.867+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T10:45:14.867+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T10:45:14.868+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T10:45:15.405+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T10:45:15.406+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T10:45:15.457+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T10:45:38.585+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "48.0004ms", "client_ip": "::1"}
+2026-08-18T10:45:38.734+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "23.5287ms", "client_ip": "::1"}
+2026-08-18T10:45:46.639+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/2", "status": 200, "latency": "37.5215ms", "client_ip": "::1"}
+2026-08-18T10:45:48.488+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 500, "latency": "28.7091ms", "client_ip": "::1"}
+2026-08-18T10:45:49.101+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004480927602"}
+2026-08-18T10:46:35.582+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 500, "latency": "30.5787ms", "client_ip": "::1"}
+2026-08-18T10:46:36.427+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004480927602"}
+2026-08-18T10:46:38.902+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 500, "latency": "8.2599ms", "client_ip": "::1"}
+2026-08-18T10:46:39.347+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004480927602"}
+2026-08-18T10:46:40.569+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/favicon.ico", "status": 404, "latency": "0s", "client_ip": "::1"}
+2026-08-18T10:49:10.865+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T10:49:10.993+0700	[34mINFO[0m	database connected
+2026-08-18T10:49:10.993+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T10:49:12.061+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T10:49:12.370+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T10:49:12.581+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T10:49:12.582+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T10:49:12.582+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T10:49:12.879+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T10:49:12.879+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T10:49:12.892+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T10:49:16.552+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "89.1591ms", "client_ip": "::1"}
+2026-08-18T10:49:54.873+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "5.2436ms", "client_ip": "::1"}
+2026-08-18T10:49:54.887+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "11.0376ms", "client_ip": "::1"}
+2026-08-18T10:56:15.773+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T10:56:15.888+0700	[34mINFO[0m	database connected
+2026-08-18T10:56:15.888+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T10:56:16.834+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T10:56:17.034+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T10:56:17.165+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T10:56:17.165+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T10:56:17.165+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T10:56:17.448+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T10:56:17.448+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T10:56:17.464+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T10:56:27.233+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "133.2165ms", "client_ip": "::1"}
+2026-08-18T10:57:17.603+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "1.6944ms", "client_ip": "::1"}
+2026-08-18T10:58:09.121+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T10:58:09.265+0700	[34mINFO[0m	database connected
+2026-08-18T10:58:09.265+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T10:58:10.257+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T10:58:10.602+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T10:58:10.731+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T10:58:10.731+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T10:58:10.731+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T10:58:10.731+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T10:58:10.731+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T10:58:10.732+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T10:58:10.731+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T10:58:10.732+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T10:58:10.732+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T10:58:10.732+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T10:58:10.732+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T10:58:10.732+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T10:58:11.008+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T10:58:11.009+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T10:58:11.027+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T10:58:16.752+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "91.6826ms", "client_ip": "::1"}
+2026-08-18T10:58:16.968+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "611µs", "client_ip": "::1"}
+2026-08-18T10:58:22.778+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "6.0074ms", "client_ip": "::1"}
+2026-08-18T10:58:22.811+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "5.7712ms", "client_ip": "::1"}
+2026-08-18T11:01:31.247+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T11:01:31.361+0700	[34mINFO[0m	database connected
+2026-08-18T11:01:31.361+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T11:01:32.130+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T11:01:32.436+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T11:01:32.509+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T11:01:32.509+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T11:01:32.511+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T11:01:32.748+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T11:01:32.749+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T11:01:32.768+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T11:01:54.331+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "invalid response from Google Maps API: REQUEST_DENIED"}
+2026-08-18T11:01:54.334+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "384.3252ms", "client_ip": "::1"}
+2026-08-18T11:08:10.787+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "207.4528ms", "client_ip": "::1"}
+2026-08-18T11:08:11.298+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "invalid response from Google Maps API: REQUEST_DENIED"}
+2026-08-18T11:08:11.301+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "403.1811ms", "client_ip": "::1"}
+2026-08-18T11:08:48.013+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T11:08:50.335+0700	[34mINFO[0m	database connected
+2026-08-18T11:08:50.336+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T11:08:51.528+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T11:08:51.726+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T11:08:51.863+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T11:08:51.864+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T11:08:51.864+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T11:08:52.173+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T11:08:52.174+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T11:08:52.185+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T11:12:56.316+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "314.315ms", "client_ip": "::1"}
+2026-08-18T11:12:56.511+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started)"}
+2026-08-18T11:12:56.514+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "380.0107ms", "client_ip": "::1"}
+2026-08-18T11:23:18.630+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/auth/register", "status": 201, "latency": "432.2103ms", "client_ip": "::1"}
+2026-08-18T11:23:32.077+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/auth/login", "status": 200, "latency": "1.7802175s", "client_ip": "::1"}
+2026-08-18T11:23:33.560+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "90.929ms", "client_ip": "::1"}
+2026-08-18T11:23:33.733+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "39.7997ms", "client_ip": "::1"}
+2026-08-18T11:24:04.260+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/18", "status": 200, "latency": "79.6297ms", "client_ip": "::1"}
+2026-08-18T11:24:07.546+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "27.1913ms", "client_ip": "::1"}
+2026-08-18T11:24:12.495+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.6492ms", "client_ip": "::1"}
+2026-08-18T11:24:12.504+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "6.2695ms", "client_ip": "::1"}
+2026-08-18T11:24:30.156+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started)"}
+2026-08-18T11:24:30.159+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "294.4308ms", "client_ip": "::1"}
+2026-08-18T11:25:04.645+0700	[34mINFO[0m	order created via POS/REST	{"order_number": "APT-20260818-450O", "status": "reserved", "total": 448000}
+2026-08-18T11:25:04.653+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/orders", "status": 201, "latency": "254.2628ms", "client_ip": "::1"}
+2026-08-18T11:25:04.815+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started)"}
+2026-08-18T11:25:04.852+0700	[34mINFO[0m	delivery notification prepared for couriers	{"delivery_id": 2}
+2026-08-18T11:25:04.857+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/deliveries/request", "status": 201, "latency": "126.6955ms", "client_ip": "::1"}
+2026-08-18T11:25:05.075+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004337357166"}
+2026-08-18T11:25:05.577+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/payments/snap-token", "status": 200, "latency": "351.4588ms", "client_ip": "::1"}
+2026-08-18T11:29:53.958+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "83.6994ms", "client_ip": "::1"}
+2026-08-18T11:30:07.864+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/18", "status": 200, "latency": "20.421ms", "client_ip": "::1"}
+2026-08-18T11:30:08.066+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "38.3191ms", "client_ip": "::1"}
+2026-08-18T11:30:08.663+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started)"}
+2026-08-18T11:30:08.664+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "300.9556ms", "client_ip": "::1"}
+2026-08-18T11:30:27.055+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/18", "status": 200, "latency": "3.7243ms", "client_ip": "::1"}
+2026-08-18T11:30:27.206+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.6901ms", "client_ip": "::1"}
+2026-08-18T11:30:27.588+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started)"}
+2026-08-18T11:30:27.590+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "92.4061ms", "client_ip": "::1"}
+2026-08-18T11:31:01.693+0700	[34mINFO[0m	order created via POS/REST	{"order_number": "APT-20260818-VVKU", "status": "reserved", "total": 98000}
+2026-08-18T11:31:01.694+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/orders", "status": 201, "latency": "251.6981ms", "client_ip": "::1"}
+2026-08-18T11:31:01.845+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started)"}
+2026-08-18T11:31:01.885+0700	[34mINFO[0m	delivery notification prepared for couriers	{"delivery_id": 3}
+2026-08-18T11:31:01.887+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/deliveries/request", "status": 201, "latency": "122.6632ms", "client_ip": "::1"}
+2026-08-18T11:31:02.114+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004337357166"}
+2026-08-18T11:31:02.178+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/payments/snap-token", "status": 200, "latency": "229.0552ms", "client_ip": "::1"}
+2026-08-18T11:31:30.828+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T11:31:30.908+0700	[34mINFO[0m	database connected
+2026-08-18T11:31:30.908+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T11:31:31.734+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T11:31:31.926+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T11:31:32.381+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T11:31:32.381+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T11:31:32.381+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T11:31:32.580+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T11:31:32.581+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T11:31:32.598+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T11:32:49.517+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/18", "status": 200, "latency": "39.6948ms", "client_ip": "::1"}
+2026-08-18T11:32:49.721+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "44.1277ms", "client_ip": "::1"}
+2026-08-18T11:32:50.477+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started)"}
+2026-08-18T11:32:50.479+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "429.2945ms", "client_ip": "::1"}
+2026-08-18T11:33:01.618+0700	[34mINFO[0m	order created via POS/REST	{"order_number": "APT-20260818-CAL2", "status": "reserved", "total": 54300}
+2026-08-18T11:33:01.625+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/orders", "status": 201, "latency": "230.0697ms", "client_ip": "::1"}
+2026-08-18T11:33:01.811+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You must enable Billing on the Google Cloud Project at https://console.cloud.google.com/project/_/billing/enable Learn more at https://developers.google.com/maps/gmp-get-started)"}
+2026-08-18T11:33:01.871+0700	[34mINFO[0m	delivery notification prepared for couriers	{"delivery_id": 4}
+2026-08-18T11:33:01.872+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/deliveries/request", "status": 201, "latency": "164.8575ms", "client_ip": "::1"}
+2026-08-18T11:33:02.070+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004337357166"}
+2026-08-18T11:33:02.201+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/payments/snap-token", "status": 200, "latency": "245.9952ms", "client_ip": "::1"}
+2026-08-18T11:33:36.904+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T11:33:37.053+0700	[34mINFO[0m	database connected
+2026-08-18T11:33:37.055+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T11:33:37.800+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T11:33:37.997+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T11:33:38.082+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T11:33:38.082+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T11:33:38.084+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T11:33:38.310+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T11:33:38.313+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T11:33:38.342+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T11:35:36.329+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T11:35:36.458+0700	[34mINFO[0m	database connected
+2026-08-18T11:35:36.459+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T11:35:37.226+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T11:35:37.430+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T11:35:37.485+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T11:35:37.486+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T11:35:37.487+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T11:35:37.488+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T11:35:37.687+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T11:35:37.689+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T11:35:37.702+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T11:35:51.902+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/18", "status": 200, "latency": "36.3322ms", "client_ip": "::1"}
+2026-08-18T11:35:52.136+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "56.1431ms", "client_ip": "::1"}
+2026-08-18T11:35:54.253+0700	[33mWARN[0m	Google Maps distance error, fallback to Haversine	{"error": "google maps api error (status: REQUEST_DENIED, message: You’re calling a legacy API, which is not enabled for your project. To get newer features and more functionality, switch to the Places API (New) or Routes API. Learn more: https://developers.google.com/maps/legacy#LegacyApiNotActivatedMapError)"}
+2026-08-18T11:35:54.412+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "1.9236647s", "client_ip": "::1"}
+2026-08-18T11:36:30.382+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T11:36:30.436+0700	[34mINFO[0m	database connected
+2026-08-18T11:36:30.436+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T11:36:31.257+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T11:36:31.451+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T11:36:31.461+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T11:36:31.461+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T11:36:31.462+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T11:36:31.463+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T11:36:31.670+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T11:36:31.672+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T11:36:31.687+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T11:36:55.743+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "71.2242ms", "client_ip": "::1"}
+2026-08-18T11:36:55.750+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "4.5619ms", "client_ip": "::1"}
+2026-08-18T11:37:11.103+0700	[34mINFO[0m	order created via POS/REST	{"order_number": "APT-20260818-R0W5", "status": "reserved", "total": 54300}
+2026-08-18T11:37:11.118+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/orders", "status": 201, "latency": "321.0083ms", "client_ip": "::1"}
+2026-08-18T11:37:11.307+0700	[34mINFO[0m	delivery notification prepared for couriers	{"delivery_id": 5}
+2026-08-18T11:37:11.309+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/deliveries/request", "status": 201, "latency": "105.2097ms", "client_ip": "::1"}
+2026-08-18T11:37:11.537+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004337357166"}
+2026-08-18T11:37:11.680+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/payments/snap-token", "status": 200, "latency": "249.7448ms", "client_ip": "::1"}
+2026-08-18T11:40:31.549+0700	[34mINFO[0m	reservation expired	{"order_id": 58, "product_id": 12}
+2026-08-18T11:40:31.551+0700	[34mINFO[0m	reservation expired	{"order_id": 58, "product_id": 7}
+2026-08-18T11:43:36.807+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "64.5995ms", "client_ip": "::1"}
+2026-08-18T11:43:37.098+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "60.8967ms", "client_ip": "::1"}
+2026-08-18T11:46:03.739+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T11:46:03.886+0700	[34mINFO[0m	database connected
+2026-08-18T11:46:03.886+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T11:46:04.637+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T11:46:04.841+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T11:46:04.922+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T11:46:04.924+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T11:46:04.925+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T11:46:05.133+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T11:46:05.134+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T11:46:05.156+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T11:46:22.093+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers/user/18", "status": 200, "latency": "88.7443ms", "client_ip": "::1"}
+2026-08-18T11:46:25.909+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/available-schedules", "status": 200, "latency": "77.6321ms", "client_ip": "::1"}
+2026-08-18T11:46:39.035+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/estimate-shipping-cost", "status": 200, "latency": "2.3117ms", "client_ip": "::1"}
+2026-08-18T11:46:51.334+0700	[34mINFO[0m	order created via POS/REST	{"order_number": "APT-20260818-KVWR", "status": "reserved", "total": 77484}
+2026-08-18T11:46:51.340+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/orders", "status": 201, "latency": "265.2636ms", "client_ip": "::1"}
+2026-08-18T11:46:51.443+0700	[34mINFO[0m	delivery notification prepared for couriers	{"delivery_id": 6}
+2026-08-18T11:46:51.444+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/deliveries/request", "status": 201, "latency": "46.2406ms", "client_ip": "::1"}
+2026-08-18T11:46:51.780+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/payments/snap-token", "status": 200, "latency": "270.3027ms", "client_ip": "::1"}
+2026-08-18T11:46:51.851+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004337357166"}
+2026-08-18T11:47:04.965+0700	[34mINFO[0m	reservation expired	{"order_id": 59, "product_id": 6}
+2026-08-18T11:47:04.989+0700	[34mINFO[0m	reservation expired	{"order_id": 59, "product_id": 7}
+2026-08-18T11:48:04.956+0700	[34mINFO[0m	reservation expired	{"order_id": 60, "product_id": 8}
+2026-08-18T11:48:57.570+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "52.6198ms", "client_ip": "::1"}
+2026-08-18T11:49:08.886+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "29.5437ms", "client_ip": "::1"}
+2026-08-18T11:49:13.111+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "67.0952ms", "client_ip": "::1"}
+2026-08-18T11:49:13.167+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/order/62", "status": 404, "latency": "0s", "client_ip": "::1"}
+2026-08-18T11:49:20.435+0700	[31mERROR[0m	Midtrans Snap error response	{"status_code": 400, "errors": ["transaction_details.order_id has already been taken"]}
+2026-08-18T11:49:20.437+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/payments/snap-token", "status": 500, "latency": "2.0305632s", "client_ip": "::1"}
+2026-08-18T11:49:20.515+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders/62", "status": 200, "latency": "8.1565ms", "client_ip": "::1"}
+2026-08-18T11:49:20.883+0700	[34mINFO[0m	telegram channel message sent	{"channel_id": "-1004480927602"}
+2026-08-18T11:49:43.425+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "12.1474ms", "client_ip": "::1"}
+2026-08-18T11:49:43.529+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "20.9858ms", "client_ip": "::1"}
+2026-08-18T11:53:05.207+0700	[34mINFO[0m	reservation expired	{"order_id": 61, "product_id": 8}
+2026-08-18T11:55:17.336+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "27.0303ms", "client_ip": "::1"}
+2026-08-18T11:55:17.527+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "16.8207ms", "client_ip": "::1"}
+2026-08-18T11:55:51.141+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "20.1888ms", "client_ip": "::1"}
+2026-08-18T11:55:51.299+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "8.5121ms", "client_ip": "::1"}
+2026-08-18T11:57:48.749+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "17.3768ms", "client_ip": "::1"}
+2026-08-18T11:57:48.904+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "32.222ms", "client_ip": "::1"}
+2026-08-18T11:58:08.421+0700	[34mINFO[0m	http request	{"method": "POST", "path": "/api/v1/auth/login", "status": 200, "latency": "715.2254ms", "client_ip": "::1"}
+2026-08-18T11:58:10.407+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "21.0955ms", "client_ip": "::1"}
+2026-08-18T11:58:10.660+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "275.0894ms", "client_ip": "::1"}
+2026-08-18T11:58:10.687+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/customers", "status": 200, "latency": "301.172ms", "client_ip": "::1"}
+2026-08-18T11:58:14.759+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "137.6739ms", "client_ip": "::1"}
+2026-08-18T11:58:41.446+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "4.2557ms", "client_ip": "::1"}
+2026-08-18T12:00:16.987+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:00:17.102+0700	[34mINFO[0m	database connected
+2026-08-18T12:00:17.102+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:00:17.827+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:00:18.028+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:00:18.094+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:00:18.094+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:00:18.094+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:00:18.289+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:00:18.290+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:00:18.317+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:00:40.666+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "35.793ms", "client_ip": "::1"}
+2026-08-18T12:01:04.608+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "127.0759ms", "client_ip": "::1"}
+2026-08-18T12:01:04.625+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "164.1883ms", "client_ip": "::1"}
+2026-08-18T12:01:04.803+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "20.016ms", "client_ip": "::1"}
+2026-08-18T12:01:27.562+0700	[34mINFO[0m	shutdown signal received
+2026-08-18T12:01:27.562+0700	[34mINFO[0m	stopping courier bot polling
+2026-08-18T12:01:27.568+0700	[34mINFO[0m	stopping worker pool
+2026-08-18T12:01:27.568+0700	[34mINFO[0m	worker pool stopped
+2026-08-18T12:01:27.569+0700	[34mINFO[0m	server exited cleanly
+2026-08-18T12:01:40.382+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:01:40.421+0700	[34mINFO[0m	database connected
+2026-08-18T12:01:40.422+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:01:41.168+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:01:41.365+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:01:41.387+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:01:41.388+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:01:41.389+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:01:41.602+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:01:41.603+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:01:41.621+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:01:41.691+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "30.9635ms", "client_ip": "127.0.0.1"}
+2026-08-18T12:02:41.929+0700	[34mINFO[0m	reservation expired	{"order_id": 62, "product_id": 4}
+2026-08-18T12:02:56.437+0700	[34mINFO[0m	shutdown signal received
+2026-08-18T12:02:56.437+0700	[34mINFO[0m	stopping courier bot polling
+2026-08-18T12:02:56.439+0700	[34mINFO[0m	stopping worker pool
+2026-08-18T12:02:56.439+0700	[34mINFO[0m	worker pool stopped
+2026-08-18T12:02:56.439+0700	[34mINFO[0m	server exited cleanly
+2026-08-18T12:03:12.380+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:03:12.477+0700	[34mINFO[0m	database connected
+2026-08-18T12:03:12.478+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:03:13.163+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:03:13.356+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:03:13.403+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:03:13.403+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:03:13.403+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:03:13.612+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:03:13.613+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:03:13.627+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:03:18.868+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/delivery-schedules", "status": 200, "latency": "23.0186ms", "client_ip": "::1"}
+2026-08-18T12:04:24.190+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:04:24.227+0700	[34mINFO[0m	database connected
+2026-08-18T12:04:24.228+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:04:24.974+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:04:25.175+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:04:25.195+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:04:25.196+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:04:25.196+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:04:25.196+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:04:25.196+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:04:25.196+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:04:25.196+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:04:25.196+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:04:25.196+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:04:25.196+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:04:25.197+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:04:25.197+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:04:25.396+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:04:25.396+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:04:25.410+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:04:43.535+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "70.7593ms", "client_ip": "::1"}
+2026-08-18T12:04:43.924+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "456.1802ms", "client_ip": "::1"}
+2026-08-18T12:04:44.109+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "30.0937ms", "client_ip": "::1"}
+2026-08-18T12:05:26.164+0700	[34mINFO[0m	shutdown signal received
+2026-08-18T12:05:26.165+0700	[34mINFO[0m	stopping courier bot polling
+2026-08-18T12:05:26.166+0700	[34mINFO[0m	stopping worker pool
+2026-08-18T12:05:26.168+0700	[34mINFO[0m	worker pool stopped
+2026-08-18T12:05:26.168+0700	[34mINFO[0m	server exited cleanly
+2026-08-18T12:05:42.147+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:05:42.275+0700	[34mINFO[0m	database connected
+2026-08-18T12:05:42.276+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:05:43.621+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:05:43.825+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:05:43.833+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:05:43.833+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:05:43.834+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:05:43.833+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:05:43.834+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:05:43.834+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:05:43.834+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:05:43.834+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:05:43.834+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:05:43.834+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:05:43.833+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:05:43.834+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:05:44.132+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:05:44.133+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:05:44.163+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:05:58.536+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "79.9813ms", "client_ip": "::1"}
+2026-08-18T12:05:58.571+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "114.5969ms", "client_ip": "::1"}
+2026-08-18T12:05:58.825+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "15.0924ms", "client_ip": "::1"}
+2026-08-18T12:06:18.378+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "109.6367ms", "client_ip": "::1"}
+2026-08-18T12:06:18.448+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "90.624ms", "client_ip": "::1"}
+2026-08-18T12:06:19.187+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "249.8666ms", "client_ip": "::1"}
+2026-08-18T12:08:44.978+0700	[34mINFO[0m	shutdown signal received
+2026-08-18T12:08:44.980+0700	[34mINFO[0m	stopping courier bot polling
+2026-08-18T12:08:44.984+0700	[34mINFO[0m	stopping worker pool
+2026-08-18T12:08:44.985+0700	[34mINFO[0m	worker pool stopped
+2026-08-18T12:08:44.986+0700	[34mINFO[0m	server exited cleanly
+2026-08-18T12:08:58.278+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:08:58.423+0700	[34mINFO[0m	database connected
+2026-08-18T12:08:58.425+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:08:59.196+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:08:59.521+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:08:59.610+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:08:59.611+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:08:59.611+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:08:59.931+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:08:59.932+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:08:59.943+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:09:12.970+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/orders", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:09:12.972+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/categories", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:09:13.131+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "85.9746ms", "client_ip": "::1"}
+2026-08-18T12:09:13.279+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "232.2767ms", "client_ip": "::1"}
+2026-08-18T12:09:13.317+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/products", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:09:13.393+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "14.5385ms", "client_ip": "::1"}
+2026-08-18T12:09:18.317+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/deliveries", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:09:37.598+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/deliveries/", "status": 200, "latency": "88.6644ms", "client_ip": "::1"}
+2026-08-18T12:11:55.530+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/deliveries", "status": 204, "latency": "1.1519ms", "client_ip": "::1"}
+2026-08-18T12:12:40.547+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/orders", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:12:40.556+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/categories", "status": 204, "latency": "639.3µs", "client_ip": "::1"}
+2026-08-18T12:12:40.727+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "106.916ms", "client_ip": "::1"}
+2026-08-18T12:12:40.882+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/products", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:12:40.911+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "294.1024ms", "client_ip": "::1"}
+2026-08-18T12:12:40.964+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "58.1993ms", "client_ip": "::1"}
+2026-08-18T12:12:46.039+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/deliveries", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:15:17.242+0700	[34mINFO[0m	shutdown signal received
+2026-08-18T12:15:17.249+0700	[34mINFO[0m	stopping courier bot polling
+2026-08-18T12:15:17.252+0700	[34mINFO[0m	stopping worker pool
+2026-08-18T12:15:17.253+0700	[34mINFO[0m	worker pool stopped
+2026-08-18T12:15:17.253+0700	[34mINFO[0m	server exited cleanly
+2026-08-18T12:15:28.779+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:15:28.905+0700	[34mINFO[0m	database connected
+2026-08-18T12:15:28.906+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:15:29.983+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:15:30.288+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:15:30.345+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:15:30.346+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:15:30.346+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:15:30.595+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:15:30.596+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:15:30.665+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:15:46.989+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/orders", "status": 204, "latency": "4.1526ms", "client_ip": "::1"}
+2026-08-18T12:15:46.989+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/categories", "status": 204, "latency": "2.1309ms", "client_ip": "::1"}
+2026-08-18T12:15:47.113+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/categories", "status": 200, "latency": "63.3404ms", "client_ip": "::1"}
+2026-08-18T12:15:47.198+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/orders", "status": 200, "latency": "155.8648ms", "client_ip": "::1"}
+2026-08-18T12:15:47.257+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/products", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:15:47.298+0700	[34mINFO[0m	http request	{"method": "GET", "path": "/api/v1/products", "status": 200, "latency": "19.16ms", "client_ip": "::1"}
+2026-08-18T12:15:51.496+0700	[34mINFO[0m	http request	{"method": "OPTIONS", "path": "/api/v1/deliveries", "status": 204, "latency": "0s", "client_ip": "::1"}
+2026-08-18T12:16:53.963+0700	[34mINFO[0m	shutdown signal received
+2026-08-18T12:16:53.964+0700	[34mINFO[0m	stopping courier bot polling
+2026-08-18T12:16:53.972+0700	[34mINFO[0m	stopping worker pool
+2026-08-18T12:16:53.972+0700	[34mINFO[0m	worker pool stopped
+2026-08-18T12:16:53.973+0700	[34mINFO[0m	server exited cleanly
+2026-08-18T12:17:11.864+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:17:11.991+0700	[34mINFO[0m	database connected
+2026-08-18T12:17:11.997+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:17:13.001+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:17:13.306+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:17:13.455+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:17:13.456+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:17:13.457+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:17:13.715+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:17:13.716+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:17:13.731+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:24:51.938+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:24:52.011+0700	[34mINFO[0m	database connected
+2026-08-18T12:24:52.011+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:24:52.735+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:24:52.929+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:24:53.000+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:24:53.000+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:24:53.002+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:24:53.003+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:24:53.004+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:24:53.003+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:24:53.003+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:24:53.003+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:24:53.002+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:24:53.004+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:24:53.002+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:24:53.004+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:24:53.205+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:24:53.205+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:24:53.215+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:26:58.309+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:26:58.419+0700	[34mINFO[0m	database connected
+2026-08-18T12:26:58.420+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:26:59.502+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:26:59.770+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:26:59.845+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:26:59.845+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:26:59.846+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:27:00.042+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:27:00.042+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:27:00.060+0700	[34mINFO[0m	server starting	{"port": "8080"}
