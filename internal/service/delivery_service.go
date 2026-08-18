@@ -445,7 +445,7 @@ func (s *DeliveryService) CustomerChangeSchedule(ctx context.Context, deliveryID
 		UPDATE deliveries 
 		SET delivery_date = $1, schedule_id = $2, status = $3, suggested_date = NULL, suggested_schedule_id = NULL, updated_at = NOW() 
 		WHERE id = $4`
-	if _, err := s.deliveryRepo.UpdateRescheduleSuggestion(ctx, deliveryID, newDate, newScheduleID, "Diajukan ulang oleh customer"); err != nil {
+	if err := s.deliveryRepo.UpdateRescheduleSuggestion(ctx, deliveryID, newDate, newScheduleID, "Diajukan ulang oleh customer"); err != nil {
 		return err
 	}
 
