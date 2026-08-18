@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -376,9 +377,21 @@ func connectDB(dsn string) (*sqlx.DB, error) {
 func buildLogger() *zap.Logger {
 	env := os.Getenv("APP_ENV")
 
+	// Tentukan direktori binary yang sedang berjalan
+	baseDir := "."
+	if execPath, err := os.Executable(); err == nil {
+		baseDir = filepath.Dir(execPath)
+	}
+
+	logsDir := filepath.Join(baseDir, "logs")
+	_ = os.MkdirAll(logsDir, 0755)
+
+	todayDate := time.Now().Format("2006-01-02")
+	logFilename := filepath.Join(logsDir, fmt.Sprintf("app_%s.log", todayDate))
+
 	// Lumberjack log rotation (7 days retention)
 	lumberjackLogger := &lumberjack.Logger{
-		Filename:   "logs/app.log",
+		Filename:   logFilename,
 		MaxSize:    10,   // megabytes
 		MaxBackups: 14,   // max files
 		MaxAge:     7,    // 7 days retention

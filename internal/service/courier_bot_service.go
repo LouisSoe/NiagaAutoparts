@@ -108,6 +108,7 @@ func (s *CourierBotService) handleUpdate(update tgbotapi.Update) {
 	chatID := update.Message.Chat.ID
 	s.courierChats[chatID] = true
 	text := strings.TrimSpace(update.Message.Text)
+	s.logger.Info("courier bot received message", zap.Int64("chat_id", chatID), zap.String("text", text))
 
 	switch {
 	case strings.HasPrefix(text, "/start") || strings.HasPrefix(text, "/tugas") || strings.HasPrefix(text, "/menu"):
@@ -442,7 +443,7 @@ func (s *CourierBotService) sendManifestSummary(chatID int64) {
 		))
 	}
 
-	if s.webAppBase != "" && !strings.Contains(s.webAppBase, "localhost") && !strings.Contains(s.webAppBase, "127.0.0.1") {
+	if s.webAppBase != "" && strings.HasPrefix(s.webAppBase, "https://") {
 		keyboardRows = append(keyboardRows, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonURL("📱 Buka Peta Interaktif (Leaflet Web)", webAppURL),
 		))
