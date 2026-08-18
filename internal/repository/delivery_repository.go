@@ -133,9 +133,9 @@ func (r *DeliveryRepository) AcceptRescheduledSchedule(ctx context.Context, id i
 	return err
 }
 
-// GetDeliveriesForDate returns all confirmed deliveries for a given date for route optimization.
-func (r *DeliveryRepository) GetDeliveriesForDate(ctx context.Context, date time.Time) ([]model.Delivery, error) {
-	const q = `
+// GetDeliveriesForDate returns deliveries for a given date, optionally filtered by status.
+func (r *DeliveryRepository) GetDeliveriesForDate(ctx context.Context, date time.Time, status string) ([]model.Delivery, error) {
+	q := `
 		SELECT 
 			d.id, d.order_id, d.customer_id, d.schedule_id, d.courier_id, 
 			d.delivery_date, d.status, d.shipping_cost, d.distance_km,
@@ -158,10 +158,19 @@ func (r *DeliveryRepository) GetDeliveriesForDate(ctx context.Context, date time
 		LEFT JOIN delivery_schedules ds ON ds.id = d.schedule_id
 		LEFT JOIN delivery_schedules ds_sug ON ds_sug.id = d.suggested_schedule_id
 		LEFT JOIN users u_cour ON u_cour.id = d.courier_id
-		WHERE d.delivery_date = $1 AND d.status IN ('confirmed', 'on_delivery')
-		ORDER BY d.id ASC`
+		WHERE d.delivery_date = $1`
+
+	var args []interface{}
+	args = append(args, date.Format("2006-01-02"))
+
+	if status != "" {
+		q += " AND d.status = $2"
+		args = append(args, status)
+	}
+
+	q += " ORDER BY d.id ASC"
 
 	var list []model.Delivery
-	err := r.db.SelectContext(ctx, &list, q, date.Format("2006-01-02"))
+	err := r.db.SelectContext(ctx, &list, q, args...)
 	return list, err
 }

@@ -58,7 +58,9 @@ func (h *DeliveryHandler) listDeliveries(c *gin.Context) {
 		return
 	}
 
-	deliveries, err := h.deliverySvc.GetDeliveriesForDate(c.Request.Context(), targetDate)
+	status := c.Query("status")
+
+	deliveries, err := h.deliverySvc.GetDeliveriesForDate(c.Request.Context(), targetDate, status)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

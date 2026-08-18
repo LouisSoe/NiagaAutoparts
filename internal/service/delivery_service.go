@@ -130,8 +130,8 @@ func (s *DeliveryService) DeleteSchedule(ctx context.Context, id int64) error {
 }
 
 
-func (s *DeliveryService) GetDeliveriesForDate(ctx context.Context, date time.Time) ([]model.Delivery, error) {
-    return s.deliveryRepo.GetDeliveriesForDate(ctx, date)
+func (s *DeliveryService) GetDeliveriesForDate(ctx context.Context, date time.Time, status string) ([]model.Delivery, error) {
+    return s.deliveryRepo.GetDeliveriesForDate(ctx, date, status)
 }
 
 // GetAvailableSchedules returns available delivery slots for the specified date.

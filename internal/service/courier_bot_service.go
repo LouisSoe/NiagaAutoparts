@@ -250,7 +250,7 @@ func (s *CourierBotService) SendDailyMorningDigest(ctx context.Context) {
 	}
 
 	today := time.Now()
-	deliveries, err := s.deliverySvc.GetDeliveriesForDate(ctx, today)
+	deliveries, err := s.deliverySvc.GetDeliveriesForDate(ctx, today, "confirmed")
 	if err != nil {
 		s.logger.Error("failed to get today's deliveries for morning digest", zap.Error(err))
 		return
