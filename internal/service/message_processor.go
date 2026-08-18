@@ -123,6 +123,10 @@ func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessag
 		reply := p.handleDeliveryAddress(ctx, msg, sess)
 		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
 		return
+	} else if sess.State == model.StateAwaitingDeliveryDate {
+		reply := p.handleDeliveryDateSelection(ctx, msg, sess)
+		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
+		return
 	} else if sess.State == model.StateAwaitingDeliverySchedule {
 		reply := p.handleDeliveryScheduleSelection(ctx, msg, sess)
 		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
@@ -384,8 +388,8 @@ func (p *MessageProcessor) handleOrderTypeSelection(ctx context.Context, msg mod
 				sess.PendingDistanceKm = est.DistanceKm
 			}
 
-			// Lanjut ke jadwal
-			return p.askDeliverySchedule(ctx, sess, existingCustomer.Address.String, sess.PendingShipping)
+			// Lanjut ke pemilihan tanggal pengantaran
+			return p.askDeliveryDate(ctx, sess, existingCustomer.Address.String, sess.PendingShipping)
 		}
 
 		sess.State = model.StateAwaitingDeliveryAddress
@@ -475,15 +479,67 @@ func (p *MessageProcessor) handleDeliveryAddress(ctx context.Context, msg model.
 		}
 	}
 
-	return p.askDeliverySchedule(ctx, sess, address, sess.PendingShipping)
+	return p.askDeliveryDate(ctx, sess, address, sess.PendingShipping)
 }
 
-func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.Session, address string, shippingCost float64) string {
-	sess.State = model.StateAwaitingDeliverySchedule
+func (p *MessageProcessor) askDeliveryDate(ctx context.Context, sess *model.Session, address string, shippingCost float64) string {
+	sess.State = model.StateAwaitingDeliveryDate
 
-	targetDate := time.Now()
-	dateStr := targetDate.Format("2006-01-02")
-	sess.PendingDate = dateStr
+	t0 := time.Now()
+	t1 := t0.Add(24 * time.Hour)
+	t2 := t0.Add(48 * time.Hour)
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("📍 *Alamat:* %s\n", address))
+	if sess.PendingDistanceKm > 0 {
+		sb.WriteString(fmt.Sprintf("📏 *Estimasi Jarak:* %.2f km\n", sess.PendingDistanceKm))
+	}
+	sb.WriteString(fmt.Sprintf("🚚 *Ongkos Kirim:* Rp %s\n\n", formatIDR(shippingCost)))
+	sb.WriteString("📅 *Pilih Tanggal Pengantaran:*\n")
+	sb.WriteString(fmt.Sprintf("1️⃣ *Hari Ini* (%s)\n", t0.Format("02 Jan 2006")))
+	sb.WriteString(fmt.Sprintf("2️⃣ *Besok* (%s)\n", t1.Format("02 Jan 2006")))
+	sb.WriteString(fmt.Sprintf("3️⃣ *Lusa* (%s)\n", t2.Format("02 Jan 2006")))
+	sb.WriteString("4️⃣ *Ketik tanggal lain* (Format: `YYYY-MM-DD`, contoh: `2026-08-25`)\n\n")
+	sb.WriteString("Balas dengan angka *1, 2, 3* atau ketik tanggal pilihan Anda:")
+
+	return sb.String()
+}
+
+func (p *MessageProcessor) handleDeliveryDateSelection(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
+	text := strings.TrimSpace(msg.Message)
+	if strings.ToLower(text) == "batal" {
+		return p.handleCancel(ctx, sess, msg.Sender)
+	}
+
+	var targetDate time.Time
+	now := time.Now()
+
+	switch text {
+	case "1", "hari ini", "today":
+		targetDate = now
+	case "2", "besok", "tomorrow":
+		targetDate = now.Add(24 * time.Hour)
+	case "3", "lusa":
+		targetDate = now.Add(48 * time.Hour)
+	default:
+		parsed, err := time.Parse("2006-01-02", text)
+		if err != nil {
+			return "⚠️ Format tanggal tidak valid.\nSilakan balas dengan angka *1* (Hari Ini), *2* (Besok), *3* (Lusa), atau ketik tanggal dengan format `YYYY-MM-DD` (contoh: `2026-08-25`)."
+		}
+		// Validasi tanggal tidak boleh di masa lampau
+		todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		if parsed.Before(todayZero) {
+			return "⚠️ Tanggal pengantaran tidak boleh di masa lampau. Silakan pilih tanggal hari ini atau ke depan."
+		}
+		targetDate = parsed
+	}
+
+	sess.PendingDate = targetDate.Format("2006-01-02")
+	return p.askDeliverySchedule(ctx, sess, targetDate)
+}
+
+func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.Session, targetDate time.Time) string {
+	sess.State = model.StateAwaitingDeliverySchedule
 
 	var schedules []model.DeliverySchedule
 	if p.deliverySvc != nil {
@@ -493,15 +549,10 @@ func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.
 	sess.AvailSchedules = schedules
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("📍 *Alamat:* %s\n", address))
-	if sess.PendingDistanceKm > 0 {
-		sb.WriteString(fmt.Sprintf("📏 *Estimasi Jarak:* %.2f km\n", sess.PendingDistanceKm))
-	}
-	sb.WriteString(fmt.Sprintf("🚚 *Ongkir:* Rp %s\n\n", formatIDR(shippingCost)))
-	sb.WriteString(fmt.Sprintf("📅 *Jadwal Pengantaran Tersedia (%s):*\n", targetDate.Format("02 Jan 2006")))
+	sb.WriteString(fmt.Sprintf("📅 *Jadwal Pengantaran Tersedia (%s):*\n\n", targetDate.Format("02 Jan 2006")))
 
 	if len(schedules) == 0 {
-		sb.WriteString("_Belum ada slot jadwal tersedia untuk hari ini._\nKetik *BATAL* untuk membatalkan.")
+		sb.WriteString("_Belum ada slot jadwal tersedia untuk tanggal ini._\nKetik *BATAL* untuk membatalkan.")
 		return sb.String()
 	}
 
@@ -517,7 +568,7 @@ func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.
 	}
 
 	if !hasSlot {
-		sb.WriteString("\n⚠️ Semua jadwal pengantaran hari ini sudah penuh. Silakan ketik *BATAL*.")
+		sb.WriteString("\n⚠️ Semua jadwal pengantaran untuk tanggal ini sudah penuh. Silakan ketik *BATAL*.")
 	} else {
 		sb.WriteString("\nBalas dengan *nomor slot jadwal* yang Anda inginkan (misal: *1*).")
 	}
@@ -545,6 +596,33 @@ func (p *MessageProcessor) handleDeliveryScheduleSelection(ctx context.Context, 
 		return "Slot jadwal tersebut sudah penuh, silakan pilih nomor slot yang lain."
 	}
 
+	// Skenario A: Jika ini adalah alur Reschedule untuk delivery yang sudah ada
+	if sess.PendingDeliveryID != nil && *sess.PendingDeliveryID > 0 {
+		deliveryID := *sess.PendingDeliveryID
+		targetDate, errD := time.Parse("2006-01-02", sess.PendingDate)
+		if errD != nil {
+			targetDate = time.Now().Add(24 * time.Hour)
+		}
+
+		if p.deliverySvc != nil {
+			if errChg := p.deliverySvc.CustomerChangeSchedule(ctx, deliveryID, targetDate, selected.ID); errChg != nil {
+				return fmt.Sprintf("⚠️ Gagal mengubah jadwal pengantaran: %s", errChg.Error())
+			}
+		}
+
+		sess.State = model.StateIdle
+		sess.PendingDeliveryID = nil
+
+		return fmt.Sprintf(
+			"✅ *Perubahan Jadwal Berhasil Diajukan!*\n\n"+
+				"📅 Tanggal : *%s*\n"+
+				"⏰ Slot    : *%s* (%s - %s)\n\n"+
+				"Jadwal pengantaran baru Anda telah dikirimkan ke kurir dan menunggu persetujuan kurir. Terima kasih! 🚚",
+			targetDate.Format("02 Jan 2006"), selected.SlotName, selected.StartTime, selected.EndTime,
+		)
+	}
+
+	// Skenario B: Alur pembuatan order baru
 	// Update order total price dengan menambahkan ongkir
 	if sess.PendingOrderID != nil {
 		order, _ := p.orderSvc.GetOrderByID(ctx, *sess.PendingOrderID)
@@ -629,38 +707,17 @@ func (p *MessageProcessor) handleRescheduleDecision(ctx context.Context, msg mod
 		return "✅ *Konfirmasi Diterima!*\n\nJadwal pengantaran baru telah disetujui. Kurir kami akan mengantar pesanan Anda sesuai jadwal tersebut. Terima kasih!"
 	}
 
-	// 2. OPSI 2 / GANTI: Customer ingin memilih jadwal/slot lain
+	// 2. OPSI 2 / GANTI: Customer ingin memilih tanggal / slot lain
 	if text == "2" || text == "ganti" || text == "ubah" || text == "reschedule" {
-		// Alihkan ke pemilihan jadwal ulang
-		sess.State = model.StateAwaitingDeliverySchedule
-		targetDate := time.Now().Add(24 * time.Hour) // default besok
-		sess.PendingDate = targetDate.Format("2006-01-02")
-
-		var schedules []model.DeliverySchedule
-		if p.deliverySvc != nil {
-			schedules, _ = p.deliverySvc.GetAvailableSchedules(ctx, targetDate)
-		}
-		sess.AvailSchedules = schedules
-
-		var sb strings.Builder
-		sb.WriteString("🗓️ *Pilih Jadwal Pengantaran Baru*\n\n")
-		sb.WriteString(fmt.Sprintf("📅 Tanggal: *%s*\n", targetDate.Format("02 Jan 2006")))
-		sb.WriteString("Silakan pilih slot waktu yang tersedia:\n")
-
-		if len(schedules) == 0 {
-			sb.WriteString("_Belum ada slot jadwal tersedia untuk tanggal ini._\nKetik *BATAL* untuk membatalkan.")
-			return sb.String()
-		}
-
-		for i, s := range schedules {
-			status := fmt.Sprintf("Tersedia (%d slot)", s.AvailableSlots)
-			if s.IsFull {
-				status = "❌ Penuh"
+		address := sess.PendingAddress
+		if address == "" {
+			if p.deliverySvc != nil {
+				if d, errD := p.deliverySvc.deliveryRepo.GetByID(ctx, deliveryID); errD == nil && d != nil {
+					address = d.CustomerAddress
+				}
 			}
-			sb.WriteString(fmt.Sprintf("%d️⃣ *%s* (%s - %s) [%s]\n", i+1, s.SlotName, s.StartTime, s.EndTime, status))
 		}
-		sb.WriteString("\nBalas dengan *nomor slot* yang Anda inginkan (misal: *1*).")
-		return sb.String()
+		return p.askDeliveryDate(ctx, sess, address, sess.PendingShipping)
 	}
 
 	// 3. OPSI 3 / TOLAK: Batalkan pengantaran kurir & beralih ambil sendiri di toko

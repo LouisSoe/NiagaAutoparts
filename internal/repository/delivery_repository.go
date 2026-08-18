@@ -133,6 +133,16 @@ func (r *DeliveryRepository) AcceptRescheduledSchedule(ctx context.Context, id i
 	return err
 }
 
+// ChangeSchedule updates the delivery date & slot and resets status to waiting_courier_approval.
+func (r *DeliveryRepository) ChangeSchedule(ctx context.Context, id int64, newDate time.Time, newScheduleID int64) error {
+	const q = `
+		UPDATE deliveries 
+		SET delivery_date = $1, schedule_id = $2, status = $3, suggested_date = NULL, suggested_schedule_id = NULL, rejection_reason = NULL, updated_at = NOW() 
+		WHERE id = $4`
+	_, err := r.db.ExecContext(ctx, q, newDate.Format("2006-01-02"), newScheduleID, model.DeliveryStatusWaitingCourier, id)
+	return err
+}
+
 // GetDeliveriesForDate returns deliveries for a given date, optionally filtered by status.
 func (r *DeliveryRepository) GetDeliveriesForDate(ctx context.Context, date time.Time, status string) ([]model.Delivery, error) {
 	q := `

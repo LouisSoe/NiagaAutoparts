@@ -183,6 +183,12 @@ func (s *DeliveryService) RequestDelivery(ctx context.Context, input RequestDeli
 		return nil, fmt.Errorf("format tanggal tidak valid, gunakan YYYY-MM-DD: %w", err)
 	}
 
+	now := time.Now()
+	todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	if targetDate.Before(todayZero) {
+		return nil, fmt.Errorf("tanggal pengantaran tidak boleh di masa lampau (backdate)")
+	}
+
 	// 1. Validasi slot ketersediaan jadwal
 	schedules, err := s.scheduleRepo.GetAvailableSchedulesByDate(ctx, targetDate)
 	if err != nil {
@@ -440,18 +446,8 @@ func (s *DeliveryService) CustomerChangeSchedule(ctx context.Context, deliveryID
 		return fmt.Errorf("data pengantaran tidak ditemukan")
 	}
 
-	// Update delivery to waiting_courier_approval with new date and schedule
-	const q = `
-		UPDATE deliveries 
-		SET delivery_date = $1, schedule_id = $2, status = $3, suggested_date = NULL, suggested_schedule_id = NULL, updated_at = NOW() 
-		WHERE id = $4`
-	if err := s.deliveryRepo.UpdateRescheduleSuggestion(ctx, deliveryID, newDate, newScheduleID, "Diajukan ulang oleh customer"); err != nil {
-		return err
-	}
-
-	// Set status to waiting courier approval
-	if err := s.deliveryRepo.UpdateStatus(ctx, deliveryID, model.DeliveryStatusWaitingCourier, nil); err != nil {
-		return err
+	if err := s.deliveryRepo.ChangeSchedule(ctx, deliveryID, newDate, newScheduleID); err != nil {
+		return fmt.Errorf("gagal mengubah jadwal pengantaran: %w", err)
 	}
 
 	// Notify courier of customer's updated schedule
