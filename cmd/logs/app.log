@@ -1266,3 +1266,66 @@
 2026-08-18T12:27:00.042+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
 2026-08-18T12:27:00.042+0700	[34mINFO[0m	courier bot polling started
 2026-08-18T12:27:00.060+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T12:34:17.318+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T12:34:17.432+0700	[34mINFO[0m	database connected
+2026-08-18T12:34:17.432+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T12:34:18.574+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T12:34:18.780+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T12:34:18.863+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T12:34:18.863+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T12:34:18.864+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T12:34:19.184+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T12:34:19.185+0700	[34mINFO[0m	courier morning digest scheduled	{"next_run": "2026-08-19T05:00:00.000+0700", "wait": "16h25m40.814087s"}
+2026-08-18T12:34:19.185+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T12:34:19.240+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T13:02:10.248+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T13:02:10.368+0700	[34mINFO[0m	database connected
+2026-08-18T13:02:10.368+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T13:02:11.096+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T13:02:11.288+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T13:02:11.395+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T13:02:11.396+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T13:02:11.396+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T13:02:11.616+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T13:02:11.618+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T13:02:11.620+0700	[34mINFO[0m	courier morning digest scheduled	{"next_run": "2026-08-19T05:00:00.000+0700", "wait": "15h57m48.3796702s"}
+2026-08-18T13:02:11.643+0700	[34mINFO[0m	server starting	{"port": "8080"}
+2026-08-18T13:05:37.646+0700	[34mINFO[0m	configuration loaded	{"env": "development"}
+2026-08-18T13:05:37.761+0700	[34mINFO[0m	database connected
+2026-08-18T13:05:37.762+0700	[34mINFO[0m	in-memory cache started	{"product_ttl": "1m0s", "cleanup_interval": "2m0s"}
+2026-08-18T13:05:38.632+0700	[34mINFO[0m	telegram bot authenticated	{"username": "@NiagaAutopart_bot"}
+2026-08-18T13:05:38.826+0700	[34mINFO[0m	telegram notifier bot authenticated	{"username": "@NotifierAutopart_bot"}
+2026-08-18T13:05:38.907+0700	[34mINFO[0m	dictionary built	{"words": 50}
+2026-08-18T13:05:38.909+0700	[34mINFO[0m	starting worker pool	{"workers": 10}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 0}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 4}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 3}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 2}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 7}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 1}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 5}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 6}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 8}
+2026-08-18T13:05:38.910+0700	[35mDEBUG[0m	worker started	{"id": 9}
+2026-08-18T13:05:39.116+0700	[34mINFO[0m	courier telegram bot authenticated	{"username": "@CourierAutopart_bot"}
+2026-08-18T13:05:39.120+0700	[34mINFO[0m	courier bot polling started
+2026-08-18T13:05:39.121+0700	[34mINFO[0m	courier morning digest scheduled	{"next_run": "2026-08-19T05:00:00.000+0700", "wait": "15h54m20.8789108s"}
+2026-08-18T13:05:39.160+0700	[34mINFO[0m	server starting	{"port": "8080"}

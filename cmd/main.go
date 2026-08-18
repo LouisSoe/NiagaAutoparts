@@ -222,6 +222,7 @@ func main() {
 			logger.Error("failed to initialize courier bot service", zap.Error(err))
 		} else {
 			courierBotSvc.SetDeliveryService(deliverySvc)
+			courierBotSvc.SetUserRepository(userRepo)
 			deliverySvc.SetCourierBot(courierBotSvc)
 			courierBotSvc.StartPolling(ctx)
 
@@ -234,11 +235,7 @@ func main() {
 
 				for {
 					now := time.Now().In(loc)
-					nextRun := time.Date(now.Year(), now.Month(), now.Day(), 5, 0, 0, 0, loc)
-					if now.After(nextRun) {
-						nextRun = nextRun.Add(24 * time.Hour)
-					}
-
+					nextRun := service.CalculateNextRunTime(now, 0, 5, loc)
 					durationUntilNextRun := time.Until(nextRun)
 					logger.Info("courier morning digest scheduled", zap.Time("next_run", nextRun), zap.Duration("wait", durationUntilNextRun))
 

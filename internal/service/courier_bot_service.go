@@ -9,6 +9,7 @@ import (
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/louissoe/niaga-autoparts/internal/model"
+	"github.com/louissoe/niaga-autoparts/internal/repository"
 	"github.com/louissoe/niaga-autoparts/internal/utils"
 	"go.uber.org/zap"
 )
@@ -35,6 +36,7 @@ type CourierBotService struct {
 	logger       *zap.Logger
 	webAppBase   string
 	deliverySvc  *DeliveryService
+	userRepo     *repository.UserRepository
 	courierChats map[int64]bool
 }
 
@@ -53,6 +55,10 @@ func NewCourierBotService(token string, webAppBase string, logger *zap.Logger) (
 		webAppBase:   strings.TrimRight(webAppBase, "/"),
 		courierChats: make(map[int64]bool),
 	}, nil
+}
+
+func (s *CourierBotService) SetUserRepository(repo *repository.UserRepository) {
+	s.userRepo = repo
 }
 
 // StartPolling starts polling for updates from the courier bot (in a background goroutine).
@@ -117,6 +123,38 @@ func (s *CourierBotService) SetDeliveryService(svc *DeliveryService) {
 	s.deliverySvc = svc
 }
 
+// getTargetCourierChatIDs retrieves all chat IDs from database (role = courier) and recent active chat IDs.
+func (s *CourierBotService) getTargetCourierChatIDs(ctx context.Context) []int64 {
+	targetSet := make(map[int64]bool)
+
+	// 1. From recent memory cache
+	for chatID := range s.courierChats {
+		targetSet[chatID] = true
+	}
+
+	// 2. From database (users with role = 'courier')
+	if s.userRepo != nil {
+		users, _, err := s.userRepo.FindFiltered(ctx, repository.UserFilter{
+			Role: "courier",
+		})
+		if err == nil {
+			for _, u := range users {
+				if u.TelegramChatID.Valid && u.TelegramChatID.String != "" {
+					if cID, errParse := strconv.ParseInt(u.TelegramChatID.String, 10, 64); errParse == nil {
+						targetSet[cID] = true
+					}
+				}
+			}
+		}
+	}
+
+	res := make([]int64, 0, len(targetSet))
+	for chatID := range targetSet {
+		res = append(res, chatID)
+	}
+	return res
+}
+
 // NotifyNewDeliveryRequest sends a notification to courier(s) when a customer requests delivery.
 func (s *CourierBotService) NotifyNewDeliveryRequest(ctx context.Context, d *model.Delivery) {
 	if s.bot == nil {
@@ -146,15 +184,63 @@ func (s *CourierBotService) NotifyNewDeliveryRequest(ctx context.Context, d *mod
 		),
 	)
 
-	// Broadcast to all active courier chats
-	for chatID := range s.courierChats {
+	// Broadcast to all courier chat IDs
+	targetChats := s.getTargetCourierChatIDs(ctx)
+	if len(targetChats) == 0 {
+		s.logger.Warn("no registered courier chat IDs found to send delivery alert", zap.Int64("delivery_id", d.ID))
+		return
+	}
+
+	for _, chatID := range targetChats {
 		msg := tgbotapi.NewMessage(chatID, text)
 		msg.ParseMode = tgbotapi.ModeMarkdown
 		msg.ReplyMarkup = markup
-		_, _ = s.bot.Send(msg)
+		if _, err := s.bot.Send(msg); err != nil {
+			s.logger.Warn("failed to send delivery notification to courier chat", zap.Int64("chat_id", chatID), zap.Error(err))
+		}
 	}
 
-	s.logger.Info("delivery notification sent to active couriers", zap.Int64("delivery_id", d.ID))
+	s.logger.Info("delivery notification sent to active couriers", zap.Int64("delivery_id", d.ID), zap.Int("recipients", len(targetChats)))
+}
+
+// CalculateNextRunTime calculates the next execution time for a target hour and minute in a given timezone location.
+func CalculateNextRunTime(now time.Time, targetHour, targetMinute int, loc *time.Location) time.Time {
+	if loc == nil {
+		loc = time.Local
+	}
+	nowInLoc := now.In(loc)
+	nextRun := time.Date(nowInLoc.Year(), nowInLoc.Month(), nowInLoc.Day(), targetHour, targetMinute, 0, 0, loc)
+	if nowInLoc.After(nextRun) || nowInLoc.Equal(nextRun) {
+		nextRun = nextRun.Add(24 * time.Hour)
+	}
+	return nextRun
+}
+
+// FormatDailyMorningDigest formats the delivery digest text for couriers.
+func FormatDailyMorningDigest(today time.Time, deliveries []model.Delivery) string {
+	if len(deliveries) == 0 {
+		return fmt.Sprintf("🌅 *Selamat Pagi Tim Kurir!* (05:00 WIB)\n📅 *Tanggal:* %s\n\n✅ _Tidak ada jadwal pengantaran barang untuk hari ini._ Tetap semangat!", today.Format("02 Jan 2006"))
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("🌅 *PENGINGAT PENGANTARAN HARI INI (05:00 WIB)*\n"))
+	sb.WriteString(fmt.Sprintf("📅 *Tanggal:* %s\n", today.Format("02 Jan 2006")))
+	sb.WriteString(fmt.Sprintf("📦 *Total Paket Siap Antar:* %d Pengiriman\n", len(deliveries)))
+	sb.WriteString("━━━━━━━━━━━━━━━━━━━━\n\n")
+
+	for i, d := range deliveries {
+		sb.WriteString(fmt.Sprintf("%d️⃣ *Slot: %s*\n", i+1, d.SlotName))
+		sb.WriteString(fmt.Sprintf("📦 No: `%s`\n", d.OrderNumber))
+		sb.WriteString(fmt.Sprintf("👤 Penerima: %s (Telp: `%s`)\n", d.CustomerName, d.CustomerPhone))
+		sb.WriteString(fmt.Sprintf("🏢 Alamat: %s\n", d.CustomerAddress))
+		if d.DistanceKm > 0 {
+			sb.WriteString(fmt.Sprintf("📏 Jarak: `%.1f km`\n", d.DistanceKm))
+		}
+		sb.WriteString("\n")
+	}
+
+	sb.WriteString("🗺️ _Gunakan perintah /rute atau /pins untuk navigasi peta teroptimasi._\nSemoga pengiriman hari ini lancar & aman! 🛵💨")
+	return sb.String()
 }
 
 // SendDailyMorningDigest broadcasts today's delivery schedule to all couriers at 05:00 AM.
@@ -170,38 +256,21 @@ func (s *CourierBotService) SendDailyMorningDigest(ctx context.Context) {
 		return
 	}
 
-	var text string
-	if len(deliveries) == 0 {
-		text = fmt.Sprintf("🌅 *Selamat Pagi Tim Kurir!* (05:00 WIB)\n📅 *Tanggal:* %s\n\n✅ _Tidak ada jadwal pengantaran barang untuk hari ini._ Tetap semangat!", today.Format("02 Jan 2006"))
-	} else {
-		var sb strings.Builder
-		sb.WriteString(fmt.Sprintf("🌅 *PENGINGAT PENGANTARAN HARI INI (05:00 WIB)*\n"))
-		sb.WriteString(fmt.Sprintf("📅 *Tanggal:* %s\n", today.Format("02 Jan 2006")))
-		sb.WriteString(fmt.Sprintf("📦 *Total Paket Siap Antar:* %d Pengiriman\n", len(deliveries)))
-		sb.WriteString("━━━━━━━━━━━━━━━━━━━━\n\n")
+	text := FormatDailyMorningDigest(today, deliveries)
 
-		for i, d := range deliveries {
-			sb.WriteString(fmt.Sprintf("%d️⃣ *Slot: %s*\n", i+1, d.SlotName))
-			sb.WriteString(fmt.Sprintf("📦 No: `%s`\n", d.OrderNumber))
-			sb.WriteString(fmt.Sprintf("👤 Penerima: %s (Telp: `%s`)\n", d.CustomerName, d.CustomerPhone))
-			sb.WriteString(fmt.Sprintf("🏢 Alamat: %s\n", d.CustomerAddress))
-			if d.DistanceKm > 0 {
-				sb.WriteString(fmt.Sprintf("📏 Jarak: `%.1f km`\n", d.DistanceKm))
-			}
-			sb.WriteString("\n")
-		}
-
-		sb.WriteString("🗺️ _Gunakan perintah /rute atau /pins untuk navigasi peta teroptimasi._\nSemoga pengiriman hari ini lancar & aman! 🛵💨")
-		text = sb.String()
+	targetChats := s.getTargetCourierChatIDs(ctx)
+	if len(targetChats) == 0 {
+		s.logger.Warn("no registered courier chat IDs found to send morning digest")
+		return
 	}
 
-	for chatID := range s.courierChats {
+	for _, chatID := range targetChats {
 		msg := tgbotapi.NewMessage(chatID, text)
 		msg.ParseMode = tgbotapi.ModeMarkdown
 		_, _ = s.bot.Send(msg)
 	}
 
-	s.logger.Info("daily morning delivery digest sent", zap.Int("total_deliveries", len(deliveries)), zap.Int("recipients", len(s.courierChats)))
+	s.logger.Info("daily morning delivery digest sent", zap.Int("total_deliveries", len(deliveries)), zap.Int("recipients", len(targetChats)))
 }
 
 // handleCallbackQuery processes button clicks from inline keyboards.
