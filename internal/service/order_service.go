@@ -20,6 +20,9 @@ const (
 
 	// CashReservationWindow is the payment expiry window for cash payment method (24 hours).
 	CashReservationWindow = 24 * time.Hour
+
+	// DefaultTaxRate is the default PPN (11%).
+	DefaultTaxRate = 0.11
 )
 
 // OrderService handles the order lifecycle: create, reserve, confirm, cancel.
@@ -104,10 +107,13 @@ func (s *OrderService) CreateReservation(ctx context.Context, sender string, pla
 
 	expiry := time.Now().Add(ReservationWindow)
 	subtotal := product.SellingPrice * float64(qty)
+	taxAmount := subtotal * DefaultTaxRate
+	totalWithTax := subtotal + taxAmount
+
 	order := &model.Order{
 		OrderNumber:    generateOrderNumber(),
 		UserID:         userID,
-		TotalPrice:     subtotal,
+		TotalPrice:     totalWithTax,
 		Status:         model.OrderStatusReserved,
 		Source:         sourceStr,
 		TelegramChatID: teleChatID,

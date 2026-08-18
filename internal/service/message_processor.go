@@ -307,10 +307,17 @@ func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.Parsed
 	sess.PendingOrderID = &order.ID
 	sess.State = model.StateAwaitingOrderType
 
+	subtotal := product.SellingPrice * float64(parsed.Quantity)
+	taxAmount := order.TotalPrice - subtotal
+
 	return fmt.Sprintf(
 		"🛒 *Pesanan Dibuat: %s*\n"+
-			"Produk: %s (%d pcs)\n"+
-			"Subtotal: *Rp %s*\n\n"+
+			"━━━━━━━━━━━━━━━━\n"+
+			"Produk      : %s (%d pcs)\n"+
+			"Subtotal    : Rp %s\n"+
+			"PPN (11%%)   : Rp %s\n"+
+			"*Total      : Rp %s*\n"+
+			"━━━━━━━━━━━━━━━━\n\n"+
 			"Silakan pilih metode penerimaan pesanan:\n"+
 			"1️⃣ Balas *1* atau *AMBIL* → Ambil di Toko (Pickup)\n"+
 			"2️⃣ Balas *2* atau *KIRIM* → Diantar Kurir (Delivery)\n"+
@@ -318,6 +325,8 @@ func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.Parsed
 		order.OrderNumber,
 		product.Name,
 		parsed.Quantity,
+		formatIDR(subtotal),
+		formatIDR(taxAmount),
 		formatIDR(order.TotalPrice),
 	)
 }

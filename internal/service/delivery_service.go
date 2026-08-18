@@ -208,6 +208,15 @@ func (s *DeliveryService) RequestDelivery(ctx context.Context, input RequestDeli
 		custLng = *input.Longitude
 	}
 
+	// Auto-resolve CustomerID from Order if not explicitly passed
+	if input.CustomerID <= 0 && input.OrderID > 0 && s.orderRepo != nil && s.customerRepo != nil {
+		if ord, errO := s.orderRepo.GetByID(ctx, input.OrderID); errO == nil && ord != nil && ord.UserID.Valid {
+			if cust, errC := s.customerRepo.GetByUserID(ctx, ord.UserID.Int64); errC == nil && cust != nil {
+				input.CustomerID = cust.ID
+			}
+		}
+	}
+
 	if input.CustomerID > 0 {
 		cust, err := s.customerRepo.GetByID(ctx, input.CustomerID)
 		if err == nil && cust != nil {

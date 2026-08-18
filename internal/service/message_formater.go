@@ -103,19 +103,31 @@ func FormatOrderConfirmation(order *model.Order) string {
 	prodName := "-"
 	qty := 0
 	unitPrice := 0.0
+	var itemsSubtotal float64
+	for _, item := range order.Items {
+		itemsSubtotal += item.UnitPrice * float64(item.Quantity)
+	}
 	if len(order.Items) > 0 {
 		prodName = order.Items[0].ProductName
 		qty = order.Items[0].Quantity
 		unitPrice = order.Items[0].UnitPrice
 	}
+
+	additional := order.TotalPrice - itemsSubtotal
+	var breakdown strings.Builder
+	breakdown.WriteString(fmt.Sprintf("Subtotal    : Rp %s\n", formatIDR(itemsSubtotal)))
+	if additional > 0 {
+		breakdown.WriteString(fmt.Sprintf("PPN / Ongkir: Rp %s\n", formatIDR(additional)))
+	}
+
 	return fmt.Sprintf(
 		"🛒 *Konfirmasi Pesanan*\n"+
 			"━━━━━━━━━━━━━━━━\n"+
 			"No. Pesanan : *%s*\n"+
-			"Produk      : %s\n"+
-			"Jumlah      : %d pcs\n"+
+			"Produk      : %s (%d pcs)\n"+
 			"Harga Satuan: Rp %s\n"+
-			"*Total      : Rp %s*\n"+
+			"%s"+
+			"*Total Akhir: Rp %s*\n"+
 			"━━━━━━━━━━━━━━━━\n"+
 			"Pilih metode pembayaran:\n"+
 			"1️⃣ Balas *1* atau *MIDTRANS* → Bayar Online (QRIS/Bank/E-Wallet)\n"+
@@ -126,6 +138,7 @@ func FormatOrderConfirmation(order *model.Order) string {
 		prodName,
 		qty,
 		formatIDR(unitPrice),
+		breakdown.String(),
 		formatIDR(order.TotalPrice),
 	)
 }
