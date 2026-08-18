@@ -377,17 +377,30 @@ func connectDB(dsn string) (*sqlx.DB, error) {
 func buildLogger() *zap.Logger {
 	env := os.Getenv("APP_ENV")
 
-	// Tentukan direktori binary yang sedang berjalan
-	baseDir := "."
-	if execPath, err := os.Executable(); err == nil {
-		baseDir = filepath.Dir(execPath)
+	// 1. Tentukan base directory (prioritas: working directory, fallback: binary dir)
+	baseDir, err := os.Getwd()
+	if err != nil || baseDir == "" {
+		if execPath, errEx := os.Executable(); errEx == nil {
+			baseDir = filepath.Dir(execPath)
+		} else {
+			baseDir = "."
+		}
 	}
 
+	// 2. Buat folder logs jika belum ada
 	logsDir := filepath.Join(baseDir, "logs")
-	_ = os.MkdirAll(logsDir, 0755)
+	if err := os.MkdirAll(logsDir, 0777); err != nil {
+		fmt.Printf("warning: failed to create logs dir: %v\n", err)
+	}
 
+	// 3. Nama file log harian: app_YYYY-MM-DD.log
 	todayDate := time.Now().Format("2006-01-02")
 	logFilename := filepath.Join(logsDir, fmt.Sprintf("app_%s.log", todayDate))
+
+	// 4. Buka / sentuh file secara langsung agar langsung muncul di 'ls'
+	if f, err := os.OpenFile(logFilename, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0666); err == nil {
+		_ = f.Close()
+	}
 
 	// Lumberjack log rotation (7 days retention)
 	lumberjackLogger := &lumberjack.Logger{
