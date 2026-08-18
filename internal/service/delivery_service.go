@@ -36,12 +36,12 @@ type RequestDeliveryInput struct {
 	Notes        string   `json:"notes"`
 }
 
-// DeliveryService coordinates the delivery lifecycle and notifications.
 type DeliveryService struct {
 	deliveryRepo *repository.DeliveryRepository
 	scheduleRepo *repository.DeliveryScheduleRepository
 	customerRepo *repository.CustomerRepository
 	orderRepo    *repository.OrderRepository
+	sessionRepo  *repository.SessionRepository
 	courierBot   *CourierBotService
 	msgSender    model.MessageSender
 	logger       *zap.Logger
@@ -62,6 +62,10 @@ func NewDeliveryService(
 		orderRepo:    orderRepo,
 		logger:       logger,
 	}
+}
+
+func (s *DeliveryService) SetSessionRepository(repo *repository.SessionRepository) {
+	s.sessionRepo = repo
 }
 
 // SetGoogleMapsService injects the GoogleMapsService for distance calculations.
@@ -334,17 +338,33 @@ func (s *DeliveryService) CourierSuggestReschedule(ctx context.Context, delivery
 		sugSched, _ := s.scheduleRepo.GetByID(ctx, suggestedScheduleID)
 		sugSlotName := ""
 		if sugSched != nil {
-			sugSlotName = sugSched.SlotName
+			sugSlotName = fmt.Sprintf("%s (%s - %s)", sugSched.SlotName, sugSched.StartTime, sugSched.EndTime)
+		}
+
+		// Update customer session to StateAwaitingRescheduleDecision
+		if s.sessionRepo != nil {
+			if sess, errSess := s.sessionRepo.GetOrCreate(ctx, d.TelegramChatID); errSess == nil && sess != nil {
+				sess.LoadContext()
+				sess.State = model.StateAwaitingRescheduleDecision
+				sess.PendingDeliveryID = &deliveryID
+				sess.SaveContext()
+				_ = s.sessionRepo.Save(ctx, sess)
+			}
 		}
 
 		msg := fmt.Sprintf(
 			"⚠️ *Pemberitahuan Perubahan Jadwal Pengantaran*\n\n"+
-				"Mohon maaf, kurir berhalangan pada jadwal yang dipilih untuk pesanan *%s*.\n\n"+
-				"📝 *Alasan:* %s\n"+
+				"Pesanan: *%s*\n"+
+				"📝 *Alasan Kurir:* %s\n\n"+
 				"💡 *Saran Jadwal Baru dari Kurir:*\n"+
-				"📅 Tanggal: *%s*\n"+
-				"⏰ Slot: *%s*\n\n"+
-				"Silakan konfirmasi persetujuan jadwal baru ini di bawah:",
+				"📅 Tanggal : *%s*\n"+
+				"⏰ Slot Jam : *%s*\n\n"+
+				"━━━━━━━━━━━━━━━━━━━━\n"+
+				"👉 *Silakan pilih tindakan:*\n"+
+				"1️⃣ Balas *1* atau *SETUJU* → Menerima jadwal saran dari kurir\n"+
+				"2️⃣ Balas *2* atau *GANTI*  → Pilih tanggal / slot pengantaran lain\n"+
+				"3️⃣ Balas *3* atau *TOLAK*  → Batalkan pengantaran (ambil sendiri di toko)\n"+
+				"━━━━━━━━━━━━━━━━━━━━",
 			d.OrderNumber, reason, suggestedDate.Format("02 Jan 2006"), sugSlotName,
 		)
 
@@ -367,6 +387,78 @@ func (s *DeliveryService) CustomerAcceptReschedule(ctx context.Context, delivery
 
 	if err := s.deliveryRepo.AcceptRescheduledSchedule(ctx, deliveryID, *d.SuggestedDate, d.SuggestedScheduleID.Int64); err != nil {
 		return fmt.Errorf("gagal menerima jadwal baru: %w", err)
+	}
+
+	if d.TelegramChatID != "" && s.msgSender != nil {
+		sugSched, _ := s.scheduleRepo.GetByID(ctx, d.SuggestedScheduleID.Int64)
+		sugSlotName := ""
+		if sugSched != nil {
+			sugSlotName = sugSched.SlotName
+		}
+		msg := fmt.Sprintf(
+			"✅ *Jadwal Pengantaran Telah Dikonfirmasi!*\n\n"+
+				"Pesanan: *%s*\n"+
+				"📅 Tanggal : *%s*\n"+
+				"⏰ Slot Jam : *%s*\n\n"+
+				"Kurir kami akan mengantar pesanan Anda sesuai jadwal baru ini. Terima kasih! 🚚",
+			d.OrderNumber, d.SuggestedDate.Format("02 Jan 2006"), sugSlotName,
+		)
+		_ = s.msgSender.SendText(ctx, model.PlatformTelegram, d.TelegramChatID, msg)
+	}
+
+	return nil
+}
+
+// CustomerRejectReschedule cancels the delivery request (e.g. customer chooses to pick up in store instead).
+func (s *DeliveryService) CustomerRejectReschedule(ctx context.Context, deliveryID int64) error {
+	d, err := s.deliveryRepo.GetByID(ctx, deliveryID)
+	if err != nil || d == nil {
+		return fmt.Errorf("data pengantaran tidak ditemukan")
+	}
+
+	if err := s.deliveryRepo.UpdateStatus(ctx, deliveryID, model.DeliveryStatusCancelled, nil); err != nil {
+		return fmt.Errorf("gagal membatalkan pengantaran: %w", err)
+	}
+
+	if d.TelegramChatID != "" && s.msgSender != nil {
+		msg := fmt.Sprintf(
+			"❌ *Pengantaran Kurir Dibatalkan*\n\n"+
+				"Pesanan: *%s*\n\n"+
+				"Pengantaran kurir telah dibatalkan. Anda dapat mengambil pesanan secara langsung di toko Niaga AutoParts. Terima kasih! 🏬",
+			d.OrderNumber,
+		)
+		_ = s.msgSender.SendText(ctx, model.PlatformTelegram, d.TelegramChatID, msg)
+	}
+
+	return nil
+}
+
+// CustomerChangeSchedule allows customer to choose their own new date & slot.
+func (s *DeliveryService) CustomerChangeSchedule(ctx context.Context, deliveryID int64, newDate time.Time, newScheduleID int64) error {
+	d, err := s.deliveryRepo.GetByID(ctx, deliveryID)
+	if err != nil || d == nil {
+		return fmt.Errorf("data pengantaran tidak ditemukan")
+	}
+
+	// Update delivery to waiting_courier_approval with new date and schedule
+	const q = `
+		UPDATE deliveries 
+		SET delivery_date = $1, schedule_id = $2, status = $3, suggested_date = NULL, suggested_schedule_id = NULL, updated_at = NOW() 
+		WHERE id = $4`
+	if _, err := s.deliveryRepo.UpdateRescheduleSuggestion(ctx, deliveryID, newDate, newScheduleID, "Diajukan ulang oleh customer"); err != nil {
+		return err
+	}
+
+	// Set status to waiting courier approval
+	if err := s.deliveryRepo.UpdateStatus(ctx, deliveryID, model.DeliveryStatusWaitingCourier, nil); err != nil {
+		return err
+	}
+
+	// Notify courier of customer's updated schedule
+	if s.courierBot != nil {
+		if updatedDelivery, errG := s.deliveryRepo.GetByID(ctx, deliveryID); errG == nil && updatedDelivery != nil {
+			s.courierBot.NotifyNewDeliveryRequest(ctx, updatedDelivery)
+		}
 	}
 
 	return nil

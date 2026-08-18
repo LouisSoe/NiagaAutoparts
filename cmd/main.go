@@ -119,6 +119,7 @@ func main() {
 	reportSvc := service.NewReportService(reportRepo, logger)
 	deliverySvc := service.NewDeliveryService(deliveryRepo, deliveryScheduleRepo, customerRepo, orderRepo, logger)
 	deliverySvc.SetMessageSender(compositeSender)
+	deliverySvc.SetSessionRepository(sessionRepo)
 
 	// Initialize Google Maps Service if enabled
 	if cfg.GoogleMaps.Enabled {
@@ -222,6 +223,7 @@ func main() {
 			logger.Error("failed to initialize courier bot service", zap.Error(err))
 		} else {
 			courierBotSvc.SetDeliveryService(deliverySvc)
+			courierBotSvc.SetOrderService(orderSvc)
 			courierBotSvc.SetUserRepository(userRepo)
 			deliverySvc.SetCourierBot(courierBotSvc)
 			courierBotSvc.StartPolling(ctx)

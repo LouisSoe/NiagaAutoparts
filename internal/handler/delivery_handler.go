@@ -34,6 +34,8 @@ func (h *DeliveryHandler) RegisterRoutes(apiGroup *gin.RouterGroup) {
 		deliveries.POST("/:id/approve", h.courierApprove)
 		deliveries.POST("/:id/reschedule-suggest", h.courierSuggestReschedule)
 		deliveries.POST("/:id/reschedule-accept", h.customerAcceptReschedule)
+		deliveries.POST("/:id/reschedule-reject", h.customerRejectReschedule)
+		deliveries.POST("/:id/reschedule-change", h.customerChangeSchedule)
 	}
 
 	deliverySchedules := apiGroup.Group("/delivery-schedules")
@@ -222,6 +224,61 @@ func (h *DeliveryHandler) customerAcceptReschedule(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Jadwal baru berhasil diterima dan dikonfirmasi",
+	})
+}
+
+func (h *DeliveryHandler) customerRejectReschedule(c *gin.Context) {
+	idStr := c.Param("id")
+	deliveryID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID pengantaran tidak valid"})
+		return
+	}
+
+	if err := h.deliverySvc.CustomerRejectReschedule(c.Request.Context(), deliveryID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Pengantaran berhasil dibatalkan (ambil di toko)",
+	})
+}
+
+type changeRescheduleInput struct {
+	DeliveryDate string `json:"delivery_date" binding:"required"`
+	ScheduleID   int64  `json:"schedule_id" binding:"required"`
+}
+
+func (h *DeliveryHandler) customerChangeSchedule(c *gin.Context) {
+	idStr := c.Param("id")
+	deliveryID, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID pengantaran tidak valid"})
+		return
+	}
+
+	var input changeRescheduleInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	targetDate, err := time.Parse("2006-01-02", input.DeliveryDate)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Format tanggal tidak valid (gunakan YYYY-MM-DD)"})
+		return
+	}
+
+	if err := h.deliverySvc.CustomerChangeSchedule(c.Request.Context(), deliveryID, targetDate, input.ScheduleID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Perubahan jadwal baru berhasil diajukan dan menunggu persetujuan kurir",
 	})
 }
 

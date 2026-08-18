@@ -18,6 +18,7 @@ const (
     StateOrdering                 SessionState = "ordering"
     StateAwaitingProductSelection SessionState = "awaiting_product_selection"
     StateAwaitingImportConfirm    SessionState = "awaiting_import_confirm"
+    StateAwaitingRescheduleDecision SessionState = "awaiting_reschedule_decision"
 )
 
 type Session struct {
@@ -40,6 +41,7 @@ type Session struct {
     PendingLng        *float64           `db:"-" json:"-"`
     PendingShipping   float64            `db:"-" json:"-"`
     PendingDistanceKm float64            `db:"-" json:"-"`
+    PendingDeliveryID *int64             `db:"-" json:"-"`
     PendingDate       string             `db:"-" json:"-"`
     AvailSchedules    []DeliverySchedule `db:"-" json:"-"`
 }
@@ -53,6 +55,7 @@ type sessionContext struct {
     PendingLng        *float64           `json:"pending_lng,omitempty"`
     PendingShipping   float64            `json:"pending_shipping,omitempty"`
     PendingDistanceKm float64            `json:"pending_distance_km,omitempty"`
+    PendingDeliveryID *int64             `json:"pending_delivery_id,omitempty"`
     PendingDate       string             `json:"pending_date,omitempty"`
     AvailSchedules    []DeliverySchedule `json:"avail_schedules,omitempty"`
 }
@@ -71,6 +74,7 @@ func (s *Session) LoadContext() {
         s.PendingLng = sc.PendingLng
         s.PendingShipping = sc.PendingShipping
         s.PendingDistanceKm = sc.PendingDistanceKm
+        s.PendingDeliveryID = sc.PendingDeliveryID
         s.PendingDate = sc.PendingDate
         s.AvailSchedules = sc.AvailSchedules
     }
@@ -86,6 +90,7 @@ func (s *Session) SaveContext() {
         PendingLng:        s.PendingLng,
         PendingShipping:   s.PendingShipping,
         PendingDistanceKm: s.PendingDistanceKm,
+        PendingDeliveryID: s.PendingDeliveryID,
         PendingDate:       s.PendingDate,
         AvailSchedules:    s.AvailSchedules,
     }

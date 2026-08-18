@@ -111,7 +111,11 @@ func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessag
 
 	// Tangani alur state percakapan bertahap (Order Type & Delivery Flow)
 	sess.LoadContext()
-	if sess.State == model.StateAwaitingOrderType {
+	if sess.State == model.StateAwaitingRescheduleDecision {
+		reply := p.handleRescheduleDecision(ctx, msg, sess)
+		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
+		return
+	} else if sess.State == model.StateAwaitingOrderType {
 		reply := p.handleOrderTypeSelection(ctx, msg, sess)
 		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
 		return
@@ -598,6 +602,81 @@ func (p *MessageProcessor) handleDeliveryScheduleSelection(ctx context.Context, 
 
 	sess.State = model.StateAwaitingConfirm
 	return "Jadwal pengantaran dikonfirmasi. Ketik *1* untuk bayar online via Midtrans."
+}
+
+func (p *MessageProcessor) handleRescheduleDecision(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
+	text := strings.ToLower(strings.TrimSpace(msg.Message))
+
+	deliveryID := int64(0)
+	if sess.PendingDeliveryID != nil {
+		deliveryID = *sess.PendingDeliveryID
+	}
+
+	if deliveryID == 0 {
+		sess.State = model.StateIdle
+		return "Tidak ada permintaan reschedule pengantaran yang sedang aktif."
+	}
+
+	// 1. OPSI 1 / SETUJU: Terima saran jadwal dari kurir
+	if text == "1" || text == "setuju" || text == "terima" || text == "ok" || text == "yes" {
+		if p.deliverySvc != nil {
+			if err := p.deliverySvc.CustomerAcceptReschedule(ctx, deliveryID); err != nil {
+				return fmt.Sprintf("⚠️ Gagal menerima jadwal baru: %s", err.Error())
+			}
+		}
+		sess.State = model.StateIdle
+		sess.PendingDeliveryID = nil
+		return "✅ *Konfirmasi Diterima!*\n\nJadwal pengantaran baru telah disetujui. Kurir kami akan mengantar pesanan Anda sesuai jadwal tersebut. Terima kasih!"
+	}
+
+	// 2. OPSI 2 / GANTI: Customer ingin memilih jadwal/slot lain
+	if text == "2" || text == "ganti" || text == "ubah" || text == "reschedule" {
+		// Alihkan ke pemilihan jadwal ulang
+		sess.State = model.StateAwaitingDeliverySchedule
+		targetDate := time.Now().Add(24 * time.Hour) // default besok
+		sess.PendingDate = targetDate.Format("2006-01-02")
+
+		var schedules []model.DeliverySchedule
+		if p.deliverySvc != nil {
+			schedules, _ = p.deliverySvc.GetAvailableSchedules(ctx, targetDate)
+		}
+		sess.AvailSchedules = schedules
+
+		var sb strings.Builder
+		sb.WriteString("🗓️ *Pilih Jadwal Pengantaran Baru*\n\n")
+		sb.WriteString(fmt.Sprintf("📅 Tanggal: *%s*\n", targetDate.Format("02 Jan 2006")))
+		sb.WriteString("Silakan pilih slot waktu yang tersedia:\n")
+
+		if len(schedules) == 0 {
+			sb.WriteString("_Belum ada slot jadwal tersedia untuk tanggal ini._\nKetik *BATAL* untuk membatalkan.")
+			return sb.String()
+		}
+
+		for i, s := range schedules {
+			status := fmt.Sprintf("Tersedia (%d slot)", s.AvailableSlots)
+			if s.IsFull {
+				status = "❌ Penuh"
+			}
+			sb.WriteString(fmt.Sprintf("%d️⃣ *%s* (%s - %s) [%s]\n", i+1, s.SlotName, s.StartTime, s.EndTime, status))
+		}
+		sb.WriteString("\nBalas dengan *nomor slot* yang Anda inginkan (misal: *1*).")
+		return sb.String()
+	}
+
+	// 3. OPSI 3 / TOLAK: Batalkan pengantaran kurir & beralih ambil sendiri di toko
+	if text == "3" || text == "tolak" || text == "batal" || text == "ambil sendiri" {
+		if p.deliverySvc != nil {
+			_ = p.deliverySvc.CustomerRejectReschedule(ctx, deliveryID)
+		}
+		sess.State = model.StateIdle
+		sess.PendingDeliveryID = nil
+		return "❌ *Pengantaran Kurir Dibatalkan*\n\nAnda dapat mengambil pesanan secara langsung di toko Niaga AutoParts. Terima kasih! 🏬"
+	}
+
+	return "Pilihan tidak valid. Silakan balas dengan:\n" +
+		"1️⃣ *1* atau *SETUJU* → Terima jadwal saran kurir\n" +
+		"2️⃣ *2* atau *GANTI*  → Pilih jadwal lain\n" +
+		"3️⃣ *3* atau *TOLAK*  → Batalkan pengantaran (ambil di toko)"
 }
 
 var orderNumRegex = regexp.MustCompile(`(?i)APT-\d{8}-[A-Z0-9]{4}`)

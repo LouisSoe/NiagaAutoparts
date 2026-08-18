@@ -36,6 +36,7 @@ type CourierBotService struct {
 	logger       *zap.Logger
 	webAppBase   string
 	deliverySvc  *DeliveryService
+	orderSvc     *OrderService
 	userRepo     *repository.UserRepository
 	courierChats map[int64]bool
 }
@@ -59,6 +60,10 @@ func NewCourierBotService(token string, webAppBase string, logger *zap.Logger) (
 
 func (s *CourierBotService) SetUserRepository(repo *repository.UserRepository) {
 	s.userRepo = repo
+}
+
+func (s *CourierBotService) SetOrderService(orderSvc *OrderService) {
+	s.orderSvc = orderSvc
 }
 
 // StartPolling starts polling for updates from the courier bot (in a background goroutine).
@@ -320,16 +325,86 @@ func (s *CourierBotService) handleCallbackQuery(cb *tgbotapi.CallbackQuery) {
 	}
 }
 
+// getTodayRealDeliveryTask fetches real confirmed deliveries for today and constructs a DeliveryTask.
+func (s *CourierBotService) getTodayRealDeliveryTask(ctx context.Context) model.DeliveryTask {
+	today := time.Now()
+	task := model.DeliveryTask{
+		ManifestID:  fmt.Sprintf("MNF-%s", today.Format("20060102")),
+		CourierName: "Tim Kurir Niaga",
+		Date:        today.Format("02 January 2006"),
+		OriginName:  "Gudang Pusat Niaga Autoparts",
+		OriginLat:   WarehouseLat,
+		OriginLng:   WarehouseLng,
+		Points:      []model.DeliveryPoint{},
+	}
+
+	if s.deliverySvc == nil {
+		return task
+	}
+
+	deliveries, err := s.deliverySvc.GetDeliveriesForDate(ctx, today, "")
+	if err != nil || len(deliveries) == 0 {
+		return task
+	}
+
+	var validPoints []model.DeliveryPoint
+	for _, d := range deliveries {
+		// Filter yang statusnya confirmed atau on_delivery
+		if d.Status != model.DeliveryStatusConfirmed && d.Status != model.DeliveryStatusOnDelivery {
+			continue
+		}
+
+		lat := d.CustomerLatitude
+		lng := d.CustomerLongitude
+		if lat == 0 || lng == 0 {
+			lat = WarehouseLat
+			lng = WarehouseLng
+		}
+
+		itemsSummary := "1x Pesanan Sparepart"
+		if s.orderSvc != nil && d.OrderID > 0 {
+			if ord, errO := s.orderSvc.GetOrderByID(ctx, d.OrderID); errO == nil && ord != nil && len(ord.Items) > 0 {
+				var names []string
+				for _, it := range ord.Items {
+					names = append(names, fmt.Sprintf("%dx %s", it.Quantity, it.ProductName))
+				}
+				itemsSummary = strings.Join(names, ", ")
+			}
+		}
+
+		validPoints = append(validPoints, model.DeliveryPoint{
+			OrderNumber:  d.OrderNumber,
+			CustomerName: d.CustomerName,
+			Phone:        d.CustomerPhone,
+			Address:      d.CustomerAddress,
+			Latitude:     lat,
+			Longitude:    lng,
+			Notes:        d.Notes,
+			ItemsSummary: itemsSummary,
+		})
+	}
+
+	task.Points = validPoints
+	task.OptimizeRoute()
+	return task
+}
+
 // sendManifestSummary sends the summary of today's delivery manifest with action buttons.
 func (s *CourierBotService) sendManifestSummary(chatID int64) {
-	task := model.GetDummyDeliveryTask()
+	task := s.getTodayRealDeliveryTask(context.Background())
+
+	if len(task.Points) == 0 {
+		msg := tgbotapi.NewMessage(chatID, "📦 *Tidak ada tugas pengiriman aktif untuk hari ini.*\n\nSemua pesanan sudah selesai diantar atau belum ada pesanan terkonfirmasi untuk hari ini.")
+		msg.ParseMode = tgbotapi.ModeMarkdown
+		_, _ = s.bot.Send(msg)
+		return
+	}
 
 	totalKm := utils.CalculateTotalDistance(task.OriginLat, task.OriginLng, getRoutables(task.Points), getSeqIndices(len(task.Points)))
 
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("🚚 *DAFTAR TUGAS PENGIRIMAN KURIR*\n"))
+	sb.WriteString(fmt.Sprintf("🚚 *DAFTAR TUGAS PENGIRIMAN REAL-TIME*\n"))
 	sb.WriteString(fmt.Sprintf("📋 *Manifest:* `%s`\n", task.ManifestID))
-	sb.WriteString(fmt.Sprintf("👤 *Kurir:* %s\n", task.CourierName))
 	sb.WriteString(fmt.Sprintf("📅 *Tanggal:* %s\n", task.Date))
 	sb.WriteString(fmt.Sprintf("🏢 *Asal (Gudang):* %s\n", task.OriginName))
 	sb.WriteString(fmt.Sprintf("📍 *Total Titik Antar:* %d Lokasi\n", len(task.Points)))
@@ -361,9 +436,11 @@ func (s *CourierBotService) sendManifestSummary(chatID int64) {
 		tgbotapi.NewInlineKeyboardButtonData("📍 Kirim Pin Lokasi Antar", "action_pins"),
 	))
 
-	keyboardRows = append(keyboardRows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonURL("🗺️ Buka Rute Multi-Stop (Google Maps)", routeURL),
-	))
+	if routeURL != "" {
+		keyboardRows = append(keyboardRows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("🗺️ Buka Rute Multi-Stop (Google Maps)", routeURL),
+		))
+	}
 
 	if s.webAppBase != "" && !strings.Contains(s.webAppBase, "localhost") && !strings.Contains(s.webAppBase, "127.0.0.1") {
 		keyboardRows = append(keyboardRows, tgbotapi.NewInlineKeyboardRow(
@@ -379,7 +456,9 @@ func (s *CourierBotService) sendManifestSummary(chatID int64) {
 			fmt.Sprintf("stop_%d", pt.Sequence),
 		))
 	}
-	keyboardRows = append(keyboardRows, stopButtons)
+	if len(stopButtons) > 0 {
+		keyboardRows = append(keyboardRows, stopButtons)
+	}
 
 	msg := tgbotapi.NewMessage(chatID, sb.String())
 	msg.ParseMode = tgbotapi.ModeMarkdown
@@ -393,7 +472,13 @@ func (s *CourierBotService) sendManifestSummary(chatID int64) {
 
 // sendLocationPins sends Telegram native venue/location pins for each stop.
 func (s *CourierBotService) sendLocationPins(chatID int64) {
-	task := model.GetDummyDeliveryTask()
+	task := s.getTodayRealDeliveryTask(context.Background())
+
+	if len(task.Points) == 0 {
+		msg := tgbotapi.NewMessage(chatID, "📦 Tidak ada titik pengantaran aktif untuk dikirimkan pin lokasinya.")
+		_, _ = s.bot.Send(msg)
+		return
+	}
 
 	introMsg := tgbotapi.NewMessage(chatID, "📌 *Mengirimkan Pin Lokasi Titik Pengantaran...*")
 	introMsg.ParseMode = tgbotapi.ModeMarkdown
@@ -434,18 +519,24 @@ func (s *CourierBotService) sendLocationPins(chatID int64) {
 	routeURL := task.GenerateGoogleMapsRouteURL()
 	doneMsg := tgbotapi.NewMessage(chatID, "✅ *Semua pin lokasi telah dikirim!*\nSilakan pilih pin lokasi tujuan di atas atau buka rute multi-stop lengkap berikut.")
 	doneMsg.ParseMode = tgbotapi.ModeMarkdown
-	doneMsg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-		tgbotapi.NewInlineKeyboardRow(
+
+	var rows [][]tgbotapi.InlineKeyboardButton
+	if routeURL != "" {
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonURL("🗺️ Navigasi Semua Rute (Google Maps)", routeURL),
-			tgbotapi.NewInlineKeyboardButtonData("📋 Menu Tugas", "action_summary"),
-		),
-	)
+		))
+	}
+	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+		tgbotapi.NewInlineKeyboardButtonData("📋 Menu Tugas", "action_summary"),
+	))
+
+	doneMsg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(rows...)
 	_, _ = s.bot.Send(doneMsg)
 }
 
 // sendSinglePointDetail sends detailed info for a single stop point.
 func (s *CourierBotService) sendSinglePointDetail(chatID int64, sequence int) {
-	task := model.GetDummyDeliveryTask()
+	task := s.getTodayRealDeliveryTask(context.Background())
 
 	var selected *model.DeliveryPoint
 	for _, pt := range task.Points {
@@ -473,7 +564,11 @@ func (s *CourierBotService) sendSinglePointDetail(chatID int64, sequence int) {
 	}
 
 	singleRouteURL := fmt.Sprintf("https://www.google.com/maps/dir/?api=1&destination=%f,%f&travelmode=driving", selected.Latitude, selected.Longitude)
-	waURL := fmt.Sprintf("https://wa.me/%s", strings.TrimPrefix(selected.Phone, "0"))
+	waPhone := strings.TrimPrefix(selected.Phone, "0")
+	if !strings.HasPrefix(waPhone, "62") && len(waPhone) > 5 {
+		waPhone = "62" + waPhone
+	}
+	waURL := fmt.Sprintf("https://wa.me/%s", waPhone)
 
 	markup := tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardRow(
@@ -485,7 +580,6 @@ func (s *CourierBotService) sendSinglePointDetail(chatID int64, sequence int) {
 		),
 	)
 
-	// Send location pin and caption
 	venue := tgbotapi.NewVenue(
 		chatID,
 		fmt.Sprintf("Stop #%d: %s", selected.Sequence, selected.CustomerName),
@@ -505,7 +599,13 @@ func (s *CourierBotService) sendSinglePointDetail(chatID int64, sequence int) {
 
 // sendRouteMap sends direct links for Google Maps and Web Map.
 func (s *CourierBotService) sendRouteMap(chatID int64) {
-	task := model.GetDummyDeliveryTask()
+	task := s.getTodayRealDeliveryTask(context.Background())
+	if len(task.Points) == 0 {
+		msg := tgbotapi.NewMessage(chatID, "📦 Tidak ada pengantaran aktif hari ini untuk membuat rute.")
+		_, _ = s.bot.Send(msg)
+		return
+	}
+
 	routeURL := task.GenerateGoogleMapsRouteURL()
 	webAppURL := s.webAppBase + "/api/v1/courier/map-view"
 
@@ -513,9 +613,11 @@ func (s *CourierBotService) sendRouteMap(chatID int64) {
 	msg.ParseMode = tgbotapi.ModeMarkdown
 
 	var rows [][]tgbotapi.InlineKeyboardButton
-	rows = append(rows, tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonURL("🧭 Buka Google Maps (Rute Multi-Stop)", routeURL),
-	))
+	if routeURL != "" {
+		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
+			tgbotapi.NewInlineKeyboardButtonURL("🧭 Buka Google Maps (Rute Multi-Stop)", routeURL),
+		))
+	}
 	if s.webAppBase != "" && !strings.Contains(s.webAppBase, "localhost") && !strings.Contains(s.webAppBase, "127.0.0.1") {
 		rows = append(rows, tgbotapi.NewInlineKeyboardRow(
 			tgbotapi.NewInlineKeyboardButtonURL("📱 Buka Peta Interaktif Leaflet", webAppURL),
