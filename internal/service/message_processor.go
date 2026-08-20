@@ -630,7 +630,12 @@ func (p *MessageProcessor) saveCustomerDeliveryProfile(ctx context.Context, send
 func (p *MessageProcessor) askDeliveryDate(ctx context.Context, sess *model.Session, address string, shippingCost float64) string {
 	sess.State = model.StateAwaitingDeliveryDate
 
-	now := time.Now()
+	loc, errLoc := time.LoadLocation("Asia/Jakarta")
+	if errLoc != nil {
+		loc = time.Local
+	}
+
+	now := time.Now().In(loc)
 	t0 := now
 	t1 := now.Add(24 * time.Hour)
 	t2 := now.Add(48 * time.Hour)
@@ -640,7 +645,7 @@ func (p *MessageProcessor) askDeliveryDate(ctx context.Context, sess *model.Sess
 	if p.deliverySvc != nil {
 		todaySchedules, _ := p.deliverySvc.GetAvailableSchedules(ctx, t0)
 		for _, s := range todaySchedules {
-			if !isSlotExpired(s.StartTime, now) {
+			if !isSlotExpired(s.StartTime, now, loc) {
 				todayHasValidSlots = true
 				break
 			}
@@ -678,7 +683,12 @@ func (p *MessageProcessor) handleDeliveryDateSelection(ctx context.Context, msg 
 		return p.handleCancel(ctx, sess, msg.Sender)
 	}
 
-	now := time.Now()
+	loc, errLoc := time.LoadLocation("Asia/Jakarta")
+	if errLoc != nil {
+		loc = time.Local
+	}
+
+	now := time.Now().In(loc)
 	var targetDate time.Time
 
 	// Cek apakah slot hari ini masih ada yang valid (H-1 sebelum jam mulai)
@@ -686,7 +696,7 @@ func (p *MessageProcessor) handleDeliveryDateSelection(ctx context.Context, msg 
 	if p.deliverySvc != nil {
 		todaySchedules, _ := p.deliverySvc.GetAvailableSchedules(ctx, now)
 		for _, s := range todaySchedules {
-			if !isSlotExpired(s.StartTime, now) {
+			if !isSlotExpired(s.StartTime, now, loc) {
 				todayHasValidSlots = true
 				break
 			}
@@ -702,11 +712,11 @@ func (p *MessageProcessor) handleDeliveryDateSelection(ctx context.Context, msg 
 		case "3", "lusa":
 			targetDate = now.Add(48 * time.Hour)
 		default:
-			parsed, err := time.Parse("2006-01-02", text)
+			parsed, err := time.ParseInLocation("2006-01-02", text, loc)
 			if err != nil {
 				return "⚠️ Format tanggal tidak valid.\nSilakan balas dengan angka *1* (Hari Ini), *2* (Besok), *3* (Lusa), atau ketik format `YYYY-MM-DD` (contoh: `2026-08-25`)."
 			}
-			todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+			todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 			if parsed.Before(todayZero) {
 				return "⚠️ Tanggal pengantaran tidak boleh di masa lampau. Silakan pilih tanggal hari ini atau ke depan."
 			}
@@ -722,11 +732,11 @@ func (p *MessageProcessor) handleDeliveryDateSelection(ctx context.Context, msg 
 		case "hari ini", "today":
 			return "⚠️ Mohon maaf, jadwal pengantaran untuk hari ini sudah melewati batas waktu. Silakan pilih *1* (Besok) atau tanggal lain."
 		default:
-			parsed, err := time.Parse("2006-01-02", text)
+			parsed, err := time.ParseInLocation("2006-01-02", text, loc)
 			if err != nil {
 				return "⚠️ Format tanggal tidak valid.\nSilakan balas dengan angka *1* (Besok), *2* (Lusa), atau ketik format `YYYY-MM-DD` (contoh: `2026-08-25`)."
 			}
-			todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+			todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
 			if parsed.Before(todayZero.Add(24 * time.Hour)) {
 				return "⚠️ Jadwal hari ini sudah lewat batas operasional. Silakan pilih tanggal mulai dari besok ke depan."
 			}
@@ -741,21 +751,9 @@ func (p *MessageProcessor) handleDeliveryDateSelection(ctx context.Context, msg 
 func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.Session, targetDate time.Time) string {
 	sess.State = model.StateAwaitingDeliverySchedule
 
-	var rawSchedules []model.DeliverySchedule
-	if p.deliverySvc != nil {
-		rawSchedules, _ = p.deliverySvc.GetAvailableSchedules(ctx, targetDate)
-	}
-
-	now := time.Now()
-	isToday := targetDate.Year() == now.Year() && targetDate.Month() == now.Month() && targetDate.Day() == now.Day()
-
-	// Filter: Jika pengantaran hari ini, buang slot yang sudah melewati jam mulai - 1 jam (H-1 sebelum pengantaran dimulai)
 	var validSchedules []model.DeliverySchedule
-	for _, s := range rawSchedules {
-		if isToday && isSlotExpired(s.StartTime, now) {
-			continue // Sembunyikan slot jika waktu sekarang sudah melewati startTime - 1 jam
-		}
-		validSchedules = append(validSchedules, s)
+	if p.deliverySvc != nil {
+		validSchedules, _ = p.deliverySvc.GetAvailableSchedules(ctx, targetDate)
 	}
 
 	sess.AvailSchedules = validSchedules
@@ -776,7 +774,9 @@ func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.
 		} else {
 			hasSlot = true
 		}
-		sb.WriteString(fmt.Sprintf("%d️⃣ *%s* (%s - %s) [%s]\n", i+1, s.SlotName, s.StartTime, s.EndTime, status))
+		startTimeClean := formatTimeShort(s.StartTime)
+		endTimeClean := formatTimeShort(s.EndTime)
+		sb.WriteString(fmt.Sprintf("%d️⃣ *%s* (%s - %s) [%s]\n", i+1, s.SlotName, startTimeClean, endTimeClean, status))
 	}
 
 	if !hasSlot {
@@ -788,9 +788,18 @@ func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.
 	return sb.String()
 }
 
+// formatTimeShort memotong detik dari "09:00:00" menjadi "09:00" jika ada
+func formatTimeShort(t string) string {
+	parts := strings.Split(strings.TrimSpace(t), ":")
+	if len(parts) >= 2 {
+		return fmt.Sprintf("%s:%s", parts[0], parts[1])
+	}
+	return t
+}
+
 // isSlotExpired mengecek apakah jam waktu sekarang sudah melewati batas waktu H-1 jam sebelum jadwal dimulai (startTime - 1 jam).
 // Format startTimeStr yang didukung: "15:04" atau "15:04:05".
-func isSlotExpired(startTimeStr string, now time.Time) bool {
+func isSlotExpired(startTimeStr string, now time.Time, loc *time.Location) bool {
 	cleanTime := strings.TrimSpace(startTimeStr)
 	var hour, min int
 	var err error
@@ -804,7 +813,7 @@ func isSlotExpired(startTimeStr string, now time.Time) bool {
 	}
 
 	// Batas cutoff = startTime dikurangi 1 jam (H-1 sebelum pengantaran dimulai)
-	slotCutoff := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, now.Location()).Add(-1 * time.Hour)
+	slotCutoff := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, loc).Add(-1 * time.Hour)
 	return now.After(slotCutoff)
 }
 

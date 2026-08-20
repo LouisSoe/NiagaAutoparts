@@ -139,22 +139,29 @@ func (s *DeliveryService) GetDeliveriesForDate(ctx context.Context, date time.Ti
 }
 
 // GetAvailableSchedules returns available delivery slots for the specified date.
-// If the targetDate is today, slots that have passed the cutoff (startTime - 1 hour) are filtered out.
+// If the targetDate is today (WIB / Asia/Jakarta), slots that have passed the cutoff (startTime - 1 hour) are filtered out.
 func (s *DeliveryService) GetAvailableSchedules(ctx context.Context, targetDate time.Time) ([]model.DeliverySchedule, error) {
-	schedules, err := s.scheduleRepo.GetAvailableSchedulesByDate(ctx, targetDate)
+	loc, errLoc := time.LoadLocation("Asia/Jakarta")
+	if errLoc != nil {
+		loc = time.Local
+	}
+
+	now := time.Now().In(loc)
+	targetInLoc := targetDate.In(loc)
+
+	schedules, err := s.scheduleRepo.GetAvailableSchedulesByDate(ctx, targetInLoc)
 	if err != nil {
 		return nil, err
 	}
 
-	now := time.Now()
-	isToday := targetDate.Year() == now.Year() && targetDate.Month() == now.Month() && targetDate.Day() == now.Day()
+	isToday := targetInLoc.Year() == now.Year() && targetInLoc.Month() == now.Month() && targetInLoc.Day() == now.Day()
 	if !isToday {
 		return schedules, nil
 	}
 
 	validSchedules := make([]model.DeliverySchedule, 0, len(schedules))
 	for _, sched := range schedules {
-		if !isDeliverySlotExpired(sched.StartTime, now) {
+		if !isDeliverySlotExpired(sched.StartTime, now, loc) {
 			validSchedules = append(validSchedules, sched)
 		}
 	}
@@ -163,7 +170,7 @@ func (s *DeliveryService) GetAvailableSchedules(ctx context.Context, targetDate 
 }
 
 // isDeliverySlotExpired mengecek apakah jam waktu sekarang sudah melewati batas waktu H-1 jam sebelum jadwal dimulai (startTime - 1 jam).
-func isDeliverySlotExpired(startTimeStr string, now time.Time) bool {
+func isDeliverySlotExpired(startTimeStr string, now time.Time, loc *time.Location) bool {
 	cleanTime := strings.TrimSpace(startTimeStr)
 	var hour, min int
 	var err error
@@ -176,7 +183,7 @@ func isDeliverySlotExpired(startTimeStr string, now time.Time) bool {
 		return false
 	}
 
-	slotCutoff := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, now.Location()).Add(-1 * time.Hour)
+	slotCutoff := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, loc).Add(-1 * time.Hour)
 	return now.After(slotCutoff)
 }
 
