@@ -97,7 +97,8 @@ File Postman Collection resmi yang dapat di-import langsung ke Postman berada di
 
 | Method | Endpoint | Deskripsi |
 |---|---|---|
-| `GET` | `/api/v1/customers` | Ambil semua pelanggan |
+| `GET` | `/api/v1/customers` | Ambil semua pelanggan (Filter query: `q`, `type_customer` / `type` (`INDIVIDUAL`, `WORKSHOP`, `COMPANY`), `page`, `limit`) |
+| `GET` | `/api/v1/customers?type_customer=WORKSHOP` | Filter khusus pelanggan bertipe bengkel |
 | `GET` | `/api/v1/customers/:id` | Ambil detail pelanggan by ID |
 | `POST` | `/api/v1/customers` | Tambah pelanggan baru |
 | `PUT` | `/api/v1/customers/:id` | Update data pelanggan |

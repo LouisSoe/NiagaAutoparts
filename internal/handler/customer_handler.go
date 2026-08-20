@@ -38,11 +38,16 @@ func (h *CustomerHandler) RegisterRoutes(rg *gin.RouterGroup) {
 
 func (h *CustomerHandler) List(c *gin.Context) {
 	q := c.Query("q")
+	customerType := c.Query("type_customer")
+	if customerType == "" {
+		customerType = c.Query("type")
+	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
 
 	filter := repository.CustomerFilter{
 		Q:     q,
+		Type:  customerType,
 		Page:  page,
 		Limit: limit,
 	}
