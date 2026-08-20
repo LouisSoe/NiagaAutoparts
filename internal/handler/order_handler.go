@@ -43,11 +43,18 @@ func (h *OrderHandler) List(c *gin.Context) {
 	date := c.Query("date")
 
 	var userID int64
+	userRole, _ := c.Get("user_role")
+	roleStr, _ := userRole.(string)
+
 	if uIDStr := c.Query("user_id"); uIDStr != "" {
 		userID, _ = strconv.ParseInt(uIDStr, 10, 64)
 	} else if val, exists := c.Get("user_id"); exists {
-		if id, ok := val.(int64); ok {
-			userID = id
+		// Jika role adalah customer/guest biasa, filter pesanan milik mereka sendiri
+		// Namun jika admin, manager, staff, cashier, atau courier, tampilkan semua pesanan toko jika tidak ada query ?user_id
+		if roleStr == string(model.RoleCustomer) || roleStr == string(model.RoleGuest) {
+			if id, ok := val.(int64); ok {
+				userID = id
+			}
 		}
 	}
 
