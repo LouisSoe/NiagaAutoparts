@@ -3,36 +3,36 @@ package logger
 import (
 	"io"
 	"os"
-	"path/filepath"
+	"time"
 
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-// NewLogger creates a new logrus.Logger configured with Lumberjack for log rotation.
-// It logs to stdout as text and to `logs/app.log` as JSON with a 7-day retention policy.
+// NewLogger creates a new logrus.Logger configured with rotatelogs for daily log rotation.
+// It logs to stdout and to `logs/app-YYYY-MM-DD.log` with a 7-day retention policy.
 func NewLogger() *logrus.Logger {
-	logDir := "logs"
-	if err := os.MkdirAll(logDir, 0755); err != nil {
+	if err := os.MkdirAll("logs", 0755); err != nil {
 		logrus.Errorf("failed to create log directory: %v", err)
 	}
 
-	logFilePath := filepath.Join(logDir, "app.log")
-
-	// Lumberjack handles log rotation and retention
-	lumberjackLogger := &lumberjack.Logger{
-		Filename:   logFilePath,
-		MaxSize:    10,   // Max megabytes before rotation
-		MaxBackups: 14,   // Max number of old log files to retain
-		MaxAge:     7,    // Max number of days to retain old log files (7 days retention)
-		Compress:   true, // Compress old log files with gzip
+	rotator, err := rotatelogs.New(
+		"logs/app-%Y-%m-%d.log",
+		rotatelogs.WithMaxAge(7*24*time.Hour),     // 7 days retention
+		rotatelogs.WithRotationTime(24*time.Hour), // rotate daily
+	)
+	if err != nil {
+		logrus.Errorf("failed to initialize rotate logger: %v", err)
 	}
 
 	log := logrus.New()
 
-	// Write to both Console (stdout) and File
-	mw := io.MultiWriter(os.Stdout, lumberjackLogger)
-	log.SetOutput(mw)
+	if rotator != nil {
+		mw := io.MultiWriter(os.Stdout, rotator)
+		log.SetOutput(mw)
+	} else {
+		log.SetOutput(os.Stdout)
+	}
 
 	env := os.Getenv("APP_ENV")
 	if env == "production" {

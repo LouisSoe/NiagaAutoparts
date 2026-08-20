@@ -1,5 +1,7 @@
 .env
 cmd/tmp/
+cmd/logs/
+cmd/uploads/
 # File Tree: NiagaGudang
 
 **Generated:** 5/6/2026, 11:32:20 AM

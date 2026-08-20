@@ -12,10 +12,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
+	rotatelogs "github.com/lestrrat-go/file-rotatelogs"
 	_ "github.com/lib/pq"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
 
 	"github.com/louissoe/niaga-autoparts/internal/ai"
 	"github.com/louissoe/niaga-autoparts/internal/cache"
@@ -376,13 +376,19 @@ func connectDB(dsn string) (*sqlx.DB, error) {
 func buildLogger() *zap.Logger {
 	env := os.Getenv("APP_ENV")
 
-	// Lumberjack log rotation (7 days retention)
-	lumberjackLogger := &lumberjack.Logger{
-		Filename:   "logs/app.log",
-		MaxSize:    10,   // megabytes
-		MaxBackups: 14,   // max files
-		MaxAge:     7,    // 7 days retention
-		Compress:   true, // compress with gzip
+	// Ensure logs directory exists
+	if err := os.MkdirAll("logs", 0755); err != nil {
+		fmt.Printf("failed to create log directory: %v\n", err)
+	}
+
+	// Daily rotating log writer (logs/app-YYYY-MM-DD.log) with 7 days retention
+	rotator, err := rotatelogs.New(
+		"logs/app-%Y-%m-%d.log",
+		rotatelogs.WithMaxAge(7*24*time.Hour),     // 7 days retention
+		rotatelogs.WithRotationTime(24*time.Hour), // rotate daily
+	)
+	if err != nil {
+		fmt.Printf("failed to initialize rotate logger: %v\n", err)
 	}
 
 	var encoder zapcore.Encoder
@@ -397,9 +403,16 @@ func buildLogger() *zap.Logger {
 		encoder = zapcore.NewConsoleEncoder(encCfg)
 	}
 
+	var writeSyncer zapcore.WriteSyncer
+	if rotator != nil {
+		writeSyncer = zapcore.AddSync(rotator)
+	} else {
+		writeSyncer = zapcore.AddSync(os.Stdout)
+	}
+
 	core := zapcore.NewTee(
 		zapcore.NewCore(encoder, zapcore.AddSync(os.Stdout), zap.DebugLevel),
-		zapcore.NewCore(encoder, zapcore.AddSync(lumberjackLogger), zap.DebugLevel),
+		zapcore.NewCore(encoder, writeSyncer, zap.DebugLevel),
 	)
 
 	return zap.New(core)
