@@ -565,8 +565,23 @@ func (p *MessageProcessor) handleDeliveryAddressDetail(ctx context.Context, msg 
 	// Simpan / Update profil customer
 	p.saveCustomerDeliveryProfile(ctx, msg.Sender, msg.SenderName, text, lat, lng)
 
-	// Lanjut ke pemilihan tanggal pengantaran
-	return p.askDeliveryDate(ctx, sess, text, sess.PendingShipping)
+	// Masuk ke tahap konfirmasi alamat dan ongkir
+	sess.State = model.StateAwaitingAddressConfirmation
+	return fmt.Sprintf(
+		"📍 *Konfirmasi Detail Pengantaran*\n\n"+
+			"🏠 *Alamat Lengkap:* %s\n"+
+			"📍 *Titik GPS:* `%.6f, %.6f`\n"+
+			"📏 *Estimasi Jarak:* %.2f km\n"+
+			"🚚 *Ongkos Kirim:* Rp %s\n\n"+
+			"Apakah data pengantaran di atas sudah benar?\n"+
+			"1️⃣ *1* / *Ya* (Lanjut Pilih Jadwal)\n"+
+			"2️⃣ *2* / *Ganti* (Ubah Alamat / Titik Lokasi)\n\n"+
+			"💡 _Ketik *batal* untuk membatalkan pesanan._",
+		text,
+		lat, lng,
+		sess.PendingDistanceKm,
+		formatIDR(sess.PendingShipping),
+	)
 }
 
 func (p *MessageProcessor) saveCustomerDeliveryProfile(ctx context.Context, sender, senderName, address string, lat, lng float64) {
