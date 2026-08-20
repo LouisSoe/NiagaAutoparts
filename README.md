@@ -62,12 +62,22 @@ Pastikan sudah terinstall di komputer/server kamu:
 
 > Gemini Flash Lite tersedia di free tier — tidak perlu kartu kredit untuk development.
 
-### 3. Telegram Bot
+### 3. Telegram Bot Ecosystem (3 Bot)
 
-1. Buka Telegram dan cari **@BotFather**
-2. Kirim `/newbot` dan ikuti instruksi
-3. Copy API Token yang diberikan
-4. Masukkan ke `.env` sebagai `TELE_API`
+Aplikasi ini menggunakan 3 Bot Telegram terpisah untuk kebutuhan operasional:
+1. **Bot 1 (Customer Service Chatbot):** Bot interaktif pelanggan untuk pencarian barang, katalog, reservasi pesanan, dan pengantaran kurir (`TELE_API`).
+2. **Bot 2 (System Notifier & Broadcaster):** Bot untuk broadcast pesanan baru ke channel admin (`TELEGRAM_ORDER_CHANNEL_ID`) dan error alert (`TELEGRAM_ERROR_CHANNEL_ID`).
+3. **Bot 3 (Courier Delivery Assistant):** Asisten kurir untuk menerima notifikasi order delivery, navigasi rute Google Maps / Web Leaflet, dan reminder jadwal pengantaran (`TELEGRAM_COURIER_BOT_TOKEN`).
+
+#### Cara Menghubungkan Akun Kurir ke Bot 3:
+1. Pastikan akun kurir sudah terdaftar dengan role `courier` (misal via POST `/api/v1/users`).
+2. Buka Bot Kurir Anda di Telegram (`@CourierAutopart_bot`).
+3. Ketik perintah:
+   ```text
+   /link <email_kurir>
+   ```
+   *(Contoh: `/link kurir1@niagagudang.com`)*
+4. Akun kurir akan otomatis terhubung dengan ID Telegram dan mulai menerima notifikasi order delivery serta reminder jadwal pengiriman.
 
 ---
 
@@ -661,6 +671,10 @@ curl http://localhost:8080/metrics
 | `TELE_API` | | — | Token Bot 1: CS Chatbot Telegram |
 | `TELEGRAM_NOTIFIER_BOT_TOKEN` | | — | Token Bot 2: Notifier & Channel Broadcaster |
 | `TELEGRAM_COURIER_BOT_TOKEN` | | — | Token Bot 3: Courier Delivery Assistant |
+| `COURIER_REMINDER_MODE` | | `daily` | Mode reminder kurir: `daily` (jam tertentu) atau `interval` (per menit/jam) |
+| `COURIER_REMINDER_INTERVAL_MINUTES` | | `60` | Interval pengiriman reminder dalam menit (saat mode `interval`) |
+| `COURIER_REMINDER_HOUR` | | `5` | Jam pengiriman reminder harian (0-23 WIB, saat mode `daily`) |
+| `COURIER_REMINDER_MINUTE` | | `0` | Menit pengiriman reminder harian (0-59 WIB, saat mode `daily`) |
 | `TELEGRAM_ORDER_CHANNEL_ID` | | — | Channel Telegram untuk broadcast order baru |
 | `TELEGRAM_ERROR_CHANNEL_ID` | | — | Channel Telegram untuk error alerting |
 | `FONNTE_API_URL` | | `https://api.fonnte.com/send` | Endpoint Fonnte (jangan diubah) |

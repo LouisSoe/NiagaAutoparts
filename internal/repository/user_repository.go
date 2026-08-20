@@ -83,9 +83,9 @@ func (r *UserRepository) GetByPhone(ctx context.Context, phone string) (*model.U
 func (r *UserRepository) Update(ctx context.Context, u *model.User) error {
 	const q = `
 		UPDATE users
-		SET email = $1, password_hash = $2, name = $3, role = $4, phone = $5, is_active = $6, updated_at = NOW()
-		WHERE id = $7`
-	res, err := r.db.ExecContext(ctx, q, u.Email, u.PasswordHash, u.Name, u.Role, u.Phone, u.IsActive, u.ID)
+		SET email = $1, password_hash = $2, name = $3, role = $4, phone = $5, telegram_chat_id = $6, is_active = $7, updated_at = NOW()
+		WHERE id = $8`
+	res, err := r.db.ExecContext(ctx, q, u.Email, u.PasswordHash, u.Name, u.Role, u.Phone, u.TelegramChatID, u.IsActive, u.ID)
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ func (r *UserRepository) FindFiltered(ctx context.Context, filter UserFilter) ([
 	}
 
 	selectQuery := fmt.Sprintf(`
-		SELECT id, email, password_hash, name, role, phone, is_active, created_at, updated_at
+		SELECT id, email, password_hash, name, role, phone, telegram_chat_id, is_active, created_at, updated_at
 		FROM users
 		WHERE %s
 		ORDER BY created_at DESC`, whereStmt)

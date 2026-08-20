@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"strconv"
 	"strings"
@@ -111,6 +112,8 @@ func (s *CourierBotService) handleUpdate(update tgbotapi.Update) {
 	s.logger.Info("courier bot received message", zap.Int64("chat_id", chatID), zap.String("text", text))
 
 	switch {
+	case strings.HasPrefix(text, "/link"):
+		s.handleLinkAccount(chatID, text)
 	case strings.HasPrefix(text, "/start") || strings.HasPrefix(text, "/tugas") || strings.HasPrefix(text, "/menu"):
 		s.sendManifestSummary(chatID)
 	case strings.HasPrefix(text, "/pins"):
@@ -122,6 +125,52 @@ func (s *CourierBotService) handleUpdate(update tgbotapi.Update) {
 	default:
 		s.sendManifestSummary(chatID)
 	}
+}
+
+func (s *CourierBotService) handleLinkAccount(chatID int64, text string) {
+	parts := strings.Fields(text)
+	if len(parts) < 2 {
+		msg := tgbotapi.NewMessage(chatID, "💡 *Cara Menghubungkan Akun Kurir:*\n\nKetik: `/link <email_anda>`\nContoh: `/link kurir1@niagagudang.com`")
+		msg.ParseMode = tgbotapi.ModeMarkdown
+		_, _ = s.bot.Send(msg)
+		return
+	}
+
+	email := parts[1]
+	if s.userRepo == nil {
+		msg := tgbotapi.NewMessage(chatID, "⚠️ Layanan database sedang tidak tersedia.")
+		_, _ = s.bot.Send(msg)
+		return
+	}
+
+	ctx := context.Background()
+	user, err := s.userRepo.GetByEmail(ctx, email)
+	if err != nil || user == nil {
+		msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("❌ Akun dengan email `%s` tidak ditemukan.", email))
+		msg.ParseMode = tgbotapi.ModeMarkdown
+		_, _ = s.bot.Send(msg)
+		return
+	}
+
+	if user.Role != model.RoleCourier && user.Role != model.RoleAdmin {
+		msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("⚠️ Akun `%s` bukan merupakan akun dengan role *Courier* (Role saat ini: %s).", email, user.Role))
+		msg.ParseMode = tgbotapi.ModeMarkdown
+		_, _ = s.bot.Send(msg)
+		return
+	}
+
+	user.TelegramChatID = sql.NullString{String: strconv.FormatInt(chatID, 10), Valid: true}
+	if err := s.userRepo.Update(ctx, user); err != nil {
+		msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("⚠️ Gagal memperbarui Telegram Chat ID: %s", err.Error()))
+		_, _ = s.bot.Send(msg)
+		return
+	}
+
+	s.courierChats[chatID] = true
+
+	msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("✅ *Akun Kurir Berhasil Terhubung!*\n\n👤 Nama: *%s*\n📧 Email: `%s`\n🆔 Telegram ID: `%d`\n\nAnda sekarang akan menerima notifikasi order delivery & reminder jadwal pengantaran di sini. 🛵💨", user.Name, user.Email, chatID))
+	msg.ParseMode = tgbotapi.ModeMarkdown
+	_, _ = s.bot.Send(msg)
 }
 
 // SetDeliveryService injects DeliveryService to handle approval/reschedule callbacks.
@@ -637,6 +686,7 @@ func (s *CourierBotService) sendHelp(chatID int64) {
 	helpText := `🤖 *Bantuan Bot Kurir Niaga Autoparts*
 
 Perintah yang tersedia:
+• /link <email> - Hubungkan akun kurir Anda dari website ke bot ini
 • /tugas atau /start - Tampilkan daftar tugas pengiriman hari ini
 • /pins - Kirimkan seluruh pin point lokasi tujuan ke chat
 • /rute - Tampilkan link rute multi-stop Google Maps & Web Peta
