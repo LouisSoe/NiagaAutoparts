@@ -114,6 +114,28 @@ File Postman Collection resmi yang dapat di-import langsung ke Postman berada di
 }
 ```
 
+#### Contoh Respon `GET /api/v1/customers`:
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "user_id": 5,
+      "type_customer": "WORKSHOP",
+      "name": "Bengkel Karunia",
+      "phone": "081298765432",
+      "email": "budi@gmail.com",
+      "address": "Jl. Merdeka No. 45 Jakarta",
+      "notes": "Pelanggan langganan oli & sparepart",
+      "total_orders": 8,
+      "total_spent": 1250000,
+      "created_at": "2026-08-04T13:18:40.783227+07:00",
+      "updated_at": "2026-08-04T13:18:40.783227+07:00"
+    }
+  ]
+}
+```
+
 ---
 
 ### 5. Orders (`/api/v1/orders`)

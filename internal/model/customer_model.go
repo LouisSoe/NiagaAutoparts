@@ -25,6 +25,8 @@ type Customer struct {
 	Latitude     sql.NullFloat64 `db:"latitude" json:"latitude"`
 	Longitude    sql.NullFloat64 `db:"longitude" json:"longitude"`
 	Notes        sql.NullString  `db:"notes" json:"notes"`
+	TotalOrders  int64           `db:"total_orders" json:"total_orders"`
+	TotalSpent   float64         `db:"total_spent" json:"total_spent"`
 	CreatedAt    time.Time       `db:"created_at" json:"created_at"`
 	UpdatedAt    time.Time       `db:"updated_at" json:"updated_at"`
 }

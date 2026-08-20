@@ -99,7 +99,28 @@ func (s *OrderService) CreateReservation(ctx context.Context, sender string, pla
 		sourceStr = "telegram"
 		teleChatID = sql.NullString{String: sender, Valid: true}
 		if s.userRepo != nil {
-			if u, err := s.userRepo.GetByTelegramChatID(ctx, sender); err == nil && u != nil {
+			var u *model.User
+			var errU error
+			u, errU = s.userRepo.GetByTelegramChatID(ctx, sender)
+			if (u == nil || errU != nil) {
+				guestUser := &model.User{
+					Email:          fmt.Sprintf("tele_%s@autoparts.local", sender),
+					Name:           "Customer Telegram",
+					Role:           model.RoleCustomer,
+					TelegramChatID: sql.NullString{String: sender, Valid: true},
+					IsActive:       true,
+				}
+				if errCreate := s.userRepo.Create(ctx, guestUser); errCreate == nil && guestUser.ID > 0 {
+					u = guestUser
+					if s.customerRepo != nil {
+						_ = s.customerRepo.Create(ctx, &model.Customer{
+							UserID:       guestUser.ID,
+							TypeCustomer: model.CustomerTypeIndividual,
+						})
+					}
+				}
+			}
+			if u != nil && u.ID > 0 {
 				userID = sql.NullInt64{Int64: u.ID, Valid: true}
 			}
 		}

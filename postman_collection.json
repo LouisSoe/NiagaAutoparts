@@ -896,7 +896,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"user_id\": 5,\n      \"type_customer\": \"WORKSHOP\",\n      \"name\": \"Bengkel Karunia\",\n      \"phone\": \"081298765432\",\n      \"email\": \"budi@gmail.com\",\n      \"address\": \"Jl. Merdeka No. 45 Jakarta\",\n      \"notes\": \"Pelanggan langganan oli & sparepart\",\n      \"created_at\": \"2026-08-04T13:18:40.783227+07:00\",\n      \"updated_at\": \"2026-08-04T13:18:40.783227+07:00\"\n    }\n  ]\n}"
+							"body": "{\n  \"data\": [\n    {\n      \"id\": 1,\n      \"user_id\": 5,\n      \"type_customer\": \"WORKSHOP\",\n      \"name\": \"Bengkel Karunia\",\n      \"phone\": \"081298765432\",\n      \"email\": \"budi@gmail.com\",\n      \"address\": \"Jl. Merdeka No. 45 Jakarta\",\n      \"notes\": \"Pelanggan langganan oli & sparepart\",\n      \"total_orders\": 8,\n      \"total_spent\": 1250000,\n      \"created_at\": \"2026-08-04T13:18:40.783227+07:00\",\n      \"updated_at\": \"2026-08-04T13:18:40.783227+07:00\"\n    }\n  ]\n}"
 						}
 					]
 				},
@@ -933,7 +933,7 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n  \"data\": {\n    \"id\": 1,\n    \"user_id\": 5,\n    \"type_customer\": \"WORKSHOP\",\n    \"name\": \"Bengkel Karunia\",\n    \"phone\": \"081298765432\",\n    \"email\": \"budi@gmail.com\",\n    \"address\": \"Jl. Merdeka No. 45 Jakarta\",\n    \"notes\": \"Pelanggan langganan oli & sparepart\",\n    \"created_at\": \"2026-08-04T13:18:40.783227+07:00\",\n    \"updated_at\": \"2026-08-04T13:18:40.783227+07:00\"\n  }\n}"
+							"body": "{\n  \"data\": {\n    \"id\": 1,\n    \"user_id\": 5,\n    \"type_customer\": \"WORKSHOP\",\n    \"name\": \"Bengkel Karunia\",\n    \"phone\": \"081298765432\",\n    \"email\": \"budi@gmail.com\",\n    \"address\": \"Jl. Merdeka No. 45 Jakarta\",\n    \"notes\": \"Pelanggan langganan oli & sparepart\",\n    \"total_orders\": 8,\n    \"total_spent\": 1250000,\n    \"created_at\": \"2026-08-04T13:18:40.783227+07:00\",\n    \"updated_at\": \"2026-08-04T13:18:40.783227+07:00\"\n  }\n}"
 						}
 					]
 				},

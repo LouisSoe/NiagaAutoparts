@@ -31,9 +31,32 @@ func (r *CustomerRepository) Create(ctx context.Context, c *model.Customer) erro
 
 func (r *CustomerRepository) GetAll(ctx context.Context) ([]model.Customer, error) {
 	const q = `
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
+		SELECT 
+			c.id, 
+			COALESCE(c.user_id, 0) AS user_id, 
+			c.type_customer, 
+			COALESCE(u.name, '') AS name, 
+			COALESCE(u.phone, '') AS phone, 
+			COALESCE(u.email, '') AS email, 
+			c.address, 
+			c.latitude, 
+			c.longitude, 
+			c.notes, 
+			COALESCE(stat.total_orders, 0) AS total_orders,
+			COALESCE(stat.total_spent, 0) AS total_spent,
+			c.created_at, 
+			c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
+		LEFT JOIN (
+			SELECT 
+				user_id, 
+				COUNT(*) AS total_orders, 
+				COALESCE(SUM(CASE WHEN status = 'paid' THEN total_price ELSE 0 END), 0) AS total_spent
+			FROM orders
+			WHERE user_id IS NOT NULL
+			GROUP BY user_id
+		) stat ON stat.user_id = c.user_id
 		ORDER BY c.id DESC`
 	var customers []model.Customer
 	err := r.db.SelectContext(ctx, &customers, q)
@@ -42,9 +65,32 @@ func (r *CustomerRepository) GetAll(ctx context.Context) ([]model.Customer, erro
 
 func (r *CustomerRepository) GetByID(ctx context.Context, id int64) (*model.Customer, error) {
 	const q = `
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
+		SELECT 
+			c.id, 
+			COALESCE(c.user_id, 0) AS user_id, 
+			c.type_customer, 
+			COALESCE(u.name, '') AS name, 
+			COALESCE(u.phone, '') AS phone, 
+			COALESCE(u.email, '') AS email, 
+			c.address, 
+			c.latitude, 
+			c.longitude, 
+			c.notes, 
+			COALESCE(stat.total_orders, 0) AS total_orders,
+			COALESCE(stat.total_spent, 0) AS total_spent,
+			c.created_at, 
+			c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
+		LEFT JOIN (
+			SELECT 
+				user_id, 
+				COUNT(*) AS total_orders, 
+				COALESCE(SUM(CASE WHEN status = 'paid' THEN total_price ELSE 0 END), 0) AS total_spent
+			FROM orders
+			WHERE user_id IS NOT NULL
+			GROUP BY user_id
+		) stat ON stat.user_id = c.user_id
 		WHERE c.id = $1`
 	var c model.Customer
 	if err := r.db.GetContext(ctx, &c, q, id); err != nil {
@@ -55,9 +101,32 @@ func (r *CustomerRepository) GetByID(ctx context.Context, id int64) (*model.Cust
 
 func (r *CustomerRepository) GetByUserID(ctx context.Context, userID int64) (*model.Customer, error) {
 	const q = `
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
+		SELECT 
+			c.id, 
+			COALESCE(c.user_id, 0) AS user_id, 
+			c.type_customer, 
+			COALESCE(u.name, '') AS name, 
+			COALESCE(u.phone, '') AS phone, 
+			COALESCE(u.email, '') AS email, 
+			c.address, 
+			c.latitude, 
+			c.longitude, 
+			c.notes, 
+			COALESCE(stat.total_orders, 0) AS total_orders,
+			COALESCE(stat.total_spent, 0) AS total_spent,
+			c.created_at, 
+			c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
+		LEFT JOIN (
+			SELECT 
+				user_id, 
+				COUNT(*) AS total_orders, 
+				COALESCE(SUM(CASE WHEN status = 'paid' THEN total_price ELSE 0 END), 0) AS total_spent
+			FROM orders
+			WHERE user_id IS NOT NULL
+			GROUP BY user_id
+		) stat ON stat.user_id = c.user_id
 		WHERE c.user_id = $1`
 	var c model.Customer
 	if err := r.db.GetContext(ctx, &c, q, userID); err != nil {
@@ -68,9 +137,32 @@ func (r *CustomerRepository) GetByUserID(ctx context.Context, userID int64) (*mo
 
 func (r *CustomerRepository) GetUserBasicInfo(ctx context.Context, userID int64) (*model.Customer, error) {
 	const q = `
-		SELECT 0 AS id, id AS user_id, 'individual' AS type_customer, name, COALESCE(phone, '') AS phone, email, '' AS address, NULL AS latitude, NULL AS longitude, '' AS notes, created_at, updated_at
-		FROM users
-		WHERE id = $1`
+		SELECT 
+			0 AS id, 
+			u.id AS user_id, 
+			'individual' AS type_customer, 
+			u.name, 
+			COALESCE(u.phone, '') AS phone, 
+			u.email, 
+			'' AS address, 
+			NULL AS latitude, 
+			NULL AS longitude, 
+			'' AS notes, 
+			COALESCE(stat.total_orders, 0) AS total_orders,
+			COALESCE(stat.total_spent, 0) AS total_spent,
+			u.created_at, 
+			u.updated_at
+		FROM users u
+		LEFT JOIN (
+			SELECT 
+				user_id, 
+				COUNT(*) AS total_orders, 
+				COALESCE(SUM(CASE WHEN status = 'paid' THEN total_price ELSE 0 END), 0) AS total_spent
+			FROM orders
+			WHERE user_id IS NOT NULL
+			GROUP BY user_id
+		) stat ON stat.user_id = u.id
+		WHERE u.id = $1`
 	var c model.Customer
 	if err := r.db.GetContext(ctx, &c, q, userID); err != nil {
 		return nil, err
@@ -86,9 +178,32 @@ func (r *CustomerRepository) UpdateUserInfo(ctx context.Context, userID int64, n
 
 func (r *CustomerRepository) GetByPhone(ctx context.Context, phone string) (*model.Customer, error) {
 	const q = `
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
+		SELECT 
+			c.id, 
+			COALESCE(c.user_id, 0) AS user_id, 
+			c.type_customer, 
+			COALESCE(u.name, '') AS name, 
+			COALESCE(u.phone, '') AS phone, 
+			COALESCE(u.email, '') AS email, 
+			c.address, 
+			c.latitude, 
+			c.longitude, 
+			c.notes, 
+			COALESCE(stat.total_orders, 0) AS total_orders,
+			COALESCE(stat.total_spent, 0) AS total_spent,
+			c.created_at, 
+			c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
+		LEFT JOIN (
+			SELECT 
+				user_id, 
+				COUNT(*) AS total_orders, 
+				COALESCE(SUM(CASE WHEN status = 'paid' THEN total_price ELSE 0 END), 0) AS total_spent
+			FROM orders
+			WHERE user_id IS NOT NULL
+			GROUP BY user_id
+		) stat ON stat.user_id = c.user_id
 		WHERE u.phone = $1`
 	var c model.Customer
 	if err := r.db.GetContext(ctx, &c, q, phone); err != nil {
@@ -170,9 +285,32 @@ func (r *CustomerRepository) FindFiltered(ctx context.Context, filter CustomerFi
 	}
 
 	selectQuery := fmt.Sprintf(`
-		SELECT c.id, COALESCE(c.user_id, 0) AS user_id, c.type_customer, COALESCE(u.name, '') AS name, COALESCE(u.phone, '') AS phone, COALESCE(u.email, '') AS email, c.address, c.latitude, c.longitude, c.notes, c.created_at, c.updated_at
+		SELECT 
+			c.id, 
+			COALESCE(c.user_id, 0) AS user_id, 
+			c.type_customer, 
+			COALESCE(u.name, '') AS name, 
+			COALESCE(u.phone, '') AS phone, 
+			COALESCE(u.email, '') AS email, 
+			c.address, 
+			c.latitude, 
+			c.longitude, 
+			c.notes, 
+			COALESCE(stat.total_orders, 0) AS total_orders,
+			COALESCE(stat.total_spent, 0) AS total_spent,
+			c.created_at, 
+			c.updated_at
 		FROM customers c
 		LEFT JOIN users u ON u.id = c.user_id
+		LEFT JOIN (
+			SELECT 
+				user_id, 
+				COUNT(*) AS total_orders, 
+				COALESCE(SUM(CASE WHEN status = 'paid' THEN total_price ELSE 0 END), 0) AS total_spent
+			FROM orders
+			WHERE user_id IS NOT NULL
+			GROUP BY user_id
+		) stat ON stat.user_id = c.user_id
 		WHERE %s
 		ORDER BY c.id DESC`, whereStmt)
 

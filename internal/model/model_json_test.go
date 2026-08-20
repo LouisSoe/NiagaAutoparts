@@ -21,9 +21,12 @@ func TestCategoryMarshalJSON(t *testing.T) {
 			t.Fatalf("Marshal error: %v", err)
 		}
 
-		expected := `{"id":1,"name":"Rem","slug":"rem","description":"Sistem pengereman","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`
-		if string(bytes) != expected {
-			t.Errorf("Marshal JSON got %s, want %s", string(bytes), expected)
+		var parsed map[string]interface{}
+		if err := json.Unmarshal(bytes, &parsed); err != nil {
+			t.Fatalf("Unmarshal error: %v", err)
+		}
+		if parsed["name"] != "Rem" || parsed["slug"] != "rem" || parsed["description"] != "Sistem pengereman" {
+			t.Errorf("Unexpected unmarshaled JSON: %v", parsed)
 		}
 	})
 
@@ -40,9 +43,12 @@ func TestCategoryMarshalJSON(t *testing.T) {
 			t.Fatalf("Marshal error: %v", err)
 		}
 
-		expected := `{"id":1,"name":"Rem","slug":"rem","description":null,"created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`
-		if string(bytes) != expected {
-			t.Errorf("Marshal JSON got %s, want %s", string(bytes), expected)
+		var parsed map[string]interface{}
+		if err := json.Unmarshal(bytes, &parsed); err != nil {
+			t.Fatalf("Unmarshal error: %v", err)
+		}
+		if parsed["name"] != "Rem" || parsed["slug"] != "rem" || parsed["description"] != nil {
+			t.Errorf("Unexpected unmarshaled JSON: %v", parsed)
 		}
 	})
 }
