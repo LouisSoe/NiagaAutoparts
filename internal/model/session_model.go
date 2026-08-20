@@ -12,14 +12,15 @@ const (
     StateSearching                SessionState = "searching"
     StateAwaitingQty              SessionState = "awaiting_qty"
     StateAwaitingOrderType        SessionState = "awaiting_order_type"
-    StateAwaitingDeliveryAddress  SessionState = "awaiting_delivery_address"
-    StateAwaitingDeliveryDate     SessionState = "awaiting_delivery_date"
-    StateAwaitingDeliverySchedule SessionState = "awaiting_delivery_schedule"
-    StateAwaitingConfirm          SessionState = "awaiting_confirm"
-    StateOrdering                 SessionState = "ordering"
-    StateAwaitingProductSelection SessionState = "awaiting_product_selection"
-    StateAwaitingImportConfirm    SessionState = "awaiting_import_confirm"
-    StateAwaitingRescheduleDecision SessionState = "awaiting_reschedule_decision"
+    StateAwaitingDeliveryAddress        SessionState = "awaiting_delivery_address"
+    StateAwaitingDeliveryAddressDetail  SessionState = "awaiting_delivery_address_detail"
+    StateAwaitingDeliveryDate           SessionState = "awaiting_delivery_date"
+    StateAwaitingDeliverySchedule       SessionState = "awaiting_delivery_schedule"
+    StateAwaitingConfirm                SessionState = "awaiting_confirm"
+    StateOrdering                       SessionState = "ordering"
+    StateAwaitingProductSelection       SessionState = "awaiting_product_selection"
+    StateAwaitingImportConfirm          SessionState = "awaiting_import_confirm"
+    StateAwaitingRescheduleDecision     SessionState = "awaiting_reschedule_decision"
 )
 
 type Session struct {

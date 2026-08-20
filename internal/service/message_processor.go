@@ -32,6 +32,7 @@ type MessageProcessor struct {
 	aiSvc        *ai.AIService
 	midtransSvc  *MidtransService
 	reportSvc    *ReportService
+	osmSvc       *OSMService
 	logger       *zap.Logger
 	sessionTTL   time.Duration
 }
@@ -79,6 +80,10 @@ func (p *MessageProcessor) SetReportService(reportSvc *ReportService) {
 	p.reportSvc = reportSvc
 }
 
+func (p *MessageProcessor) SetOSMService(osmSvc *OSMService) {
+	p.osmSvc = osmSvc
+}
+
 // Process is the main entry point for async message handling.
 // It accepts the generic IncomingMessage — platform-agnostic.
 func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessage) {
@@ -121,6 +126,10 @@ func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessag
 		return
 	} else if sess.State == model.StateAwaitingDeliveryAddress {
 		reply := p.handleDeliveryAddress(ctx, msg, sess)
+		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
+		return
+	} else if sess.State == model.StateAwaitingDeliveryAddressDetail {
+		reply := p.handleDeliveryAddressDetail(ctx, msg, sess)
 		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
 		return
 	} else if sess.State == model.StateAwaitingDeliveryDate {
@@ -394,9 +403,10 @@ func (p *MessageProcessor) handleOrderTypeSelection(ctx context.Context, msg mod
 
 		sess.State = model.StateAwaitingDeliveryAddress
 		return "📍 *Pengantaran Kurir (Delivery)*\n\n" +
-			"Silakan kirimkan alamat pengantaran Anda:\n" +
-			"👉 Gunakan fitur *Kirim Lokasi (Share Location / GPS)* pada Telegram 📎, ATAU\n" +
-			"👉 Ketik alamat lengkap Anda di sini."
+			"Silakan tentukan alamat tujuan pengantaran Anda:\n" +
+			"1️⃣ *Kirim Pin Lokasi GPS (Share Location 📎)* pada Telegram (Jika sedang di rumah/tujuan)\n" +
+			"2️⃣ *Ketik Alamat Lengkap* (Nama Jalan, No. Rumah, RT/RW, Kelurahan/Kecamatan, Kota)\n\n" +
+			"💡 _Ketik *batal* untuk membatalkan pesanan._"
 	}
 
 	return "Pilihan tidak valid. Silakan balas:\n1️⃣ *1* (Ambil di Toko)\n2️⃣ *2* (Diantar Kurir)"
@@ -408,78 +418,153 @@ func (p *MessageProcessor) handleDeliveryAddress(ctx context.Context, msg model.
 		return p.handleCancel(ctx, sess, msg.Sender)
 	}
 
-	var lat, lng float64
-	var address string
-
+	// ── 1. Jika User Mengirimkan Pin Point GPS Telegram ──
 	if msg.Latitude != nil && msg.Longitude != nil {
-		lat = *msg.Latitude
-		lng = *msg.Longitude
-		address = fmt.Sprintf("Koordinat GPS: %.6f, %.6f", lat, lng)
-	} else if strings.HasPrefix(text, "LOC:") {
+		lat := *msg.Latitude
+		lng := *msg.Longitude
+		sess.PendingLat = &lat
+		sess.PendingLng = &lng
+		sess.State = model.StateAwaitingDeliveryAddressDetail
+
+		return fmt.Sprintf(
+			"✅ *Titik Lokasi GPS Diterima!*\n"+
+				"📍 Koordinat: `%.6f, %.6f`\n\n"+
+				"📝 *Langkah Terakhir:* Mohon ketikkan *Alamat Lengkap & Patokan Rumah* Anda\n"+
+				"_(Contoh: Jl. Melati No. 12, RT 02/RW 03, Pagar Hitam seberang Masjid)_ agar kurir mudah menemukan lokasi Anda.",
+			lat, lng,
+		)
+	}
+
+	// ── 2. Jika Pesan Berupa String Koordinat "LOC:lat,lng" ──
+	if strings.HasPrefix(text, "LOC:") {
+		var lat, lng float64
 		parts := strings.Split(strings.TrimPrefix(text, "LOC:"), ",")
 		if len(parts) == 2 {
 			_, _ = fmt.Sscanf(parts[0], "%f", &lat)
 			_, _ = fmt.Sscanf(parts[1], "%f", &lng)
-			address = text
+			sess.PendingLat = &lat
+			sess.PendingLng = &lng
+			sess.State = model.StateAwaitingDeliveryAddressDetail
+
+			return fmt.Sprintf(
+				"✅ *Titik Lokasi GPS Diterima!*\n"+
+					"📍 Koordinat: `%.6f, %.6f`\n\n"+
+					"📝 *Langkah Terakhir:* Mohon ketikkan *Alamat Lengkap & Patokan Rumah* Anda\n"+
+					"_(Contoh: Jl. Melati No. 12, RT 02/RW 03, Pagar Hitam seberang Masjid)_ agar kurir mudah menemukan lokasi Anda.",
+				lat, lng,
+			)
 		}
-	} else {
-		address = text
-		// Jika hanya alamat teks tanpa koordinat, gunakan koordinat toko/default atau estimasi
-		lat = WarehouseLat
-		lng = WarehouseLng
 	}
 
-	sess.PendingAddress = address
-	sess.PendingLat = &lat
-	sess.PendingLng = &lng
+	// ── 3. Jika User Mengetik Alamat Teks Biasa ──
+	// Coba cari koordinatnya via OpenStreetMap Nominatim Geocoder
+	if p.osmSvc != nil {
+		lat, lng, displayName, err := p.osmSvc.Geocode(ctx, text)
+		if err == nil && lat != 0 && lng != 0 {
+			sess.PendingAddress = text
+			sess.PendingLat = &lat
+			sess.PendingLng = &lng
 
-	// Hitung Ongkir
+			// Hitung Ongkir
+			if p.deliverySvc != nil {
+				est := p.deliverySvc.CalculateShippingCost(lat, lng)
+				sess.PendingShipping = est.ShippingCost
+				sess.PendingDistanceKm = est.DistanceKm
+			}
+
+			// Simpan / Update profil customer
+			p.saveCustomerDeliveryProfile(ctx, msg.Sender, msg.SenderName, text, lat, lng)
+
+			// Lanjut ke pemilihan tanggal pengantaran dengan informasi alamat yang terdeteksi
+			return fmt.Sprintf("🔍 *Alamat Terdeteksi:* %s\n\n", displayName) +
+				p.askDeliveryDate(ctx, sess, text, sess.PendingShipping)
+		}
+	}
+
+	// ── 4. Jika OpenStreetMap Tidak Menemukan / Alamat Terlalu Singkat/Ambigu ──
+	return "⚠️ *Alamat Belum Ditemukan pada Peta*\n\n" +
+		"Sistem kami tidak dapat menentukan titik rute pengantaran dari alamat yang Anda ketik.\n\n" +
+		"Agar kurir dapat mengantar dan menghitung ongkir secara akurat, silakan:\n" +
+		"👉 *Kirimkan Pin Lokasi (Share Location / GPS 📎)* melalui fitur lampiran Telegram, ATAU\n" +
+		"👉 Ketik alamat lebih lengkap beserta kelurahan, kecamatan, dan kota (contoh: *Jl. Veteran No. 8, Ketawanggede, Lowokwaru, Malang*)."
+}
+
+func (p *MessageProcessor) handleDeliveryAddressDetail(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
+	text := strings.TrimSpace(msg.Message)
+	if strings.ToLower(text) == "batal" {
+		return p.handleCancel(ctx, sess, msg.Sender)
+	}
+
+	if text == "" {
+		return "Mohon ketikkan alamat lengkap beserta patokan rumah pengantaran Anda (contoh: *Jl. Merbabu No. 10, rumah cat hijau*)."
+	}
+
+	var lat, lng float64
+	if sess.PendingLat != nil && sess.PendingLng != nil {
+		lat = *sess.PendingLat
+		lng = *sess.PendingLng
+	} else {
+		lat = WarehouseLat
+		lng = WarehouseLng
+		sess.PendingLat = &lat
+		sess.PendingLng = &lng
+	}
+
+	sess.PendingAddress = text
+
+	// Hitung Ongkir berdasarkan koordinat GPS yang sudah disimpan
 	if p.deliverySvc != nil && lat != 0 && lng != 0 {
 		est := p.deliverySvc.CalculateShippingCost(lat, lng)
 		sess.PendingShipping = est.ShippingCost
 		sess.PendingDistanceKm = est.DistanceKm
 	}
 
-	// Update / Create Customer Profile otomatis jika belum ada
-	if p.userRepo != nil && p.customerRepo != nil {
-		u, _ := p.userRepo.GetByTelegramChatID(ctx, msg.Sender)
-		if u == nil {
-			// Buat guest user & link telegram
-			guestUser := &model.User{
-				Email:          fmt.Sprintf("tele_%s@autoparts.local", msg.Sender),
-				Name:           msg.SenderName,
-				Role:           model.RoleCustomer,
-				TelegramChatID: sql.NullString{String: msg.Sender, Valid: true},
-				IsActive:       true,
-			}
-			if msg.SenderName == "" {
-				guestUser.Name = "Customer Telegram"
-			}
-			if errU := p.userRepo.Create(ctx, guestUser); errU == nil && guestUser.ID > 0 {
-				u = guestUser
-			}
-		}
+	// Simpan / Update profil customer
+	p.saveCustomerDeliveryProfile(ctx, msg.Sender, msg.SenderName, text, lat, lng)
 
-		if u != nil {
-			cust, _ := p.customerRepo.GetByUserID(ctx, u.ID)
-			if cust == nil {
-				_ = p.customerRepo.Create(ctx, &model.Customer{
-					UserID:       u.ID,
-					TypeCustomer: model.CustomerTypeIndividual,
-					Address:      sql.NullString{String: address, Valid: address != ""},
-					Latitude:     sql.NullFloat64{Float64: lat, Valid: lat != 0},
-					Longitude:    sql.NullFloat64{Float64: lng, Valid: lng != 0},
-				})
-			} else {
-				cust.Address = sql.NullString{String: address, Valid: address != ""}
-				cust.Latitude = sql.NullFloat64{Float64: lat, Valid: lat != 0}
-				cust.Longitude = sql.NullFloat64{Float64: lng, Valid: lng != 0}
-				_ = p.customerRepo.Update(ctx, cust)
-			}
+	// Lanjut ke pemilihan tanggal pengantaran
+	return p.askDeliveryDate(ctx, sess, text, sess.PendingShipping)
+}
+
+func (p *MessageProcessor) saveCustomerDeliveryProfile(ctx context.Context, sender, senderName, address string, lat, lng float64) {
+	if p.userRepo == nil || p.customerRepo == nil {
+		return
+	}
+
+	u, _ := p.userRepo.GetByTelegramChatID(ctx, sender)
+	if u == nil {
+		guestUser := &model.User{
+			Email:          fmt.Sprintf("tele_%s@autoparts.local", sender),
+			Name:           senderName,
+			Role:           model.RoleCustomer,
+			TelegramChatID: sql.NullString{String: sender, Valid: true},
+			IsActive:       true,
+		}
+		if senderName == "" {
+			guestUser.Name = "Customer Telegram"
+		}
+		if errU := p.userRepo.Create(ctx, guestUser); errU == nil && guestUser.ID > 0 {
+			u = guestUser
 		}
 	}
 
-	return p.askDeliveryDate(ctx, sess, address, sess.PendingShipping)
+	if u != nil {
+		cust, _ := p.customerRepo.GetByUserID(ctx, u.ID)
+		if cust == nil {
+			_ = p.customerRepo.Create(ctx, &model.Customer{
+				UserID:       u.ID,
+				TypeCustomer: model.CustomerTypeIndividual,
+				Address:      sql.NullString{String: address, Valid: address != ""},
+				Latitude:     sql.NullFloat64{Float64: lat, Valid: lat != 0},
+				Longitude:    sql.NullFloat64{Float64: lng, Valid: lng != 0},
+			})
+		} else {
+			cust.Address = sql.NullString{String: address, Valid: address != ""}
+			cust.Latitude = sql.NullFloat64{Float64: lat, Valid: lat != 0}
+			cust.Longitude = sql.NullFloat64{Float64: lng, Valid: lng != 0}
+			_ = p.customerRepo.Update(ctx, cust)
+		}
+	}
 }
 
 func (p *MessageProcessor) askDeliveryDate(ctx context.Context, sess *model.Session, address string, shippingCost float64) string {

@@ -159,6 +159,8 @@ func main() {
 	orderSvc.SetCustomerRepository(customerRepo)
 	orderSvc.SetMessageSender(compositeSender)
 	orderSvc.SetMidtransService(midtransSvc)
+	osmSvc := service.NewOSMService(logger)
+	processor.SetOSMService(osmSvc)
 	processor.SetMidtransService(midtransSvc)
 	processor.SetReportService(reportSvc)
 	processor.SetDeliveryService(deliverySvc)
