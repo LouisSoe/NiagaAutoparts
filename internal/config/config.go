@@ -184,13 +184,24 @@ func Load() (*Config, error) {
 
 func getEnv(key, fallback string) string {
 	if val := os.Getenv(key); val != "" {
-		return val
+		val = strings.TrimSpace(val)
+		// Jika ada inline comment '#' yang ikut terbaca
+		if idx := strings.Index(val, "#"); idx != -1 {
+			val = strings.TrimSpace(val[:idx])
+		}
+		if val != "" {
+			return val
+		}
 	}
 	return fallback
 }
 
 func getEnvInt(key string, fallback int) int {
 	if val := os.Getenv(key); val != "" {
+		val = strings.TrimSpace(val)
+		if idx := strings.Index(val, "#"); idx != -1 {
+			val = strings.TrimSpace(val[:idx])
+		}
 		if i, err := strconv.Atoi(val); err == nil {
 			return i
 		}
