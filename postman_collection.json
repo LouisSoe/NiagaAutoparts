@@ -712,7 +712,7 @@
 					]
 				},
 				{
-					"name": "Create User",
+					"name": "Create User (Staff / Courier / Cashier / Manager / Admin)",
 					"request": {
 						"method": "POST",
 						"header": [
@@ -723,7 +723,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"budi@niagagudang.com\",\n  \"password\": \"rahasia123\",\n  \"name\": \"Budi Santoso\",\n  \"role\": \"cashier\",\n  \"phone\": \"081234567890\"\n}"
+							"raw": "{\n  \"email\": \"kurir1@niagagudang.com\",\n  \"password\": \"rahasia123\",\n  \"name\": \"Budi Kurir\",\n  \"role\": \"courier\",\n  \"phone\": \"081234567890\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/users",

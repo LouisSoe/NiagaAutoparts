@@ -74,20 +74,19 @@ File Postman Collection resmi yang dapat di-import langsung ke Postman berada di
 
 | Method | Endpoint | Deskripsi |
 |---|---|---|
-| `GET` | `/api/v1/users` | Ambil semua pengguna |
+| `GET` | `/api/v1/users` | Ambil semua pengguna (Filter query: `role`, `is_active`, `q`, `page`, `limit`) |
 | `GET` | `/api/v1/users/:id` | Ambil detail pengguna by ID |
-| `POST` | `/api/v1/users` | Tambah pengguna baru (password otomatis di-hash `bcrypt`) |
+| `POST` | `/api/v1/users` | Tambah pengguna baru (password otomatis di-hash `bcrypt`). Pilihan role: `admin`, `staff`, `manager`, `customer`, `cashier`, `courier`, `guest` |
 | `PUT` | `/api/v1/users/:id` | Update data pengguna |
 | `DELETE` | `/api/v1/users/:id` | Hapus pengguna |
 
-#### Contoh Payload `POST /api/v1/users`:
+#### Contoh Payload `POST /api/v1/users` (Kurir):
 ```json
 {
-  "username": "budi_staff",
-  "email": "budi@niagagudang.com",
+  "email": "kurir1@niagagudang.com",
   "password": "rahasia123",
-  "name": "Budi Santoso",
-  "role": "staff",
+  "name": "Budi Kurir",
+  "role": "courier",
   "phone": "081234567890"
 }
 ```

@@ -14,6 +14,7 @@ const (
 	RoleManager  UserRole = "manager"
 	RoleCustomer UserRole = "customer"
 	RoleCashier  UserRole = "cashier"
+	RoleCourier  UserRole = "courier"
 	RoleGuest    UserRole = "guest"
 )
 
