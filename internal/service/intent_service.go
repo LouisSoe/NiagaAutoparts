@@ -50,7 +50,7 @@ var orderKeywords = []string{
 // confirmKeywords indicates confirmation of an order.
 var confirmKeywords = []string{
 	"ya", "iya", "yes", "ok", "okay", "oke", "setuju", "jadi",
-	"lanjut", "konfirmasi", "confirm", "1", "2", "midtrans", "cash", "tunai",
+	"lanjut", "konfirmasi", "confirm", "midtrans", "cash", "tunai",
 }
 
 // cancelKeywords indicates order cancellation.

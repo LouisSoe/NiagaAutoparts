@@ -245,9 +245,10 @@ func (p *MessageProcessor) handleSearch(ctx context.Context, parsed *model.Parse
 		if err == nil {
 			sess.LastProductID = &product.ID
 			sess.LastProductName = product.Name
-			sess.State = model.StateIdle
+			sess.State = model.StateAwaitingQty
 			sess.SearchResults = nil
-			return FormatProductDetail(product, refs)
+			return FormatProductDetail(product, refs) +
+				"\n\nBerapa jumlah yang ingin Anda pesan? (Ketik jumlah, misal: *2*)"
 		}
 	}
 
@@ -276,10 +277,11 @@ func (p *MessageProcessor) handleProductSelection(ctx context.Context, parsed *m
 
 	sess.LastProductID = &product.ID
 	sess.LastProductName = product.Name
-	sess.State = model.StateIdle
+	sess.State = model.StateAwaitingQty
 	sess.SearchResults = nil
 
-	return FormatProductDetail(product, refs)
+	return FormatProductDetail(product, refs) +
+		"\n\nBerapa jumlah yang ingin Anda pesan? (Ketik jumlah, misal: *2*)"
 }
 
 func (p *MessageProcessor) handleOrder(ctx context.Context, parsed *model.ParsedMessage, sess *model.Session, msg model.IncomingMessage) string {
