@@ -230,24 +230,62 @@ func main() {
 			deliverySvc.SetCourierBot(courierBotSvc)
 			courierBotSvc.StartPolling(ctx)
 
-			// Background scheduler: Kirim Daily Reminder Pengantaran setiap hari pk 05:00 WIB
+			// Background scheduler: Reminder Pengantaran Kurir (Daily atau Interval)
 			go func() {
 				loc, errLoc := time.LoadLocation("Asia/Jakarta")
 				if errLoc != nil {
 					loc = time.Local
 				}
 
-				for {
-					now := time.Now().In(loc)
-					nextRun := service.CalculateNextRunTime(now, 0, 5, loc)
-					durationUntilNextRun := time.Until(nextRun)
-					logger.Info("courier morning digest scheduled", zap.Time("next_run", nextRun), zap.Duration("wait", durationUntilNextRun))
+				mode := cfg.Telegram.CourierReminderMode
+				if mode == "interval" {
+					intervalMinutes := cfg.Telegram.CourierReminderInterval
+					if intervalMinutes <= 0 {
+						intervalMinutes = 1 // default 1 menit jika diset 0 / pengetesan
+					}
+					intervalDuration := time.Duration(intervalMinutes) * time.Minute
+					logger.Info("courier reminder running in interval mode",
+						zap.String("mode", "interval"),
+						zap.Duration("interval", intervalDuration),
+					)
 
-					select {
-					case <-time.After(durationUntilNextRun):
-						courierBotSvc.SendDailyMorningDigest(ctx)
-					case <-ctx.Done():
-						return
+					ticker := time.NewTicker(intervalDuration)
+					defer ticker.Stop()
+
+					for {
+						select {
+						case <-ticker.C:
+							logger.Info("triggering courier reminder (interval tick)")
+							courierBotSvc.SendDailyMorningDigest(ctx)
+						case <-ctx.Done():
+							return
+						}
+					}
+				} else {
+					// Mode "daily" (default)
+					targetHour := cfg.Telegram.CourierReminderHour
+					targetMin := cfg.Telegram.CourierReminderMinute
+					logger.Info("courier reminder running in daily mode",
+						zap.String("mode", "daily"),
+						zap.Int("hour", targetHour),
+						zap.Int("minute", targetMin),
+					)
+
+					for {
+						now := time.Now().In(loc)
+						nextRun := service.CalculateNextRunTime(now, targetHour, targetMin, loc)
+						durationUntilNextRun := time.Until(nextRun)
+						logger.Info("courier morning digest scheduled",
+							zap.Time("next_run", nextRun),
+							zap.Duration("wait", durationUntilNextRun),
+						)
+
+						select {
+						case <-time.After(durationUntilNextRun):
+							courierBotSvc.SendDailyMorningDigest(ctx)
+						case <-ctx.Done():
+							return
+						}
 					}
 				}
 			}()

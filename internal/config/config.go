@@ -45,11 +45,15 @@ type FonnteConfig struct {
 }
 
 type TelegramConfig struct {
-	Token          string // TELE_API — Bot 1 CS Token
-	NotifierToken  string // TELEGRAM_NOTIFIER_BOT_TOKEN — Bot 2 Notifier Token
-	CourierToken   string // TELEGRAM_COURIER_BOT_TOKEN — Bot 3 Courier Assistant Bot
-	OrderChannelID string // TELEGRAM_ORDER_CHANNEL_ID
-	ErrorChannelID string // TELEGRAM_ERROR_CHANNEL_ID
+	Token                  string // TELE_API — Bot 1 CS Token
+	NotifierToken          string // TELEGRAM_NOTIFIER_BOT_TOKEN — Bot 2 Notifier Token
+	CourierToken           string // TELEGRAM_COURIER_BOT_TOKEN — Bot 3 Courier Assistant Bot
+	OrderChannelID         string // TELEGRAM_ORDER_CHANNEL_ID
+	ErrorChannelID         string // TELEGRAM_ERROR_CHANNEL_ID
+	CourierReminderMode    string // "daily" atau "interval" (default: "daily")
+	CourierReminderHour    int    // Jam reminder harian (default: 5)
+	CourierReminderMinute  int    // Menit reminder harian (default: 0)
+	CourierReminderInterval int   // Interval reminder dalam menit (default: 60)
 }
 
 type GeminiConfig struct {
@@ -130,6 +134,10 @@ func Load() (*Config, error) {
 	cfg.Telegram.CourierToken = getEnv("TELEGRAM_COURIER_BOT_TOKEN", "")
 	cfg.Telegram.OrderChannelID = getEnv("TELEGRAM_ORDER_CHANNEL_ID", "")
 	cfg.Telegram.ErrorChannelID = getEnv("TELEGRAM_ERROR_CHANNEL_ID", "")
+	cfg.Telegram.CourierReminderMode = strings.ToLower(getEnv("COURIER_REMINDER_MODE", "daily"))
+	cfg.Telegram.CourierReminderHour = getEnvInt("COURIER_REMINDER_HOUR", 5)
+	cfg.Telegram.CourierReminderMinute = getEnvInt("COURIER_REMINDER_MINUTE", 0)
+	cfg.Telegram.CourierReminderInterval = getEnvInt("COURIER_REMINDER_INTERVAL_MINUTES", 60)
 
 	// Gemini
 	cfg.Gemini.APIKey = getEnv("GEMINI_API_KEY", "")
