@@ -139,8 +139,45 @@ func (s *DeliveryService) GetDeliveriesForDate(ctx context.Context, date time.Ti
 }
 
 // GetAvailableSchedules returns available delivery slots for the specified date.
+// If the targetDate is today, slots that have passed the cutoff (startTime - 1 hour) are filtered out.
 func (s *DeliveryService) GetAvailableSchedules(ctx context.Context, targetDate time.Time) ([]model.DeliverySchedule, error) {
-	return s.scheduleRepo.GetAvailableSchedulesByDate(ctx, targetDate)
+	schedules, err := s.scheduleRepo.GetAvailableSchedulesByDate(ctx, targetDate)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	isToday := targetDate.Year() == now.Year() && targetDate.Month() == now.Month() && targetDate.Day() == now.Day()
+	if !isToday {
+		return schedules, nil
+	}
+
+	validSchedules := make([]model.DeliverySchedule, 0, len(schedules))
+	for _, sched := range schedules {
+		if !isDeliverySlotExpired(sched.StartTime, now) {
+			validSchedules = append(validSchedules, sched)
+		}
+	}
+
+	return validSchedules, nil
+}
+
+// isDeliverySlotExpired mengecek apakah jam waktu sekarang sudah melewati batas waktu H-1 jam sebelum jadwal dimulai (startTime - 1 jam).
+func isDeliverySlotExpired(startTimeStr string, now time.Time) bool {
+	cleanTime := strings.TrimSpace(startTimeStr)
+	var hour, min int
+	var err error
+	if strings.Count(cleanTime, ":") >= 2 {
+		_, err = fmt.Sscanf(cleanTime, "%d:%d", &hour, &min)
+	} else {
+		_, err = fmt.Sscanf(cleanTime, "%d:%d", &hour, &min)
+	}
+	if err != nil {
+		return false
+	}
+
+	slotCutoff := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, now.Location()).Add(-1 * time.Hour)
+	return now.After(slotCutoff)
 }
 
 // ShippingEstimateResult contains estimation calculations.

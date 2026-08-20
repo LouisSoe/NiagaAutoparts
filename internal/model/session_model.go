@@ -14,6 +14,7 @@ const (
     StateAwaitingOrderType        SessionState = "awaiting_order_type"
     StateAwaitingDeliveryAddress        SessionState = "awaiting_delivery_address"
     StateAwaitingDeliveryAddressDetail  SessionState = "awaiting_delivery_address_detail"
+    StateAwaitingAddressConfirmation    SessionState = "awaiting_address_confirmation"
     StateAwaitingDeliveryDate           SessionState = "awaiting_delivery_date"
     StateAwaitingDeliverySchedule       SessionState = "awaiting_delivery_schedule"
     StateAwaitingConfirm                SessionState = "awaiting_confirm"

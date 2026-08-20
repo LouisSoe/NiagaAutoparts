@@ -132,6 +132,10 @@ func (p *MessageProcessor) Process(ctx context.Context, msg model.IncomingMessag
 		reply := p.handleDeliveryAddressDetail(ctx, msg, sess)
 		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
 		return
+	} else if sess.State == model.StateAwaitingAddressConfirmation {
+		reply := p.handleAddressConfirmation(ctx, msg, sess)
+		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
+		return
 	} else if sess.State == model.StateAwaitingDeliveryDate {
 		reply := p.handleDeliveryDateSelection(ctx, msg, sess)
 		p.finalizeAndSend(ctx, msg, sess, string(model.IntentOrder), reply)
@@ -390,15 +394,29 @@ func (p *MessageProcessor) handleOrderTypeSelection(ctx context.Context, msg mod
 			sess.PendingLng = &lng
 			sess.PendingAddress = existingCustomer.Address.String
 
-			// Hitung ongkir
+			// Hitung ongkir berdasarkan alamat tersimpan
 			if p.deliverySvc != nil {
 				est := p.deliverySvc.CalculateShippingCost(lat, lng)
 				sess.PendingShipping = est.ShippingCost
 				sess.PendingDistanceKm = est.DistanceKm
 			}
 
-			// Lanjut ke pemilihan tanggal pengantaran
-			return p.askDeliveryDate(ctx, sess, existingCustomer.Address.String, sess.PendingShipping)
+			// Masuk ke state konfirmasi alamat tersimpan
+			sess.State = model.StateAwaitingAddressConfirmation
+			return fmt.Sprintf(
+				"📍 *Konfirmasi Alamat Pengantaran*\n\n"+
+					"Kami menemukan alamat pengantaran terakhir Anda:\n"+
+					"🏠 *Alamat:* %s\n"+
+					"📏 *Estimasi Jarak:* %.2f km\n"+
+					"🚚 *Ongkos Kirim:* Rp %s\n\n"+
+					"Apakah Anda ingin mengirim ke alamat ini?\n"+
+					"1️⃣ *1* / *Ya* (Gunakan Alamat Ini)\n"+
+					"2️⃣ *2* / *Ganti* (Kirim Lokasi Baru)\n\n"+
+					"💡 _Ketik *batal* untuk membatalkan pesanan._",
+				existingCustomer.Address.String,
+				sess.PendingDistanceKm,
+				formatIDR(sess.PendingShipping),
+			)
 		}
 
 		sess.State = model.StateAwaitingDeliveryAddress
@@ -410,6 +428,31 @@ func (p *MessageProcessor) handleOrderTypeSelection(ctx context.Context, msg mod
 	}
 
 	return "Pilihan tidak valid. Silakan balas:\n1️⃣ *1* (Ambil di Toko)\n2️⃣ *2* (Diantar Kurir)"
+}
+
+func (p *MessageProcessor) handleAddressConfirmation(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
+	text := strings.TrimSpace(msg.Message)
+	if strings.ToLower(text) == "batal" {
+		return p.handleCancel(ctx, sess, msg.Sender)
+	}
+
+	lower := strings.ToLower(text)
+	if lower == "1" || lower == "ya" || lower == "benar" || lower == "ok" || lower == "yes" {
+		// Alamat dikonfirmasi sudah benar -> Lanjut ke pemilihan tanggal & jam pengantaran
+		return p.askDeliveryDate(ctx, sess, sess.PendingAddress, sess.PendingShipping)
+	}
+
+	if lower == "2" || lower == "ganti" || lower == "ubah" || lower == "tidak" || lower == "no" {
+		// User ingin mengganti alamat -> Minta pin GPS atau teks alamat baru
+		sess.State = model.StateAwaitingDeliveryAddress
+		return "📍 *Kirim Alamat Pengantaran Baru*\n\n" +
+			"Silakan kirimkan alamat pengantaran baru Anda:\n" +
+			"1️⃣ *Kirim Pin Lokasi GPS (Share Location 📎)* pada Telegram (Jika sedang di lokasi tujuan)\n" +
+			"2️⃣ *Ketik Alamat Lengkap Baru* (Nama Jalan, No. Rumah, RT/RW, Kelurahan/Kecamatan, Kota)\n\n" +
+			"💡 _Ketik *batal* untuk membatalkan pesanan._"
+	}
+
+	return "Pilihan tidak valid. Silakan balas:\n1️⃣ *1* / *Ya* (Gunakan Alamat Ini)\n2️⃣ *2* / *Ganti* (Ganti Alamat Baru)"
 }
 
 func (p *MessageProcessor) handleDeliveryAddress(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
@@ -570,9 +613,22 @@ func (p *MessageProcessor) saveCustomerDeliveryProfile(ctx context.Context, send
 func (p *MessageProcessor) askDeliveryDate(ctx context.Context, sess *model.Session, address string, shippingCost float64) string {
 	sess.State = model.StateAwaitingDeliveryDate
 
-	t0 := time.Now()
-	t1 := t0.Add(24 * time.Hour)
-	t2 := t0.Add(48 * time.Hour)
+	now := time.Now()
+	t0 := now
+	t1 := now.Add(24 * time.Hour)
+	t2 := now.Add(48 * time.Hour)
+
+	// Periksa apakah slot pengantaran untuk HARI INI masih ada yang belum melewati batas waktu (H-1 sebelum jam mulai)
+	todayHasValidSlots := false
+	if p.deliverySvc != nil {
+		todaySchedules, _ := p.deliverySvc.GetAvailableSchedules(ctx, t0)
+		for _, s := range todaySchedules {
+			if !isSlotExpired(s.StartTime, now) {
+				todayHasValidSlots = true
+				break
+			}
+		}
+	}
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("📍 *Alamat:* %s\n", address))
@@ -581,11 +637,20 @@ func (p *MessageProcessor) askDeliveryDate(ctx context.Context, sess *model.Sess
 	}
 	sb.WriteString(fmt.Sprintf("🚚 *Ongkos Kirim:* Rp %s\n\n", formatIDR(shippingCost)))
 	sb.WriteString("📅 *Pilih Tanggal Pengantaran:*\n")
-	sb.WriteString(fmt.Sprintf("1️⃣ *Hari Ini* (%s)\n", t0.Format("02 Jan 2006")))
-	sb.WriteString(fmt.Sprintf("2️⃣ *Besok* (%s)\n", t1.Format("02 Jan 2006")))
-	sb.WriteString(fmt.Sprintf("3️⃣ *Lusa* (%s)\n", t2.Format("02 Jan 2006")))
-	sb.WriteString("4️⃣ *Ketik tanggal lain* (Format: `YYYY-MM-DD`, contoh: `2026-08-25`)\n\n")
-	sb.WriteString("Balas dengan angka *1, 2, 3* atau ketik tanggal pilihan Anda:")
+
+	if todayHasValidSlots {
+		sb.WriteString(fmt.Sprintf("1️⃣ *Hari Ini* (%s)\n", t0.Format("02 Jan 2006")))
+		sb.WriteString(fmt.Sprintf("2️⃣ *Besok* (%s)\n", t1.Format("02 Jan 2006")))
+		sb.WriteString(fmt.Sprintf("3️⃣ *Lusa* (%s)\n", t2.Format("02 Jan 2006")))
+		sb.WriteString("4️⃣ *Ketik tanggal lain* (Format: `YYYY-MM-DD`, contoh: `2026-08-25`)\n\n")
+		sb.WriteString("Balas dengan angka *1, 2, 3* atau ketik tanggal pilihan Anda:")
+	} else {
+		sb.WriteString(fmt.Sprintf("1️⃣ *Besok* (%s)\n", t1.Format("02 Jan 2006")))
+		sb.WriteString(fmt.Sprintf("2️⃣ *Lusa* (%s)\n", t2.Format("02 Jan 2006")))
+		sb.WriteString("3️⃣ *Ketik tanggal lain* (Format: `YYYY-MM-DD`, contoh: `2026-08-25`)\n\n")
+		sb.WriteString("💡 _Jadwal pengantaran untuk hari ini sudah melewati batas waktu operasional._\n")
+		sb.WriteString("Balas dengan angka *1, 2* atau ketik tanggal pilihan Anda:")
+	}
 
 	return sb.String()
 }
@@ -596,27 +661,60 @@ func (p *MessageProcessor) handleDeliveryDateSelection(ctx context.Context, msg 
 		return p.handleCancel(ctx, sess, msg.Sender)
 	}
 
-	var targetDate time.Time
 	now := time.Now()
+	var targetDate time.Time
 
-	switch text {
-	case "1", "hari ini", "today":
-		targetDate = now
-	case "2", "besok", "tomorrow":
-		targetDate = now.Add(24 * time.Hour)
-	case "3", "lusa":
-		targetDate = now.Add(48 * time.Hour)
-	default:
-		parsed, err := time.Parse("2006-01-02", text)
-		if err != nil {
-			return "⚠️ Format tanggal tidak valid.\nSilakan balas dengan angka *1* (Hari Ini), *2* (Besok), *3* (Lusa), atau ketik tanggal dengan format `YYYY-MM-DD` (contoh: `2026-08-25`)."
+	// Cek apakah slot hari ini masih ada yang valid (H-1 sebelum jam mulai)
+	todayHasValidSlots := false
+	if p.deliverySvc != nil {
+		todaySchedules, _ := p.deliverySvc.GetAvailableSchedules(ctx, now)
+		for _, s := range todaySchedules {
+			if !isSlotExpired(s.StartTime, now) {
+				todayHasValidSlots = true
+				break
+			}
 		}
-		// Validasi tanggal tidak boleh di masa lampau
-		todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		if parsed.Before(todayZero) {
-			return "⚠️ Tanggal pengantaran tidak boleh di masa lampau. Silakan pilih tanggal hari ini atau ke depan."
+	}
+
+	if todayHasValidSlots {
+		switch text {
+		case "1", "hari ini", "today":
+			targetDate = now
+		case "2", "besok", "tomorrow":
+			targetDate = now.Add(24 * time.Hour)
+		case "3", "lusa":
+			targetDate = now.Add(48 * time.Hour)
+		default:
+			parsed, err := time.Parse("2006-01-02", text)
+			if err != nil {
+				return "⚠️ Format tanggal tidak valid.\nSilakan balas dengan angka *1* (Hari Ini), *2* (Besok), *3* (Lusa), atau ketik format `YYYY-MM-DD` (contoh: `2026-08-25`)."
+			}
+			todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+			if parsed.Before(todayZero) {
+				return "⚠️ Tanggal pengantaran tidak boleh di masa lampau. Silakan pilih tanggal hari ini atau ke depan."
+			}
+			targetDate = parsed
 		}
-		targetDate = parsed
+	} else {
+		// Opsi jika hari ini sudah tutup
+		switch text {
+		case "1", "besok", "tomorrow":
+			targetDate = now.Add(24 * time.Hour)
+		case "2", "lusa":
+			targetDate = now.Add(48 * time.Hour)
+		case "hari ini", "today":
+			return "⚠️ Mohon maaf, jadwal pengantaran untuk hari ini sudah melewati batas waktu. Silakan pilih *1* (Besok) atau tanggal lain."
+		default:
+			parsed, err := time.Parse("2006-01-02", text)
+			if err != nil {
+				return "⚠️ Format tanggal tidak valid.\nSilakan balas dengan angka *1* (Besok), *2* (Lusa), atau ketik format `YYYY-MM-DD` (contoh: `2026-08-25`)."
+			}
+			todayZero := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+			if parsed.Before(todayZero.Add(24 * time.Hour)) {
+				return "⚠️ Jadwal hari ini sudah lewat batas operasional. Silakan pilih tanggal mulai dari besok ke depan."
+			}
+			targetDate = parsed
+		}
 	}
 
 	sess.PendingDate = targetDate.Format("2006-01-02")
@@ -626,23 +724,35 @@ func (p *MessageProcessor) handleDeliveryDateSelection(ctx context.Context, msg 
 func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.Session, targetDate time.Time) string {
 	sess.State = model.StateAwaitingDeliverySchedule
 
-	var schedules []model.DeliverySchedule
+	var rawSchedules []model.DeliverySchedule
 	if p.deliverySvc != nil {
-		schedules, _ = p.deliverySvc.GetAvailableSchedules(ctx, targetDate)
+		rawSchedules, _ = p.deliverySvc.GetAvailableSchedules(ctx, targetDate)
 	}
 
-	sess.AvailSchedules = schedules
+	now := time.Now()
+	isToday := targetDate.Year() == now.Year() && targetDate.Month() == now.Month() && targetDate.Day() == now.Day()
+
+	// Filter: Jika pengantaran hari ini, buang slot yang sudah melewati jam mulai - 1 jam (H-1 sebelum pengantaran dimulai)
+	var validSchedules []model.DeliverySchedule
+	for _, s := range rawSchedules {
+		if isToday && isSlotExpired(s.StartTime, now) {
+			continue // Sembunyikan slot jika waktu sekarang sudah melewati startTime - 1 jam
+		}
+		validSchedules = append(validSchedules, s)
+	}
+
+	sess.AvailSchedules = validSchedules
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("📅 *Jadwal Pengantaran Tersedia (%s):*\n\n", targetDate.Format("02 Jan 2006")))
 
-	if len(schedules) == 0 {
-		sb.WriteString("_Belum ada slot jadwal tersedia untuk tanggal ini._\nKetik *BATAL* untuk membatalkan.")
+	if len(validSchedules) == 0 {
+		sb.WriteString("_Tidak ada slot jadwal pengantaran yang tersedia untuk tanggal ini._\nKetik *BATAL* untuk membatalkan.")
 		return sb.String()
 	}
 
 	hasSlot := false
-	for i, s := range schedules {
+	for i, s := range validSchedules {
 		status := fmt.Sprintf("Tersedia (%d slot)", s.AvailableSlots)
 		if s.IsFull {
 			status = "❌ Penuh"
@@ -659,6 +769,26 @@ func (p *MessageProcessor) askDeliverySchedule(ctx context.Context, sess *model.
 	}
 
 	return sb.String()
+}
+
+// isSlotExpired mengecek apakah jam waktu sekarang sudah melewati batas waktu H-1 jam sebelum jadwal dimulai (startTime - 1 jam).
+// Format startTimeStr yang didukung: "15:04" atau "15:04:05".
+func isSlotExpired(startTimeStr string, now time.Time) bool {
+	cleanTime := strings.TrimSpace(startTimeStr)
+	var hour, min int
+	var err error
+	if strings.Count(cleanTime, ":") >= 2 {
+		_, err = fmt.Sscanf(cleanTime, "%d:%d", &hour, &min)
+	} else {
+		_, err = fmt.Sscanf(cleanTime, "%d:%d", &hour, &min)
+	}
+	if err != nil {
+		return false
+	}
+
+	// Batas cutoff = startTime dikurangi 1 jam (H-1 sebelum pengantaran dimulai)
+	slotCutoff := time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, now.Location()).Add(-1 * time.Hour)
+	return now.After(slotCutoff)
 }
 
 func (p *MessageProcessor) handleDeliveryScheduleSelection(ctx context.Context, msg model.IncomingMessage, sess *model.Session) string {
